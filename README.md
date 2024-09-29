@@ -26,12 +26,12 @@ Requirements:
 
 1. Clone the repository using Git:
 ```bash
-git clone xxxx
+git clone https://github.com/AbstractMenus/minecraft-plugin.git AbstractMenus
 ```
 
 2. Navigate to the project folder:
 ```bash
-cd xxx
+cd AbstractMenus
 ```
 
 3. Install Dependencies:
