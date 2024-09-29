@@ -1,0 +1,30 @@
+main: 'ru.abstractmenus.AbstractMenus'
+name: 'AbstractMenus'
+version: ${version}
+api-version: '1.13'
+author: 'Nanit, BrainRTP'
+folia-supported: true
+softdepend:
+  - 'Vault'
+  - 'WorldGuard'
+  - 'PlaceholderAPI'
+  - 'NBTAPI'
+  - 'LuckPerms'
+  - 'Citizens'
+  - 'HeadDatabase'
+  - 'MMOItems'
+  - 'SkinsRestorer'
+  - 'ItemsAdder'
+  - 'Oraxen'
+commands:
+  am:
+    permission: 'am.admin'
+    description: 'Menu control commands'
+  var:
+    permission: 'am.admin'
+    description: 'Global variables control commands'
+  varp:
+    permission: 'am.admin'
+    description: 'Personal variables control commands'
+libraries:
+  - 'org.openjdk.nashorn:nashorn-core:15.3'

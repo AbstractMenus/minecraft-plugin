@@ -1,0 +1,165 @@
+import proguard.gradle.ProGuardTask
+
+buildscript {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+    dependencies {
+        classpath 'com.guardsquare:proguard-gradle:7.5.0'
+    }
+//    region https://github.com/johnrengelman/shadow/pull/876#issuecomment-1942380071
+    ext {
+        asmAsmVersion = "9.6" // https://gitlab.ow2.org/asm/asm/-/tags
+    }
+    configurations {
+        classpath {
+            resolutionStrategy {
+                //in order to handle jackson's higher release version in shadow, this needs to be upgraded to latest.
+                force(group: "org.ow2.asm", name: "asm", version: asmAsmVersion)
+                force(group: "org.ow2.asm", name: "asm-commons", version: asmAsmVersion)
+            }
+        }
+    }
+//    endregion
+}
+
+plugins {
+    id 'java'
+    id 'com.gradleup.shadow' version '8.3.0'
+    id("io.papermc.paperweight.userdev") version "1.7.1" // Check for new versions at https://plugins.gradle.org/plugin/io.papermc.paperweight.userdev
+}
+
+java {
+    sourceCompatibility = "21"
+    targetCompatibility = "21"
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+
+group 'ru.abstractmenus'
+version '1.17.2-beta'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url 'https://repo.papermc.io/repository/maven-public/' }
+    maven { url 'https://jitpack.io' }
+    maven { url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+    maven { url 'https://maven.enginehub.org/repo/' }
+    maven { url 'https://repo.extendedclip.com/content/repositories/placeholderapi/' }
+    maven { url 'https://mvn.lumine.io/repository/maven-public/' }
+    maven { url 'https://repo.codemc.org/repository/maven-public/'
+        metadataSources {
+            artifact()
+        }
+    }
+    maven {
+        url 'https://repo.codemc.org/repository/maven-snapshots/'
+        metadataSources {
+            artifact()
+        }
+    }
+    maven {
+        url 'https://repo.codemc.org/repository/maven-releases/'
+        metadataSources {
+            artifact()
+        }
+    }
+}
+
+dependencies {
+    compileOnly "io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT"
+    compileOnly 'org.projectlombok:lombok:1.18.32'
+    annotationProcessor 'org.projectlombok:lombok:1.18.32'
+
+    paperweight.paperDevBundle("1.21-R0.1-SNAPSHOT")
+    implementation 'com.github.AbstractMenus:api:995cd8c9a9'
+    implementation 'com.fathzer:javaluator:3.0.3'
+    implementation 'net.kyori:adventure-platform-bukkit:4.3.3'
+    //implementation files('libs/adventure-text-minimessage-4.12.0-SNAPSHOT.jar')
+    implementation 'net.kyori:adventure-text-minimessage:4.17.0'
+    implementation "com.github.technicallycoded:FoliaLib:0.4.3"
+    compileOnly 'dev.folia:folia-api:1.20.1-R0.1-SNAPSHOT'
+
+//    shadow files('libs/spigot-1.14.4.jar')
+    shadow files('libs/MMOItems-6.5.4.jar')
+    shadow files('libs/citizens-2.0.jar')
+
+    shadow ('de.tr7zw:item-nbt-api-plugin:2.9.0') {
+        exclude group: 'org.bstats', module: 'bstats-bukkit'
+    }
+    shadow ('com.arcaniax:HeadDatabase-API:1.3.2'){
+        exclude group: 'org.bstats', module: 'bstats-bukkit'
+    }
+    shadow ('com.github.MilkBowl:VaultAPI:1.7'){
+        exclude group: 'org.bstats', module: 'bstats-bukkit'
+    }
+    shadow ('net.luckperms:api:5.4'){
+        exclude group: 'org.bstats', module: 'bstats-bukkit'
+    }
+    shadow ('com.sk89q.worldguard:worldguard-bukkit:7.0.0'){
+        exclude group: 'org.bstats', module: 'bstats-bukkit'
+    }
+
+    compileOnly 'me.clip:placeholderapi:2.11.6'
+
+    shadow ('io.lumine:MythicLib:1.0.12-SNAPSHOT'){
+        exclude group: 'org.bstats', module: 'bstats-bukkit'
+    }
+    shadow ('com.github.LoneDev6:api-itemsadder:3.6.1'){
+        exclude group: 'org.bstats', module: 'bstats-bukkit'
+    }
+    shadow ('net.skinsrestorer:skinsrestorer-api:15.3.1'){
+        exclude group: 'org.bstats', module: 'bstats-bukkit'
+    }
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+    testImplementation files('libs/paper-1.20.6-147.jar')
+
+    testCompileOnly 'org.projectlombok:lombok:1.18.32'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.32'
+}
+
+shadowJar {
+    //todo not work in 1.21. Error: NoSuchMethodError: 'void org.bukkit.entity.Player.sendMessage(ru.nanit.adventure.text.Component)'
+//    relocate 'net.kyori.adventure', 'ru.nanit.adventure'
+    relocate "com.tcoded.folialib", "ru.abstractmenus.lib.folialib"
+    dependencies {
+        exclude dependency('org.inventivetalent.spiget-update:bukkit')
+        //exclude dependency('org.bstats:bstats-bukkit')
+    }
+    manifest {
+        attributes["paperweight-mappings-namespace"] = "mojang"
+    }
+
+    archiveFileName.set("${project.name}-${project.version}.jar")
+
+    processResources {
+        filesMatching("plugin.yml") {
+            expand([version: project.version])
+        }
+    }
+}
+
+//task obfuscate(type: ProGuardTask, dependsOn: shadowJar) {
+//    var classpath = configurations.runtimeClasspath.collect()
+//    classpath.addAll(configurations.compileClasspath.collect())
+//
+//    configuration "proguard.txt"
+//    libraryjars files(classpath)
+//    injars shadowJar
+//    outjars "${buildDir}/libs/${rootProject.name}-${rootProject.version}-release.jar"
+//}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.assemble {
+    dependsOn(tasks.reobfJar)
+}
