@@ -1,7 +1,7 @@
 # AbstractMenus
 
 <a href="https://github.com/AbstractMenus/plugin/blob/master/LICENSE"><img src="https://img.shields.io/badge/License-MIT-red.svg" alt="license"/></a>
-<a href="https://github.com/AbstractMenus/plugin/blob/master/LICENSE"><img src="https://img.shields.io/badge/version-1.16.9-blue" alt="license"/></a>
+<a href="https://github.com/AbstractMenus/plugin/blob/master/LICENSE"><img src="https://img.shields.io/badge/version-1.17.2-beta-blue" alt="license"/></a>
 
 AbstractMenus is a GUI plugin for SpigotMC servers that allows server owners and developers to create custom GUIs with ease. The plugin is designed to be user-friendly and easy to use, with a wide range of features and options to customize the GUIs to your liking. The plugin is also highly customizable, allowing you to create GUIs that fit your server's theme and style.
 
