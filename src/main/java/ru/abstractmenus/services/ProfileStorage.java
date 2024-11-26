@@ -1,19 +1,16 @@
 package ru.abstractmenus.services;
 
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
+import com.destroystokyo.paper.profile.PlayerProfile;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import ru.abstractmenus.api.Logger;
-import ru.abstractmenus.util.bukkit.MojangApi;
-import ru.abstractmenus.util.bukkit.BukkitTasks;
+import org.bukkit.profile.PlayerTextures;
 import ru.abstractmenus.util.StringUtil;
+import ru.abstractmenus.util.bukkit.BukkitTasks;
 
-import java.lang.reflect.Method;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -22,9 +19,9 @@ public final class ProfileStorage implements Listener {
 
     private static ProfileStorage instance;
 
-    public static final GameProfile DEF_PROFILE = new GameProfile(UUID.randomUUID(), StringUtil.generateRandom(16));
+    public static final PlayerProfile DEF_PROFILE = Bukkit.createProfile(UUID.randomUUID(), StringUtil.generateRandom(16));
 
-    private final Map<String, GameProfile> profiles = new HashMap<>();
+    private final Map<String, PlayerProfile> profiles = new HashMap<>();
 
     public ProfileStorage() {
         instance = this;
@@ -36,11 +33,11 @@ public final class ProfileStorage implements Listener {
      * @param playerName Player name
      * @return Found texture or null
      */
-    public GameProfile getProfile(String playerName) {
+    public PlayerProfile getProfile(String playerName) {
         return profiles.get(playerName.toLowerCase());
     }
 
-    public void add(String playerName, GameProfile profile) {
+    public void add(String playerName, PlayerProfile profile) {
         profiles.put(playerName.toLowerCase(), profile);
     }
 
@@ -55,31 +52,23 @@ public final class ProfileStorage implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerJoin(PlayerJoinEvent event) {
         BukkitTasks.runTaskAsync(() -> {
-            GameProfile profile = fetchProfile(event.getPlayer());
+            Player player = event.getPlayer();
+            PlayerProfile profile = player.getPlayerProfile();
 
-            add(event.getPlayer().getName(), profile);
-
-            if (profile != null) {
-                Collection<Property> texture = profile.getProperties().get("textures");
-
-                if (texture == null || texture.isEmpty())
-                    profile = MojangApi.loadProfileWithSkin(event.getPlayer().getName());
-
-                if (profile != null) {
-                    add(event.getPlayer().getName(), profile);
+            try {
+                if (!profile.isComplete()) {
+                    profile.complete(true);
                 }
+
+                PlayerTextures textures = profile.getTextures();
+                if (textures.getSkin() == null) {
+                    add(player.getName(), DEF_PROFILE);
+                } else {
+                    add(player.getName(), profile);
+                }
+            } catch (Exception e) {
+                add(player.getName(), DEF_PROFILE);
             }
         });
     }
-
-    private GameProfile fetchProfile(Player player) {
-        try {
-            Method method = player.getClass().getMethod("getProfile");
-            return (GameProfile) method.invoke(player);
-        } catch (Throwable t) {
-            Logger.warning("Cannot fetch game profile: " + t.getMessage());
-            return null;
-        }
-    }
-
 }
