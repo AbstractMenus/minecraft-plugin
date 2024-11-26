@@ -1,14 +1,16 @@
 package ru.abstractmenus.util.bukkit;
 
-import com.mojang.authlib.GameProfile;
+import com.destroystokyo.paper.profile.PlayerProfile;
+import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import ru.abstractmenus.api.Logger;
+import org.bukkit.profile.PlayerTextures;
 import ru.abstractmenus.services.ProfileStorage;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.UUID;
 
 public final class Skulls {
 
@@ -16,51 +18,55 @@ public final class Skulls {
     }
 
     public static ItemStack getCustomSkull(String url) {
-        GameProfile profile = MojangApi.createProfile(url);
-        return getCustomSkull(profile);
+        ItemStack head = createSkullItem();
+        if (url == null || url.isEmpty()) {
+            return head;
+        }
+
+        SkullMeta headMeta = (SkullMeta) head.getItemMeta();
+        if (headMeta == null) {
+            return null;
+        }
+
+        PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
+
+        try {
+            PlayerTextures textures = profile.getTextures();
+            textures.setSkin(new URI(url).toURL());
+            profile.setTextures(textures);
+
+            headMeta.setPlayerProfile(profile);
+            head.setItemMeta(headMeta);
+        } catch (MalformedURLException | URISyntaxException e) {
+            throw new RuntimeException(String.format("Bad URL [%s] for texture [%s]", url, profile.getTextures()), e);
+        }
+
+        return head;
     }
 
-    public static ItemStack getCustomSkull(GameProfile profile) {
+    public static ItemStack getCustomSkull(PlayerProfile profile) {
         ItemStack head = createSkullItem();
-
         if (profile == null) return head;
 
         SkullMeta headMeta = (SkullMeta) head.getItemMeta();
-
         if (headMeta == null) return null;
 
-        Field profileField;
-
-        try {
-            Method method = headMeta.getClass().getDeclaredMethod("setProfile", GameProfile.class);
-            method.setAccessible(true);
-            method.invoke(headMeta, profile);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-            try {
-                profileField = headMeta.getClass().getDeclaredField("profile");
-                profileField.setAccessible(true);
-                profileField.set(headMeta, profile);
-            } catch (NoSuchFieldException | IllegalAccessException ex2) {
-                ex2.printStackTrace();
-            }
-        }
-
+        headMeta.setPlayerProfile(profile);
         head.setItemMeta(headMeta);
 
         return head;
     }
 
     public static ItemStack getPlayerSkull(String playerName) {
-        GameProfile profile = ProfileStorage.instance().getProfile(playerName);
+        PlayerProfile profile = ProfileStorage.instance().getProfile(playerName);
 
         if (profile == null) {
-            Logger.info("Profile '" + playerName + "' not found. Trying to load ...");
-
-            profile = MojangApi.loadProfileWithSkin(playerName);
-
-            if (profile == null)
+            profile = Bukkit.createProfile(null, playerName);
+            try {
+                profile.complete(true);
+            } catch (Exception e) {
                 profile = ProfileStorage.DEF_PROFILE;
-
+            }
             ProfileStorage.instance().add(playerName, profile);
         }
 
@@ -68,11 +74,6 @@ public final class Skulls {
     }
 
     public static ItemStack createSkullItem() {
-        try {
-            return new ItemStack(ItemUtil.getHeadMaterial(), 1, (short) 3);
-        } catch (Throwable t) {
-            return new ItemStack(ItemUtil.getHeadMaterial());
-        }
+        return new ItemStack(ItemUtil.getHeadMaterial());
     }
-
 }
