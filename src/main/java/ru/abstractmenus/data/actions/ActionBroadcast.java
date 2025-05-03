@@ -1,23 +1,22 @@
 package ru.abstractmenus.data.actions;
 
 import com.google.gson.JsonElement;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.chat.ComponentSerializer;
-import ru.abstractmenus.hocon.api.ConfigNode;
-import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
-import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
+import ru.abstractmenus.api.Handlers;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.Menu;
-import ru.abstractmenus.api.Handlers;
 import ru.abstractmenus.api.text.Colors;
-import ru.abstractmenus.nms.actionbar.ActionBar;
-import ru.abstractmenus.nms.title.Title;
-import ru.abstractmenus.datatype.TypeInt;
-import ru.abstractmenus.util.LegacyMiniMessageUtil;
+import ru.abstractmenus.datatype.TypeDuration;
+import ru.abstractmenus.hocon.api.ConfigNode;
+import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
+import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
+import ru.abstractmenus.util.adventure.AdventureUtil;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
@@ -27,12 +26,11 @@ public class ActionBroadcast implements Action {
     private String json;
     private String actionbar;
     private String title = "", subtitle = "";
-    private TypeInt fadeIn = new TypeInt(0);
-    private TypeInt stay = new TypeInt(0);
-    private TypeInt fadeOut = new TypeInt(0);
+    private Duration fadeIn = Duration.ofSeconds(0);
+    private Duration stay = Duration.ofSeconds(0);
+    private Duration fadeOut = Duration.ofSeconds(0);
 
-    private ActionBroadcast() {
-    }
+    private ActionBroadcast() {}
 
     private void setChatMessages(List<String> messages) {
         this.chatMessages = messages;
@@ -54,63 +52,46 @@ public class ActionBroadcast implements Action {
         this.subtitle = subtitle;
     }
 
-    private void setFadeIn(TypeInt fadeIn) {
+    private void setFadeIn(Duration fadeIn) {
         this.fadeIn = fadeIn;
     }
 
-    private void setFadeOut(TypeInt fadeOut) {
+    private void setFadeOut(Duration fadeOut) {
         this.fadeOut = fadeOut;
     }
 
-    private void setStay(TypeInt stay) {
+    private void setStay(Duration stay) {
         this.stay = stay;
     }
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        if (player != null) {
-            if (chatMessages != null) {
-                List<String> replaced = Handlers.getPlaceholderHandler().replace(player, chatMessages);
+        if (player == null) return;
 
-                for (Player p : Bukkit.getOnlinePlayers()) {
-                    LegacyMiniMessageUtil.sendParsed(replaced, p);
+        List<String> replacedChat = chatMessages != null ? Handlers.getPlaceholderHandler().replace(player, chatMessages) : null;
+        String replacedJson = json != null ? Handlers.getPlaceholderHandler().replace(player, json) : null;
+        String replacedActionbar = actionbar != null ? Handlers.getPlaceholderHandler().replace(player, actionbar) : null;
+        String replacedTitle = Handlers.getPlaceholderHandler().replace(player, title);
+        String replacedSubtitle = Handlers.getPlaceholderHandler().replace(player, subtitle);
+
+        for (Player target : Bukkit.getOnlinePlayers()) {
+            if (replacedChat != null) {
+                for (String message : replacedChat) {
+                    AdventureUtil.sendMessage(target, message);
                 }
             }
 
-            if (json != null) {
-                BaseComponent[] component = ComponentSerializer.parse(
-                        Handlers.getPlaceholderHandler().replace(player, json));
-
-                if (component != null) {
-                    for (Player p : Bukkit.getOnlinePlayers())
-                        p.spigot().sendMessage(component);
-                }
+            if (replacedJson != null) {
+                Component component = GsonComponentSerializer.gson().deserialize(replacedJson);
+                target.sendMessage(component);
             }
 
-            if (actionbar != null) {
-                String replaced = Handlers.getPlaceholderHandler().replace(player, actionbar);
-                ActionBar bar = ActionBar.create();
-
-                for (Player p : Bukkit.getOnlinePlayers())
-                    bar.send(p, LegacyMiniMessageUtil.parseToLegacy(replaced));
+            if (replacedActionbar != null) {
+                AdventureUtil.sendActionbar(target, replacedActionbar);
             }
 
-            if (!this.title.isEmpty() || !this.subtitle.isEmpty()) {
-                String title = LegacyMiniMessageUtil.parseToLegacy(
-                        Handlers.getPlaceholderHandler().replace(player, this.title)
-                );
-                String subtitle = LegacyMiniMessageUtil.parseToLegacy(
-                        Handlers.getPlaceholderHandler().replace(player, this.subtitle)
-                );
-                Title t = new Title(
-                        title, subtitle,
-                        fadeIn.getInt(player, menu),
-                        stay.getInt(player, menu),
-                        fadeOut.getInt(player, menu)
-                );
-
-                for (Player p : Bukkit.getOnlinePlayers())
-                    t.send(p);
+            if (!title.isEmpty() || !subtitle.isEmpty()) {
+                AdventureUtil.sendTitle(target, replacedTitle, replacedSubtitle, fadeIn, stay, fadeOut);
             }
         }
     }
@@ -131,13 +112,11 @@ public class ActionBroadcast implements Action {
             }
 
             if (node.node("json").rawValue() != null) {
-                ConfigNode jsonNode = node.node("json");
-                JsonElement json = jsonNode.getValue(JsonElement.class);
-
+                JsonElement json = node.node("json").getValue(JsonElement.class);
                 if (json != null) {
                     message.setJson(Colors.of(json.toString()));
                 } else {
-                    throw new NodeSerializeException(jsonNode, "Cannot parse HOCON nodes as JSON objects. Check your menu file.");
+                    throw new NodeSerializeException(node.node("json"), "Cannot parse HOCON nodes as JSON objects. Check your menu file.");
                 }
             }
 
@@ -147,9 +126,18 @@ public class ActionBroadcast implements Action {
 
             message.setTitle(Colors.of(node.node("title").getString("")));
             message.setSubtitle(Colors.of(node.node("subtitle").getString("")));
-            message.setFadeIn(node.node("fadeIn").getValue(TypeInt.class, new TypeInt(10)));
-            message.setStay(node.node("stay").getValue(TypeInt.class, new TypeInt(20)));
-            message.setFadeOut(node.node("fadeOut").getValue(TypeInt.class, new TypeInt(10)));
+
+            if (node.node("fadeIn").rawValue() != null) {
+                message.setFadeIn(new TypeDuration(node.node("fadeIn").getString()).getDuration());
+            }
+
+            if (node.node("stay").rawValue() != null) {
+                message.setStay(new TypeDuration(node.node("stay").getString()).getDuration());
+            }
+
+            if (node.node("fadeOut").rawValue() != null) {
+                message.setFadeOut(new TypeDuration(node.node("fadeOut").getString()).getDuration());
+            }
 
             return message;
         }

@@ -2,6 +2,7 @@ package ru.abstractmenus.util.adventure;
 
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
@@ -38,6 +39,18 @@ public class AdventureUtil {
             .build();
 
     /**
+     * Parses a MiniMessage-formatted string into a Component.
+     *
+     * @param message     The MiniMessage string to parse.
+     * @param tagResolvers Additional tag resolvers for processing.
+     * @return The parsed Component.
+     */
+    public static Component parseMiniMessage(String message, TagResolver... tagResolvers) {
+        return customComponentSerializer.deserialize(message, tagResolvers)
+                .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
+    }
+
+    /**
      * Sends a message to the specified player.
      *
      * @param player     The player to whom the message will be sent.
@@ -45,7 +58,7 @@ public class AdventureUtil {
      * @param resolvers  Additional tag resolvers for processing.
      */
     public void sendMessage(Player player, String message, TagResolver... resolvers) {
-        Component component = customComponentSerializer.deserialize(message, resolvers);
+        Component component = parseMiniMessage(message, resolvers);
         player.sendMessage(component);
     }
 
@@ -57,7 +70,7 @@ public class AdventureUtil {
      * @param resolvers  Additional tag resolvers for processing.
      */
     public void sendActionbar(Player player, String message, TagResolver... resolvers) {
-        Component component = customComponentSerializer.deserialize(message, resolvers);
+        Component component = parseMiniMessage(message, resolvers);
         player.sendActionBar(component);
     }
 
@@ -81,8 +94,8 @@ public class AdventureUtil {
             Duration fadeOut,
             TagResolver... tagResolvers
     ) {
-        Component titleComponent = customComponentSerializer.deserialize(title, tagResolvers);
-        Component subtitleComponent = customComponentSerializer.deserialize(subtitle, tagResolvers);
+        Component titleComponent = parseMiniMessage(title, tagResolvers);
+        Component subtitleComponent = parseMiniMessage(subtitle, tagResolvers);
 
         Title fulltitle = Title.title(
                 titleComponent,
