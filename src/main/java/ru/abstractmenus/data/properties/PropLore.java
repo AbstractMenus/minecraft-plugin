@@ -10,7 +10,7 @@ import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.ItemProperty;
 import ru.abstractmenus.api.Handlers;
 import ru.abstractmenus.api.text.Colors;
-import ru.abstractmenus.util.MiniMessageUtil;
+import ru.abstractmenus.util.LegacyMiniMessageUtil;
 
 import java.util.List;
 
@@ -35,7 +35,7 @@ public class PropLore implements ItemProperty {
     @Override
     public void apply(ItemStack itemStack, ItemMeta meta, Player player, Menu menu) {
         List<String> replaced = Handlers.getPlaceholderHandler().replace(player, lore);
-        List<String> formatted = MiniMessageUtil.parseToLegacy(replaced);
+        List<String> formatted = LegacyMiniMessageUtil.parseToLegacy(replaced);
         meta.setLore(formatted);
     }
 

@@ -48,7 +48,7 @@ import ru.abstractmenus.services.BungeeManager;
 import ru.abstractmenus.services.HeadAnimManager;
 import ru.abstractmenus.services.MenuManager;
 import ru.abstractmenus.services.ProfileStorage;
-import ru.abstractmenus.util.MiniMessageUtil;
+import ru.abstractmenus.util.LegacyMiniMessageUtil;
 import ru.abstractmenus.util.TimeUtil;
 import ru.abstractmenus.util.bukkit.BukkitTasks;
 import ru.abstractmenus.util.bukkit.Events;
@@ -127,7 +127,7 @@ public final class AbstractMenus extends JavaPlugin implements AbstractMenusPlug
             BukkitTasks.setPlugin(this);
             BukkitTasks.setFoliaLib(foliaLib);
             TimeUtil.init(config);
-            MiniMessageUtil.init(config);
+            LegacyMiniMessageUtil.init(config);
             new VariableManagerImpl(config);
             new BungeeManager(this, config);
             ActionBar.init();

@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.Menu;
-import ru.abstractmenus.util.MiniMessageUtil;
+import ru.abstractmenus.util.LegacyMiniMessageUtil;
 
 import java.util.List;
 
@@ -29,7 +29,7 @@ public class ActionPlayerChat implements Action {
 
         @Override
         public ActionPlayerChat deserialize(Class type, ConfigNode node) throws NodeSerializeException {
-            return new ActionPlayerChat(MiniMessageUtil.parseToLegacy(
+            return new ActionPlayerChat(LegacyMiniMessageUtil.parseToLegacy(
                     node.getList(String.class)
             ));
         }

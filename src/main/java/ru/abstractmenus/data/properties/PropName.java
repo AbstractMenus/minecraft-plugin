@@ -10,7 +10,7 @@ import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.ItemProperty;
 import ru.abstractmenus.api.Handlers;
 import ru.abstractmenus.api.text.Colors;
-import ru.abstractmenus.util.MiniMessageUtil;
+import ru.abstractmenus.util.LegacyMiniMessageUtil;
 
 public class PropName implements ItemProperty {
 
@@ -33,7 +33,7 @@ public class PropName implements ItemProperty {
     @Override
     public void apply(ItemStack itemStack, ItemMeta meta, Player player, Menu menu) {
         String replaced = Handlers.getPlaceholderHandler().replace(player, name);
-        String formatted = MiniMessageUtil.parseToLegacy(replaced);
+        String formatted = LegacyMiniMessageUtil.parseToLegacy(replaced);
 
         meta.setDisplayName(formatted);
     }

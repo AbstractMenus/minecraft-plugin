@@ -8,7 +8,8 @@ import ru.abstractmenus.api.Action;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.Handlers;
-import ru.abstractmenus.util.MiniMessageUtil;
+import ru.abstractmenus.util.LegacyMiniMessageUtil;
+import ru.abstractmenus.util.adventure.AdventureUtil;
 
 import java.util.Collections;
 
@@ -23,7 +24,7 @@ public class ActionMiniMessage implements Action {
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
         String replaced = Handlers.getPlaceholderHandler().replace(player, message);
-        MiniMessageUtil.sendParsed(Collections.singletonList(replaced), player);
+        AdventureUtil.sendMessage(player, replaced);
     }
 
     public static class Serializer implements NodeSerializer<ActionMiniMessage> {

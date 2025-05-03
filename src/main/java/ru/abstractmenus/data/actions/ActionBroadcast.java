@@ -16,7 +16,7 @@ import ru.abstractmenus.api.text.Colors;
 import ru.abstractmenus.nms.actionbar.ActionBar;
 import ru.abstractmenus.nms.title.Title;
 import ru.abstractmenus.datatype.TypeInt;
-import ru.abstractmenus.util.MiniMessageUtil;
+import ru.abstractmenus.util.LegacyMiniMessageUtil;
 
 import java.util.Collections;
 import java.util.List;
@@ -73,7 +73,7 @@ public class ActionBroadcast implements Action {
                 List<String> replaced = Handlers.getPlaceholderHandler().replace(player, chatMessages);
 
                 for (Player p : Bukkit.getOnlinePlayers()) {
-                    MiniMessageUtil.sendParsed(replaced, p);
+                    LegacyMiniMessageUtil.sendParsed(replaced, p);
                 }
             }
 
@@ -92,14 +92,14 @@ public class ActionBroadcast implements Action {
                 ActionBar bar = ActionBar.create();
 
                 for (Player p : Bukkit.getOnlinePlayers())
-                    bar.send(p, MiniMessageUtil.parseToLegacy(replaced));
+                    bar.send(p, LegacyMiniMessageUtil.parseToLegacy(replaced));
             }
 
             if (!this.title.isEmpty() || !this.subtitle.isEmpty()) {
-                String title = MiniMessageUtil.parseToLegacy(
+                String title = LegacyMiniMessageUtil.parseToLegacy(
                         Handlers.getPlaceholderHandler().replace(player, this.title)
                 );
-                String subtitle = MiniMessageUtil.parseToLegacy(
+                String subtitle = LegacyMiniMessageUtil.parseToLegacy(
                         Handlers.getPlaceholderHandler().replace(player, this.subtitle)
                 );
                 Title t = new Title(

@@ -4,7 +4,7 @@ import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
 import ru.abstractmenus.api.text.Colors;
-import ru.abstractmenus.util.MiniMessageUtil;
+import ru.abstractmenus.util.LegacyMiniMessageUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +32,7 @@ public class BookData implements Cloneable {
     }
 
     public List<String> getPages() {
-        return MiniMessageUtil.parseToLegacy(pages);
+        return LegacyMiniMessageUtil.parseToLegacy(pages);
     }
 
     public void setPages(List<String> pages) {

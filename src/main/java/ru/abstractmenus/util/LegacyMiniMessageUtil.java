@@ -13,11 +13,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public final class MiniMessageUtil {
+@Deprecated(
+        forRemoval = true
+)
+public final class LegacyMiniMessageUtil {
 
     private static Replacer replacer;
 
-    private MiniMessageUtil() {
+    private LegacyMiniMessageUtil() {
     }
 
     public static void init(MainConfig config) {

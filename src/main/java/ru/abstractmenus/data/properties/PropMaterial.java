@@ -16,7 +16,7 @@ public class PropMaterial implements ItemProperty {
 
     private final TypeMaterial material;
 
-    private PropMaterial(TypeMaterial material){
+    private PropMaterial(TypeMaterial material) {
         this.material = material;
     }
 
@@ -40,15 +40,14 @@ public class PropMaterial implements ItemProperty {
         @Override
         public PropMaterial deserialize(Class type, ConfigNode node) throws NodeSerializeException {
             TypeMaterial material = node.getValue(TypeMaterial.class);
-            if(material != null && material.getNative() != null) checkMaterial(node, material.getNative());
+            if (material != null && material.getNative() != null) checkMaterial(node, material.getNative());
             return new PropMaterial(material);
         }
 
         private void checkMaterial(ConfigNode node, Material material) throws NodeSerializeException {
-            if(node.node("material").rawValue() != null && material == null){
+            if (node.node("material").rawValue() != null && material == null) {
                 throw new NodeSerializeException(node, "Material with id " + node.node("material").getString() + " does not exist");
             }
         }
-
     }
 }

@@ -81,6 +81,7 @@ public final class BungeeManager implements PluginMessageListener {
         }
     }
 
+    @SuppressWarnings("UnstableApiUsage")
     public void sendPluginMessage(Player player, String... data) {
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
         for (String line : data) {
@@ -94,6 +95,7 @@ public final class BungeeManager implements PluginMessageListener {
             player.sendPluginMessage(plugin, "BungeeCord", data);
     }
 
+    @SuppressWarnings("UnstableApiUsage")
     public void forwardMessage(String subchannel, byte[] message) {
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
 
@@ -172,6 +174,7 @@ public final class BungeeManager implements PluginMessageListener {
     }
 
     @Override
+    @SuppressWarnings("UnstableApiUsage")
     public void onPluginMessageReceived(String channel, @NotNull Player player, @NotNull byte[] bytes) {
         if (!channel.equals("BungeeCord")) return;
 

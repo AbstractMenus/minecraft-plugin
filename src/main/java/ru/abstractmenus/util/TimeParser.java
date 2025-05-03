@@ -2,6 +2,9 @@ package ru.abstractmenus.util;
 
 import java.util.concurrent.TimeUnit;
 
+@Deprecated(
+        forRemoval = true
+)
 public final class TimeParser {
 
     private static final long[][] TIME_UNIT_MULT = {

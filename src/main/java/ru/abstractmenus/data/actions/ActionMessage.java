@@ -1,23 +1,21 @@
 package ru.abstractmenus.data.actions;
 
 import com.google.gson.JsonElement;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.chat.ComponentSerializer;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import org.bukkit.entity.Player;
+import ru.abstractmenus.api.Action;
+import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.inventory.Item;
+import ru.abstractmenus.api.inventory.Menu;
+import ru.abstractmenus.api.text.Colors;
+import ru.abstractmenus.datatype.TypeDuration;
 import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
-import org.bukkit.entity.Player;
-import ru.abstractmenus.api.Action;
-import ru.abstractmenus.api.inventory.Menu;
-import ru.abstractmenus.api.inventory.Item;
-import ru.abstractmenus.api.Handlers;
-import ru.abstractmenus.nms.actionbar.ActionBar;
-import ru.abstractmenus.nms.title.Title;
-import ru.abstractmenus.api.text.Colors;
-import ru.abstractmenus.datatype.TypeInt;
-import ru.abstractmenus.util.MiniMessageUtil;
+import ru.abstractmenus.util.adventure.AdventureUtil;
 
-import java.util.Collections;
+import java.time.Duration;
 import java.util.List;
 
 public class ActionMessage implements Action {
@@ -26,9 +24,9 @@ public class ActionMessage implements Action {
     private String json;
     private String actionbar;
     private String title = "", subtitle = "";
-    private TypeInt fadeIn = new TypeInt(0);
-    private TypeInt stay = new TypeInt(0);
-    private TypeInt fadeOut = new TypeInt(0);
+    private Duration fadeIn = Duration.ofSeconds(0);
+    private Duration stay = Duration.ofSeconds(0);
+    private Duration fadeOut = Duration.ofSeconds(0);
 
     private ActionMessage() {
     }
@@ -53,15 +51,15 @@ public class ActionMessage implements Action {
         this.subtitle = subtitle;
     }
 
-    private void setFadeIn(TypeInt fadeIn) {
+    private void setFadeIn(Duration fadeIn) {
         this.fadeIn = fadeIn;
     }
 
-    private void setFadeOut(TypeInt fadeOut) {
+    private void setFadeOut(Duration fadeOut) {
         this.fadeOut = fadeOut;
     }
 
-    private void setStay(TypeInt stay) {
+    private void setStay(Duration stay) {
         this.stay = stay;
     }
 
@@ -70,36 +68,27 @@ public class ActionMessage implements Action {
         if (player != null) {
             if (chatMessages != null) {
                 List<String> replaced = Handlers.getPlaceholderHandler().replace(player, chatMessages);
-                MiniMessageUtil.sendParsed(replaced, player);
+                for (String message : replaced) {
+                    AdventureUtil.sendMessage(player, message);
+                }
             }
 
             if (json != null) {
-                BaseComponent[] component = ComponentSerializer.parse(
-                        Handlers.getPlaceholderHandler().replace(player, json));
-
-                if (component != null)
-                    player.spigot().sendMessage(component);
+                String replaced = Handlers.getPlaceholderHandler().replace(player, json);
+                Component component = GsonComponentSerializer.gson().deserialize(replaced);
+                player.sendMessage(player, component);
             }
 
             if (actionbar != null) {
                 String replaced = Handlers.getPlaceholderHandler().replace(player, actionbar);
-                ActionBar.create().send(player, MiniMessageUtil.parseToLegacy(replaced));
+                AdventureUtil.sendActionbar(player, replaced);
             }
 
             if (!this.title.isEmpty() || !this.subtitle.isEmpty()) {
-                String title = MiniMessageUtil.parseToLegacy(
-                        Handlers.getPlaceholderHandler().replace(player, this.title)
-                );
-                String subtitle = MiniMessageUtil.parseToLegacy(
-                        Handlers.getPlaceholderHandler().replace(player, this.subtitle)
-                );
+                String title = Handlers.getPlaceholderHandler().replace(player, this.title);
+                String subtitle = Handlers.getPlaceholderHandler().replace(player, this.subtitle);
 
-                new Title(
-                        title, subtitle,
-                        fadeIn.getInt(player, menu),
-                        stay.getInt(player, menu),
-                        fadeOut.getInt(player, menu)
-                ).send(player);
+                AdventureUtil.sendTitle(player, title, subtitle, fadeIn, stay, fadeOut);
             }
         }
     }
@@ -110,18 +99,12 @@ public class ActionMessage implements Action {
         public ActionMessage deserialize(Class type, ConfigNode node) throws NodeSerializeException {
             ActionMessage message = new ActionMessage();
 
-            if (!node.isMap()) {
-                message.setChatMessages(Collections.singletonList(Colors.of(node.getString())));
-                return message;
-            }
-
             if (node.node("chat").rawValue() != null) {
                 message.setChatMessages(Colors.ofList(node.node("chat").getList(String.class)));
             }
 
             if (node.node("json").rawValue() != null) {
                 JsonElement json = node.node("json").getValue(JsonElement.class);
-
                 if (json != null) {
                     message.setJson(Colors.of(json.toString()));
                 } else {
@@ -135,12 +118,23 @@ public class ActionMessage implements Action {
 
             message.setTitle(Colors.of(node.node("title").getString("")));
             message.setSubtitle(Colors.of(node.node("subtitle").getString("")));
-            message.setFadeIn(node.node("fadeIn").getValue(TypeInt.class, new TypeInt(10)));
-            message.setStay(node.node("stay").getValue(TypeInt.class, new TypeInt(20)));
-            message.setFadeOut(node.node("fadeOut").getValue(TypeInt.class, new TypeInt(10)));
+
+            if (node.node("fadeIn").rawValue() != null) {
+                String fadeInStr = node.node("fadeIn").getString();
+                message.setFadeIn(new TypeDuration(fadeInStr).getDuration());
+            }
+
+            if (node.node("stay").rawValue() != null) {
+                String stayStr = node.node("stay").getString();
+                message.setStay(new TypeDuration(stayStr).getDuration());
+            }
+
+            if (node.node("fadeOut").rawValue() != null) {
+                String fadeOutStr = node.node("fadeOut").getString();
+                message.setFadeOut(new TypeDuration(fadeOutStr).getDuration());
+            }
 
             return message;
         }
-
     }
 }

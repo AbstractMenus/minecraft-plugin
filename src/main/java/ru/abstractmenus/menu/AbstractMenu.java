@@ -20,7 +20,7 @@ import ru.abstractmenus.api.Activator;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.Slot;
-import ru.abstractmenus.util.MiniMessageUtil;
+import ru.abstractmenus.util.LegacyMiniMessageUtil;
 import ru.abstractmenus.util.SlotUtil;
 import ru.abstractmenus.util.TimeUtil;
 import ru.abstractmenus.util.bukkit.Events;
@@ -331,7 +331,7 @@ public abstract class AbstractMenu implements Menu {
 
     protected void createInventory(Player player, InventoryHolder holder) {
         String title = Handlers.getPlaceholderHandler().replace(player, this.title);
-        title = MiniMessageUtil.parseToLegacy(title);
+        title = LegacyMiniMessageUtil.parseToLegacy(title);
 
         if (this.type != null) {
             this.inventory = Bukkit.createInventory(holder, type, title);

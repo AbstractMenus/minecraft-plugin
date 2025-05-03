@@ -1,13 +1,13 @@
 package ru.abstractmenus.datatype;
 
-import ru.abstractmenus.hocon.api.ConfigNode;
-import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
-import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
 import org.bukkit.Color;
 import org.bukkit.DyeColor;
 import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Logger;
 import ru.abstractmenus.api.inventory.Menu;
+import ru.abstractmenus.hocon.api.ConfigNode;
+import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
+import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
 
 public class TypeColor extends DataType {
 
