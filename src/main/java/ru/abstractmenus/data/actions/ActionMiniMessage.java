@@ -1,17 +1,14 @@
 package ru.abstractmenus.data.actions;
 
+import org.bukkit.entity.Player;
+import ru.abstractmenus.api.Action;
+import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.inventory.Item;
+import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
-import org.bukkit.entity.Player;
-import ru.abstractmenus.api.Action;
-import ru.abstractmenus.api.inventory.Item;
-import ru.abstractmenus.api.inventory.Menu;
-import ru.abstractmenus.api.Handlers;
-import ru.abstractmenus.util.LegacyMiniMessageUtil;
 import ru.abstractmenus.util.adventure.AdventureUtil;
-
-import java.util.Collections;
 
 public class ActionMiniMessage implements Action {
 
@@ -33,6 +30,5 @@ public class ActionMiniMessage implements Action {
         public ActionMiniMessage deserialize(Class type, ConfigNode node) throws NodeSerializeException {
             return new ActionMiniMessage(node.getString());
         }
-
     }
 }

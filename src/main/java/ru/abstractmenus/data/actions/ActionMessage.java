@@ -8,7 +8,6 @@ import ru.abstractmenus.api.Action;
 import ru.abstractmenus.api.Handlers;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.Menu;
-import ru.abstractmenus.api.text.Colors;
 import ru.abstractmenus.datatype.TypeDuration;
 import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
@@ -100,24 +99,24 @@ public class ActionMessage implements Action {
             ActionMessage message = new ActionMessage();
 
             if (node.node("chat").rawValue() != null) {
-                message.setChatMessages(Colors.ofList(node.node("chat").getList(String.class)));
+                message.setChatMessages(node.node("chat").getList(String.class));
             }
 
             if (node.node("json").rawValue() != null) {
                 JsonElement json = node.node("json").getValue(JsonElement.class);
                 if (json != null) {
-                    message.setJson(Colors.of(json.toString()));
+                    message.setJson(json.toString());
                 } else {
                     throw new NodeSerializeException(node, "Cannot parse HOCON nodes as JSON objects. Check your menu file.");
                 }
             }
 
             if (node.node("actionbar").rawValue() != null) {
-                message.setActionbar(Colors.of(node.node("actionbar").getString()));
+                message.setActionbar(node.node("actionbar").getString());
             }
 
-            message.setTitle(Colors.of(node.node("title").getString("")));
-            message.setSubtitle(Colors.of(node.node("subtitle").getString("")));
+            message.setTitle(node.node("title").getString(""));
+            message.setSubtitle(node.node("subtitle").getString(""));
 
             if (node.node("fadeIn").rawValue() != null) {
                 String fadeInStr = node.node("fadeIn").getString();
