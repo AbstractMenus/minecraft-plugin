@@ -1,0 +1,40 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ '*' ]
+  pull_request:
+    branches: [ '*' ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone project
+        uses: actions/checkout@v4
+
+      - name: Install JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          check-latest: true
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run build with Gradle Wrapper
+        run: chmod +x ./gradlew && ./gradlew build
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: '(${{ github.ref_name }}) ${{ github.event.head_commit.message }} (${{ github.sha }})'
+          prerelease: ${{ github.ref != 'refs/heads/master' }}
+          tag_name: ${{ github.ref_name }}-${{ github.sha }}
+          files: |
+            build/libs/*.jar
