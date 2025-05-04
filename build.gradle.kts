@@ -110,8 +110,7 @@ dependencies {
         exclude(group = "org.spigotmc", module = "spigot-api")
     }
 
-    implementation(files("gradle/libs/MMOItems-6.5.4.jar"))
-    implementation(files("gradle/libs/citizens-2.0.jar"))
+    implementation(fileTree("gradle/libs"))
     compileOnly("me.clip:placeholderapi:2.11.6")
 
     // junit tests
@@ -192,7 +191,7 @@ bukkit {
         "Citizens",
         "HeadDatabase",
         "MMOItems",
-        // "SkinsRestorer",
+        "SkinsRestorer",
         "ItemsAdder",
         "Oraxen"
     )
