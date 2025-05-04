@@ -2,6 +2,7 @@ package ru.abstractmenus.data.actions;
 
 import com.google.gson.JsonElement;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
@@ -65,29 +66,28 @@ public class ActionMessage implements Action {
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
         if (player != null) {
+            TagResolver[] tagResolvers = new TagResolver[] {
+                    AdventureUtil.papiTagResolver(player, true),
+            };
+
             if (chatMessages != null) {
-                List<String> replaced = Handlers.getPlaceholderHandler().replace(player, chatMessages);
-                for (String message : replaced) {
-                    AdventureUtil.sendMessage(player, message);
+                for (String message : chatMessages) {
+                    AdventureUtil.sendMessage(player, message, tagResolvers);
                 }
             }
 
             if (json != null) {
                 String replaced = Handlers.getPlaceholderHandler().replace(player, json);
                 Component component = GsonComponentSerializer.gson().deserialize(replaced);
-                player.sendMessage(player, component);
+                player.sendMessage(component);
             }
 
             if (actionbar != null) {
-                String replaced = Handlers.getPlaceholderHandler().replace(player, actionbar);
-                AdventureUtil.sendActionbar(player, replaced);
+                AdventureUtil.sendActionbar(player, actionbar, tagResolvers);
             }
 
             if (!this.title.isEmpty() || !this.subtitle.isEmpty()) {
-                String title = Handlers.getPlaceholderHandler().replace(player, this.title);
-                String subtitle = Handlers.getPlaceholderHandler().replace(player, this.subtitle);
-
-                AdventureUtil.sendTitle(player, title, subtitle, fadeIn, stay, fadeOut);
+                AdventureUtil.sendTitle(player, title, subtitle, fadeIn, stay, fadeOut, tagResolvers);
             }
         }
     }
@@ -97,6 +97,11 @@ public class ActionMessage implements Action {
         @Override
         public ActionMessage deserialize(Class type, ConfigNode node) throws NodeSerializeException {
             ActionMessage message = new ActionMessage();
+
+            if (!node.isMap()) {
+                message.setChatMessages(List.of(node.getString()));
+                return message;
+            }
 
             if (node.node("chat").rawValue() != null) {
                 message.setChatMessages(node.node("chat").getList(String.class));
