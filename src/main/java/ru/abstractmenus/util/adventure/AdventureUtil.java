@@ -1,13 +1,17 @@
 package ru.abstractmenus.util.adventure;
 
 import lombok.experimental.UtilityClass;
+import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
 import net.kyori.adventure.title.Title;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import ru.abstractmenus.api.Logger;
 
 import java.time.Duration;
 
@@ -22,7 +26,7 @@ public class AdventureUtil {
     private static final Duration DEFAULT_STAY = Duration.ofSeconds(2);
     private static final Duration DEFAULT_FADE_OUT = Duration.ofMillis(500);
 
-    private final MiniMessage customComponentSerializer = MiniMessage.builder()
+    public static final MiniMessage CUSTOM_COMPONENT_SERIALIZER = MiniMessage.builder()
             .preProcessor(new LegacyMiniMessagePreProcessor())
             .postProcessor(new LegacyMiniMessagePostProcessor())
             .tags(
@@ -41,21 +45,46 @@ public class AdventureUtil {
     /**
      * Parses a MiniMessage-formatted string into a Component.
      *
-     * @param message     The MiniMessage string to parse.
+     * @param message      The MiniMessage string to parse.
      * @param tagResolvers Additional tag resolvers for processing.
      * @return The parsed Component.
      */
     public static Component parseMiniMessage(String message, TagResolver... tagResolvers) {
-        return customComponentSerializer.deserialize(message, tagResolvers)
+        return CUSTOM_COMPONENT_SERIALIZER.deserialize(message, tagResolvers)
                 .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
+    }
+
+    /**
+     * PAPI Tag Resolver for resolving PlaceholderAPI tags.
+     *
+     * @param player      The player to replace the placeholders for.
+     * @param selfClosing Whether the tag is self-closing.
+     * @return The tag resolver.
+     */
+    public static TagResolver papiTagResolver(Player player, boolean selfClosing) {
+        return TagResolver.resolver("papi", (argumentQueue, unused) -> {
+            if (!Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+                Logger.info("PlaceholderAPI is missing, unable to resolve <papi> placeholders");
+                return selfClosing ? Tag.selfClosingInserting(Component.text("PlaceholderAPI is missing"))
+                        : Tag.inserting(Component.text("PlaceholderAPI is missing"));
+            }
+
+            String papiPlaceholder = argumentQueue.popOr("use <papi:placeholder>").value();
+            String parsedPlaceholder = PlaceholderAPI.setPlaceholders(player, "%" + papiPlaceholder + "%");
+
+            Component componentPlaceholder = parseMiniMessage(parsedPlaceholder);
+
+            return selfClosing ? Tag.selfClosingInserting(componentPlaceholder)
+                    : Tag.inserting(componentPlaceholder);
+        });
     }
 
     /**
      * Sends a message to the specified player.
      *
-     * @param player     The player to whom the message will be sent.
-     * @param message The message
-     * @param resolvers  Additional tag resolvers for processing.
+     * @param player    The player to whom the message will be sent.
+     * @param message   The message
+     * @param resolvers Additional tag resolvers for processing.
      */
     public void sendMessage(Player player, String message, TagResolver... resolvers) {
         Component component = parseMiniMessage(message, resolvers);
@@ -65,9 +94,9 @@ public class AdventureUtil {
     /**
      * Sends an action bar message to the specified player.
      *
-     * @param player     The player to whom the action bar message will be sent.
-     * @param message The action bar message
-     * @param resolvers  Additional tag resolvers for processing.
+     * @param player    The player to whom the action bar message will be sent.
+     * @param message   The action bar message
+     * @param resolvers Additional tag resolvers for processing.
      */
     public void sendActionbar(Player player, String message, TagResolver... resolvers) {
         Component component = parseMiniMessage(message, resolvers);
@@ -77,12 +106,12 @@ public class AdventureUtil {
     /**
      * Sends a title to the specified player with custom fade in, stay, and fade out durations.
      *
-     * @param player     The player to whom the title will be sent.
-     * @param title      The title text
-     * @param subtitle   The subtitle text
-     * @param fadeIn    The duration for the title to fade in.
-     * @param stay      The duration for the title to stay on screen.
-     * @param fadeOut   The duration for the title to fade out.
+     * @param player       The player to whom the title will be sent.
+     * @param title        The title text
+     * @param subtitle     The subtitle text
+     * @param fadeIn       The duration for the title to fade in.
+     * @param stay         The duration for the title to stay on screen.
+     * @param fadeOut      The duration for the title to fade out.
      * @param tagResolvers Additional tag resolvers for processing.
      */
     public static void sendTitle(
@@ -109,9 +138,9 @@ public class AdventureUtil {
     /**
      * Sends a title to the specified player with default fade in, stay, and fade out durations.
      *
-     * @param player     The player to whom the title will be sent.
-     * @param title      The title text
-     * @param subtitle   The subtitle text
+     * @param player       The player to whom the title will be sent.
+     * @param title        The title text
+     * @param subtitle     The subtitle text
      * @param tagResolvers Additional tag resolvers for processing.
      */
     public static void sendTitle(
