@@ -6,7 +6,6 @@ import lombok.Setter;
 import net.luckperms.api.LuckPerms;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -51,12 +50,8 @@ import ru.abstractmenus.services.ProfileStorage;
 import ru.abstractmenus.util.TimeUtil;
 import ru.abstractmenus.util.bukkit.BukkitTasks;
 import ru.abstractmenus.util.bukkit.Events;
-import ru.abstractmenus.util.proxy.ClassInfo;
 import ru.abstractmenus.variables.VariableManagerImpl;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -155,8 +150,7 @@ public final class AbstractMenus extends JavaPlugin implements AbstractMenusPlug
                 Logger.info("Using WorldGuard");
             }
         } catch (Exception e) {
-            Logger.severe("Cannot enable plugin: " + e.getMessage());
-            e.printStackTrace();
+            getSLF4JLogger().error("Cannot enable plugin: {}", e.getMessage());
             disablePlugin();
         }
     }
@@ -166,8 +160,7 @@ public final class AbstractMenus extends JavaPlugin implements AbstractMenusPlug
         try {
             MenuManager.instance().loadMenus();
         } catch (Exception e) {
-            e.printStackTrace();
-            Logger.severe("Error while loading menus: " + e.getMessage());
+            getSLF4JLogger().error("Error while loading menus: {}", e.getMessage());
         }
     }
 
