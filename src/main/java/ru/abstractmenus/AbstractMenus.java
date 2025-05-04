@@ -48,7 +48,6 @@ import ru.abstractmenus.services.BungeeManager;
 import ru.abstractmenus.services.HeadAnimManager;
 import ru.abstractmenus.services.MenuManager;
 import ru.abstractmenus.services.ProfileStorage;
-import ru.abstractmenus.util.LegacyMiniMessageUtil;
 import ru.abstractmenus.util.TimeUtil;
 import ru.abstractmenus.util.bukkit.BukkitTasks;
 import ru.abstractmenus.util.bukkit.Events;
@@ -127,7 +126,6 @@ public final class AbstractMenus extends JavaPlugin implements AbstractMenusPlug
             BukkitTasks.setPlugin(this);
             BukkitTasks.setFoliaLib(foliaLib);
             TimeUtil.init(config);
-            LegacyMiniMessageUtil.init(config);
             new VariableManagerImpl(config);
             new BungeeManager(this, config);
             ActionBar.init();
@@ -288,25 +286,28 @@ public final class AbstractMenus extends JavaPlugin implements AbstractMenusPlug
     }
 
     // from SkinRestorer
+    // TODO: need refactor this
     public boolean determineProxy() {
-        Path spigotFile = Paths.get("spigot.yml");
-        Path paperFile = Paths.get("paper.yml");
-
-        if (Optional.of(getConfig()).map(config ->
-                config.getBoolean("settings.bungeecord")).orElse(false)) {
-            return true;
-        } else if (ClassInfo.get().isSpigot() // Only consider files if classes for that platform are present
-                && Files.exists(spigotFile)
-                && YamlConfiguration.loadConfiguration(spigotFile.toFile())
-                .getBoolean("settings.bungeecord")) {
-            return true;
-        } else if (Optional.of(Bukkit.spigot().getPaperConfig()).map(config ->
-                config.getBoolean("settings.velocity-support.enabled")
-                        || config.getBoolean("proxies.velocity.enabled")).orElse(false)) {
-            return true;
-        } else return ClassInfo.get().isPaper() // Only consider files if classes for that platform are present
-                && Files.exists(paperFile)
-                && YamlConfiguration.loadConfiguration(paperFile.toFile())
-                .getBoolean("settings.velocity-support.enabled");
+        throw  new UnsupportedOperationException("not support yet");
     }
+//        Path spigotFile = Paths.get("spigot.yml");
+//        Path paperFile = Paths.get("paper.yml");
+//
+//        if (Optional.of(getConfig()).map(config ->
+//                config.getBoolean("settings.bungeecord")).orElse(false)) {
+//            return true;
+//        } else if (ClassInfo.get().isSpigot() // Only consider files if classes for that platform are present
+//                && Files.exists(spigotFile)
+//                && YamlConfiguration.loadConfiguration(spigotFile.toFile())
+//                .getBoolean("settings.bungeecord")) {
+//            return true;
+//        } else if (Optional.of(Bukkit.spigot().getPaperConfig()).map(config ->
+//                config.getBoolean("settings.velocity-support.enabled")
+//                        || config.getBoolean("proxies.velocity.enabled")).orElse(false)) {
+//            return true;
+//        } else return ClassInfo.get().isPaper() // Only consider files if classes for that platform are present
+//                && Files.exists(paperFile)
+//                && YamlConfiguration.loadConfiguration(paperFile.toFile())
+//                .getBoolean("settings.velocity-support.enabled");
+//    }
 }
