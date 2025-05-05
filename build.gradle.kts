@@ -122,6 +122,7 @@ dependencies {
     implementation("com.github.AbstractMenus:api:995cd8c9a9")
     implementation("com.fathzer:javaluator:3.0.3")
     implementation("com.github.technicallycoded:FoliaLib:0.4.3")
+    implementation("org.openjdk.nashorn:nashorn-core:15.6")
 
 }
 
@@ -174,14 +175,6 @@ bukkit {
     generateLibrariesJson = true
     foliaSupported = true
 
-    val adminPermission = "am.admin"
-    permissions {
-        register(adminPermission) {
-            description = "admin permissions"
-            default = BukkitPluginDescription.Permission.Default.OP
-        }
-    }
-
     softDepend = listOf(
         "Vault",
         "WorldGuard",
@@ -197,6 +190,7 @@ bukkit {
     )
 
     commands {
+        val adminPermission = "am.admin"
         register("am") {
             permission = adminPermission
             description = "Menu control commands"

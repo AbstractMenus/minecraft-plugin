@@ -37,6 +37,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      - name: Upload local dependencies
+        run: |
+          mkdir -p gradle/libs
+          cp path/to/your/libs/MMOItems.jar gradle/libs/
+          cp path/to/your/libs/CitizensAPI.jar gradle/libs/
+
       - name: Run build with Gradle Wrapper
         run: chmod +x ./gradlew && ./gradlew build --info
 
