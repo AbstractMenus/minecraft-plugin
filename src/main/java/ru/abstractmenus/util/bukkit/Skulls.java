@@ -1,6 +1,8 @@
 package ru.abstractmenus.util.bukkit;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
+import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import ru.abstractmenus.api.Logger;
@@ -9,10 +11,12 @@ import ru.abstractmenus.services.ProfileStorage;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.UUID;
 
 public final class Skulls {
 
-    private Skulls() { }
+    private Skulls() {}
 
     public static ItemStack getCustomSkull(String url) {
         GameProfile profile = MojangApi.createProfile(url);
@@ -21,32 +25,51 @@ public final class Skulls {
 
     public static ItemStack getCustomSkull(GameProfile profile) {
         ItemStack head = createSkullItem();
-
         if (profile == null) return head;
 
         SkullMeta headMeta = (SkullMeta) head.getItemMeta();
+        if (headMeta == null) return head;
 
-        if (headMeta == null) return null;
-
-        Field profileField;
-
-        try {
-            Method method = headMeta.getClass().getDeclaredMethod("setProfile", GameProfile.class);
-            method.setAccessible(true);
-            method.invoke(headMeta, profile);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-            try {
-                profileField = headMeta.getClass().getDeclaredField("profile");
-                profileField.setAccessible(true);
-                profileField.set(headMeta, profile);
-            } catch (NoSuchFieldException | IllegalAccessException ex2) {
-                ex2.printStackTrace();
-            }
+        if (applyModernProfile(headMeta, profile)) {
+            head.setItemMeta(headMeta);
+            return head;
         }
 
-        head.setItemMeta(headMeta);
+        try {
+            Field profileField = headMeta.getClass().getDeclaredField("profile");
+            profileField.setAccessible(true);
+            profileField.set(headMeta, profile);
+        } catch (NoSuchFieldException | IllegalAccessException ignored) {}
 
+        head.setItemMeta(headMeta);
         return head;
+    }
+
+    private static boolean applyModernProfile(SkullMeta headMeta, GameProfile profile) {
+        try {
+            Class<?> playerProfileClass = Class.forName("org.bukkit.profile.PlayerProfile");
+            Method createProfile = Bukkit.class.getMethod("createProfile", UUID.class, String.class);
+            Object playerProfile = createProfile.invoke(null, profile.getId(), profile.getName());
+
+            Method getProperties = playerProfileClass.getMethod("getProperties");
+            Object properties = getProperties.invoke(playerProfile);
+
+            Class<?> propertyMapClass = properties.getClass();
+            Method put = propertyMapClass.getMethod("put", Object.class, Object.class);
+
+            for (Map.Entry<String, Property> entry : profile.getProperties().entries()) {
+                put.invoke(properties, entry.getKey(), entry.getValue());
+            }
+
+            Method setPlayerProfile = headMeta.getClass().getMethod("setPlayerProfile", playerProfileClass);
+            setPlayerProfile.invoke(headMeta, playerProfile);
+            return true;
+        } catch (ClassNotFoundException | NoSuchMethodException ignored) {
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 
     public static ItemStack getPlayerSkull(String playerName) {
@@ -73,5 +96,4 @@ public final class Skulls {
             return new ItemStack(ItemUtil.getHeadMaterial());
         }
     }
-
 }
