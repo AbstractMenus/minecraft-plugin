@@ -13,6 +13,7 @@ import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.menu.item.InventoryItem;
 import ru.abstractmenus.api.inventory.slot.SlotIndex;
 import ru.abstractmenus.api.inventory.Slot;
+import ru.abstractmenus.core.CoreItemPropertyKeys;
 
 import java.util.*;
 
@@ -39,7 +40,7 @@ public class ActionPropertySet implements Action {
         slot.getSlots(index -> {
             // Just modifying ItemStack from inventory won't work because remProperty breaks it
             Item item = menu.getItem(index);
-            item.removeProperty("bindings");
+            item.removeProperty(CoreItemPropertyKeys.BINDINGS);
             item.setProperties(properties);
             menu.setItem(SlotIndex.of(index), item, player);
         });

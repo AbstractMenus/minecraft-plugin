@@ -72,7 +72,7 @@ final class CoreItemPropsBundle {
         api.itemProperties().register("recipes", PropKnowledgeBook.class, new PropKnowledgeBook.Serializer(), owner);
         api.itemProperties().register("damage", PropDamage.class, new PropDamage.Serializer(), owner);
         api.itemProperties().register("nbt", PropNbt.class, new PropNbt.Serializer(), owner);
-        api.itemProperties().register("bindings", PropBindings.class, new PropBindings.Serializer(), owner);
+        api.itemProperties().register(CoreItemPropertyKeys.BINDINGS, PropBindings.class, new PropBindings.Serializer(), owner);
 
         api.itemProperties().register("nameLight", PropNameLight.class, new PropNameLight.Serializer(), owner);
         api.itemProperties().register("loreLight", PropLoreLight.class, new PropLoreLight.Serializer(), owner);
