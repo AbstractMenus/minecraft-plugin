@@ -3,7 +3,7 @@
 
 allprojects {
     group   = 'ru.abstractmenus'
-    version = '1.18.0'   // bumped to 2.0.0-alpha in Task 13
+    version = '2.0.0-alpha'
 
     repositories {
         mavenLocal()
