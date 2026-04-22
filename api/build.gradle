@@ -1,5 +1,6 @@
 plugins {
     id 'java-library'
+    id 'maven-publish'
 }
 
 repositories {
@@ -26,4 +27,39 @@ java {
 javadoc {
     title = "AbstractMenus ${project.version} API"
     options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            // artifactId defaults to project.name == 'api'
+            // → Maven coord: ru.abstractmenus:api:<version>
+
+            pom {
+                name = 'AbstractMenus API'
+                description = 'Public API for the AbstractMenus Minecraft plugin (Paper/Folia).'
+                url = 'https://github.com/AbstractMenus/minecraft-plugin'
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://github.com/AbstractMenus/minecraft-plugin/blob/master/LICENSE'
+                    }
+                }
+                scm {
+                    url = 'https://github.com/AbstractMenus/minecraft-plugin'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = 'GitHubPackages'
+            url  = uri('https://maven.pkg.github.com/AbstractMenus/minecraft-plugin')
+            credentials {
+                username = System.getenv('GITHUB_ACTOR')
+                password = System.getenv('GITHUB_TOKEN')
+            }
+        }
+    }
 }
