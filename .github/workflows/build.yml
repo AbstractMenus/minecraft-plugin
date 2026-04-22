@@ -38,8 +38,8 @@ jobs:
         with:
           gradle-home-cache-cleanup: true
 
-      - name: Build + tests
-        run: ./gradlew --no-daemon build shadowJar
+      - name: Build + tests (all modules) + shadowJar
+        run: ./gradlew --no-daemon build :plugin:shadowJar
 
       - name: Publish test report
         if: always()
@@ -49,14 +49,32 @@ jobs:
           fail_on_failure: true
           require_tests: false
 
-      - name: Resolve JAR path
-        id: jar
-        run: echo "path=$(ls build/libs/AbstractMenus-*.jar | head -n1)" >> "$GITHUB_OUTPUT"
+      - name: Resolve plugin JAR path
+        id: plugin_jar
+        run: echo "path=$(ls plugin/build/libs/AbstractMenus-*.jar | head -n1)" >> "$GITHUB_OUTPUT"
 
-      - name: Upload shaded JAR
+      - name: Resolve API JAR paths
+        id: api_jars
+        run: |
+          echo "binary=$(ls api/build/libs/api-*.jar   | grep -v 'sources\|javadoc' | head -n1)" >> "$GITHUB_OUTPUT"
+          echo "sources=$(ls api/build/libs/api-*-sources.jar | head -n1)" >> "$GITHUB_OUTPUT"
+          echo "javadoc=$(ls api/build/libs/api-*-javadoc.jar | head -n1)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload plugin shadow JAR
         uses: actions/upload-artifact@v4
         with:
           name: AbstractMenus-jar
-          path: ${{ steps.jar.outputs.path }}
+          path: ${{ steps.plugin_jar.outputs.path }}
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload api artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: AbstractMenus-api
+          path: |
+            ${{ steps.api_jars.outputs.binary }}
+            ${{ steps.api_jars.outputs.sources }}
+            ${{ steps.api_jars.outputs.javadoc }}
           if-no-files-found: error
           retention-days: 14
