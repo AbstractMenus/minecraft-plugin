@@ -11,49 +11,28 @@ buildscript {
 }
 
 plugins {
-    id 'java'
-    id 'com.gradleup.shadow' version '9.4.1'
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.21"
+    id 'com.gradleup.shadow'               version '9.4.1'
+    id 'io.papermc.paperweight.userdev'    version '2.0.0-beta.21'
 }
 
-java {
-    sourceCompatibility = "21"
-    targetCompatibility = "21"
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-}
-
-
-group 'ru.abstractmenus'
-version '1.18.0'
-
+// Plugin-specific repos not already in root
 repositories {
-    mavenLocal()
-    mavenCentral()
-    maven { url 'https://repo.papermc.io/repository/maven-public/' }
-    maven { url 'https://jitpack.io' }
     maven { url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
     maven { url 'https://maven.enginehub.org/repo/' }
     maven { url 'https://repo.extendedclip.com/content/repositories/placeholderapi/' }
     maven { url 'https://mvn.lumine.io/repository/maven-public/' }
-    maven { url 'https://repo.codemc.org/repository/maven-public/'
-        metadataSources {
-            artifact()
-        }
+    maven {
+        url 'https://repo.codemc.org/repository/maven-public/'
+        metadataSources { artifact() }
     }
     maven {
         url 'https://repo.codemc.org/repository/maven-snapshots/'
-        metadataSources {
-            artifact()
-        }
+        metadataSources { artifact() }
     }
     maven {
         url 'https://repo.codemc.org/repository/maven-releases/'
-        metadataSources {
-            artifact()
-        }
+        metadataSources { artifact() }
     }
 }
 
@@ -62,30 +41,32 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.44'
 
     paperweight.paperDevBundle("1.21.11-R0.1-SNAPSHOT")
+
+    // NOTE: was 'com.github.AbstractMenus:api:995cd8c9a9' — swapped in Task 8
     implementation 'com.github.AbstractMenus:api:995cd8c9a9'
+
     implementation 'com.fathzer:javaluator:3.0.6'
     implementation 'net.kyori:adventure-platform-bukkit:4.4.1'
     implementation 'net.kyori:adventure-text-minimessage:4.26.1'
     implementation "com.github.technicallycoded:FoliaLib:0.4.4"
 
-//    shadow files('libs/spigot-1.14.4.jar')
     shadow files('libs/MMOItems-6.5.4.jar')
     shadow files('libs/citizens-2.0.jar')
 
     shadow ('de.tr7zw:item-nbt-api-plugin:2.15.7') {
         exclude group: 'org.bstats', module: 'bstats-bukkit'
     }
-    shadow ('com.arcaniax:HeadDatabase-API:1.3.2'){
+    shadow ('com.arcaniax:HeadDatabase-API:1.3.2') {
         exclude group: 'org.bstats', module: 'bstats-bukkit'
     }
-    shadow ('com.github.MilkBowl:VaultAPI:1.7.1'){
+    shadow ('com.github.MilkBowl:VaultAPI:1.7.1') {
         exclude group: 'org.bstats', module: 'bstats-bukkit'
         exclude group: 'org.bukkit'
     }
-    shadow ('net.luckperms:api:5.5'){
+    shadow ('net.luckperms:api:5.5') {
         exclude group: 'org.bstats', module: 'bstats-bukkit'
     }
-    shadow ('com.sk89q.worldguard:worldguard-bukkit:7.0.0'){
+    shadow ('com.sk89q.worldguard:worldguard-bukkit:7.0.0') {
         exclude group: 'org.bstats', module: 'bstats-bukkit'
         exclude group: 'org.bukkit'
         exclude group: 'io.papermc.paper'
@@ -93,30 +74,24 @@ dependencies {
 
     compileOnly 'me.clip:placeholderapi:2.12.2'
 
-    shadow ('io.lumine:MythicLib:1.0.12-SNAPSHOT'){
+    shadow ('io.lumine:MythicLib:1.0.12-SNAPSHOT') {
         exclude group: 'org.bstats', module: 'bstats-bukkit'
     }
-    shadow ('com.github.LoneDev6:api-itemsadder:3.6.1'){
+    shadow ('com.github.LoneDev6:api-itemsadder:3.6.1') {
         exclude group: 'org.bstats', module: 'bstats-bukkit'
     }
-    shadow ('net.skinsrestorer:skinsrestorer-api:15.10.0'){
+    shadow ('net.skinsrestorer:skinsrestorer-api:15.10.0') {
         exclude group: 'org.bstats', module: 'bstats-bukkit'
     }
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.14.3'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.14.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    // MockBukkit — in-memory Paper API mock for integration tests
     testImplementation 'org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.108.0'
-
-    // Mockito — isolated behavior tests against Bukkit API surface
     testImplementation 'org.mockito:mockito-core:5.15.2'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.15.2'
-
     testImplementation 'org.openjdk.jmh:jmh-core:1.37'
     testAnnotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.37'
-
     testCompileOnly 'org.projectlombok:lombok:1.18.44'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.44'
 }
@@ -132,12 +107,10 @@ shadowJar {
     dependencies {
         exclude dependency('org.inventivetalent.spiget-update:bukkit')
     }
-
-    archiveFileName.set("${project.name}-${project.version}.jar")
+    archiveFileName.set("AbstractMenus-${project.version}.jar")
 }
 
 test {
-    useJUnitPlatform()
     exclude 'ru/abstractmenus/bench/**'
 }
 
