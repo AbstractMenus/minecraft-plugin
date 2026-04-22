@@ -13,6 +13,8 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.abstractmenus.api.*;
+import ru.abstractmenus.api.AbstractMenusApi;
+import ru.abstractmenus.api.AbstractMenusApiImpl;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.text.Colors;
 import ru.abstractmenus.api.variables.VariableManager;
@@ -69,6 +71,7 @@ public final class AbstractMenus extends JavaPlugin implements AbstractMenusPlug
     private CommandManager commandManager;
     private Metrics metrics;
     private FoliaLib foliaLib;
+    private AbstractMenusApi api;
 
     @Getter
     @Setter
@@ -78,6 +81,8 @@ public final class AbstractMenus extends JavaPlugin implements AbstractMenusPlug
     public Plugin getPlugin() {
         return this;
     }
+
+    public AbstractMenusApi getApi() { return api; }
 
     @Override
     public VariableManager getVariableManager() {
@@ -134,6 +139,13 @@ public final class AbstractMenus extends JavaPlugin implements AbstractMenusPlug
             Title.init();
 
             new MenuManager(this, config);
+
+            // Publish the new Extension API to Bukkit's ServicesManager so
+            // plugin-as-addons (Path 1) and the dogfood CoreExtension (wired in
+            // the next phase) can look it up via AbstractMenusApi.get().
+            this.api = new AbstractMenusApiImpl(this);
+            getServer().getServicesManager().register(
+                    AbstractMenusApi.class, api, this, ServicePriority.Normal);
 
             registerProviders();
             registerCommands(config);
@@ -197,6 +209,7 @@ public final class AbstractMenus extends JavaPlugin implements AbstractMenusPlug
 
         getServer().getMessenger().unregisterIncomingPluginChannel(this, "BungeeCord");
         getServer().getMessenger().unregisterOutgoingPluginChannel(this, "BungeeCord");
+        getServer().getServicesManager().unregisterAll(this);
     }
 
     private void registerCommands(MainConfig config) {
