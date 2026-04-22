@@ -5,11 +5,11 @@ import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
 import org.bukkit.entity.Player;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.Action;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.ItemProperty;
 import ru.abstractmenus.api.inventory.Menu;
-import ru.abstractmenus.api.Types;
 import ru.abstractmenus.menu.item.InventoryItem;
 import ru.abstractmenus.api.inventory.slot.SlotIndex;
 import ru.abstractmenus.api.inventory.Slot;
@@ -55,7 +55,7 @@ public class ActionPropertySet implements Action {
 
             for (Map.Entry<String, ConfigNode> entry : children.entrySet()) {
                 String key = entry.getKey();
-                Class<? extends ItemProperty> token = Types.getItemPropertyType(key);
+                Class<? extends ItemProperty> token = AbstractMenusApi.get().itemProperties().get(key);
 
                 if (token != null) {
                     propertyMap.put(key, entry.getValue().getValue(token));

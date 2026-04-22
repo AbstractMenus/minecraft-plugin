@@ -6,10 +6,10 @@ import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
 import org.bukkit.entity.Player;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.Rule;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.Menu;
-import ru.abstractmenus.api.Types;
 import ru.abstractmenus.util.StringUtil;
 
 import java.util.LinkedList;
@@ -81,7 +81,7 @@ public class RulesGroup {
                 isNot = true;
             }
 
-            Class<? extends Rule> type = Types.getRuleType(key);
+            Class<? extends Rule> type = AbstractMenusApi.get().rules().get(key);
 
             if (type != null) {
                 Rule rule = node.getValue(type);

@@ -1,8 +1,8 @@
 package ru.abstractmenus.placeholders.hooks;
 
 import org.bukkit.entity.Player;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.Activator;
-import ru.abstractmenus.api.Types;
 import ru.abstractmenus.api.ValueExtractor;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.placeholders.PlaceholderHook;
@@ -18,7 +18,7 @@ public class ActivatorPlaceholders implements PlaceholderHook {
             Activator activator = menu.getActivatedBy().get();
 
             if (placeholder.equalsIgnoreCase("name"))
-                return Types.getActivatorName(activator.getClass());
+                return AbstractMenusApi.get().activators().name(activator.getClass());
 
             if (menu.getContext().isPresent()) {
                 ValueExtractor extractor = activator.getValueExtractor();

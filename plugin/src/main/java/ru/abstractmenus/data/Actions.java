@@ -6,12 +6,12 @@ import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
 import org.bukkit.entity.Player;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.Action;
 import ru.abstractmenus.api.Logger;
 import ru.abstractmenus.api.Rule;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Item;
-import ru.abstractmenus.api.Types;
 import ru.abstractmenus.data.rules.logical.RuleAnd;
 import ru.abstractmenus.util.StringUtil;
 
@@ -122,7 +122,7 @@ public final class Actions implements Iterable<Action> {
 
             if (Actions.isReserved(key)) return;
 
-            Class<? extends Action> type = Types.getActionType(key);
+            Class<? extends Action> type = AbstractMenusApi.get().actions().get(key);
 
             if (type != null) {
                 actions.add(node.getValue(type));

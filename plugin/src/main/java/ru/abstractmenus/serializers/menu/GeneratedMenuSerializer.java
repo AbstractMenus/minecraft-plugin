@@ -1,11 +1,11 @@
 package ru.abstractmenus.serializers.menu;
 
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.Catalog;
 import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
 import ru.abstractmenus.menu.generated.GeneratedMenu;
 import ru.abstractmenus.api.inventory.Item;
-import ru.abstractmenus.api.Types;
 import ru.abstractmenus.menu.generated.Matrix;
 
 public class GeneratedMenuSerializer implements MenuSerializer<GeneratedMenu> {
@@ -15,7 +15,7 @@ public class GeneratedMenuSerializer implements MenuSerializer<GeneratedMenu> {
         GeneratedMenu menu = new GeneratedMenu(title, size);
 
         String catalogType = node.node("catalog", "type").getString();
-        Class<? extends Catalog<?>> catalogToken = Types.getCatalogType(catalogType);
+        Class<? extends Catalog<?>> catalogToken = AbstractMenusApi.get().catalogs().get(catalogType);
 
         if (catalogToken != null) {
             menu.setCatalog(node.node("catalog").getValue(catalogToken));

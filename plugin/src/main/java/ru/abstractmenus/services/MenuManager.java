@@ -6,9 +6,9 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.Plugin;
 import ru.abstractmenus.AbstractMenus;
 import ru.abstractmenus.MainConfig;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.Activator;
 import ru.abstractmenus.api.inventory.Menu;
-import ru.abstractmenus.api.Types;
 import ru.abstractmenus.command.Command;
 import ru.abstractmenus.data.actions.ActionInputChat;
 import ru.abstractmenus.data.activators.OpenCommand;
@@ -212,7 +212,7 @@ public final class MenuManager {
         try {
             conf = ConfigurationLoader.builder()
                     .source(ConfigSources.path(file))
-                    .serializers(Types.serializers())
+                    .serializers(AbstractMenusApi.get().serializers())
                     .build()
                     .load();
         } catch (Throwable t) {
@@ -364,7 +364,7 @@ public final class MenuManager {
             ConfigurationLoader.builder()
                     .source(ConfigSources.resource("/menu.conf", plugin)
                             .copyTo(menuFolder))
-                    .serializers(Types.serializers())
+                    .serializers(AbstractMenusApi.get().serializers())
                     .build()
                     .load();
 
@@ -381,7 +381,7 @@ public final class MenuManager {
             ConfigurationLoader.builder()
                     .source(ConfigSources.resource(animMenuPath, plugin)
                             .copyTo(menuFolder))
-                    .serializers(Types.serializers())
+                    .serializers(AbstractMenusApi.get().serializers())
                     .build()
                     .load();
         }

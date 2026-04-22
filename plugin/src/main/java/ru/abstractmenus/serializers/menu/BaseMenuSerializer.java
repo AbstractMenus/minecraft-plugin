@@ -8,9 +8,9 @@ import ru.abstractmenus.datatype.TypeSlot;
 import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.Activator;
 import ru.abstractmenus.api.inventory.Menu;
-import ru.abstractmenus.api.Types;
 import ru.abstractmenus.menu.AbstractMenu;
 import ru.abstractmenus.menu.SimpleMenu;
 import ru.abstractmenus.menu.animated.AnimatedMenu;
@@ -130,7 +130,7 @@ public class BaseMenuSerializer implements NodeSerializer<Menu> {
 
         for (Map.Entry<String, ConfigNode> entry : activators.entrySet()) {
             String key = entry.getKey();
-            Class<? extends Activator> type = Types.getActivator(key);
+            Class<? extends Activator> type = AbstractMenusApi.get().activators().get(key);
 
             if (type != null) {
                 Activator activator = entry.getValue().getValue(type);

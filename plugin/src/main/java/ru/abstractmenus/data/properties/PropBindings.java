@@ -8,10 +8,10 @@ import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.Rule;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.ItemProperty;
-import ru.abstractmenus.api.Types;
 import ru.abstractmenus.menu.item.SimpleItem;
 import ru.abstractmenus.data.rules.logical.RuleAnd;
 
@@ -86,7 +86,7 @@ public class PropBindings implements ItemProperty {
 
                 if (Actions.isReserved(key)) continue;
 
-                Class<? extends ItemProperty> token = Types.getItemPropertyType(key);
+                Class<? extends ItemProperty> token = AbstractMenusApi.get().itemProperties().get(key);
 
                 if (token != null) {
                     properties.add(entry.getValue().getValue(token));

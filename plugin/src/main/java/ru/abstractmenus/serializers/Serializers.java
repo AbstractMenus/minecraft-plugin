@@ -7,7 +7,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
-import ru.abstractmenus.api.Types;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.command.args.*;
 import ru.abstractmenus.data.Actions;
 import ru.abstractmenus.data.BannerData;
@@ -39,7 +39,7 @@ public final class Serializers {
     }
 
     public static void init(Plugin plugin) {
-        NodeSerializers serializers = Types.serializers();
+        NodeSerializers serializers = AbstractMenusApi.get().serializers();
 
         serializers.register(TypeBool.class, new TypeBool.Serializer());
         serializers.register(TypeByte.class, new TypeByte.Serializer());

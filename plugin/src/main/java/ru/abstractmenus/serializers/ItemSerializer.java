@@ -15,7 +15,7 @@ import ru.abstractmenus.data.rules.logical.RuleAnd;
 import ru.abstractmenus.menu.item.InventoryItem;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.ItemProperty;
-import ru.abstractmenus.api.Types;
+import ru.abstractmenus.api.AbstractMenusApi;
 
 import java.util.*;
 
@@ -67,7 +67,7 @@ public class ItemSerializer implements NodeSerializer<Item> {
 
         for (Map.Entry<String, ConfigNode> entry : children.entrySet()) {
             String key = entry.getKey();
-            Class<? extends ItemProperty> token = Types.getItemPropertyType(key);
+            Class<? extends ItemProperty> token = AbstractMenusApi.get().itemProperties().get(key);
 
             if (token != null) {
                 item.addProperty(key, entry.getValue().getValue(token));
