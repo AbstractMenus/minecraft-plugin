@@ -1,0 +1,30 @@
+// Common configuration applied to every subproject.
+// Subproject-specific plugins (java-library, shadow, paperweight) stay in subprojects.
+
+allprojects {
+    group   = 'ru.abstractmenus'
+    version = '1.18.0'   // bumped to 2.0.0-alpha in Task 13
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url 'https://repo.papermc.io/repository/maven-public/' }
+        maven { url 'https://jitpack.io' }
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+    test {
+        useJUnitPlatform()
+    }
+}
