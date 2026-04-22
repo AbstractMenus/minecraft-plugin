@@ -1,4 +1,6 @@
 .gradle
 .idea
 build
-.DS_Strore
+.DS_Store
+logs
+PR_DESCRIPTION.md
