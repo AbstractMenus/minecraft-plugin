@@ -42,8 +42,7 @@ dependencies {
 
     paperweight.paperDevBundle("1.21.11-R0.1-SNAPSHOT")
 
-    // NOTE: was 'com.github.AbstractMenus:api:995cd8c9a9' — swapped in Task 8
-    implementation 'com.github.AbstractMenus:api:995cd8c9a9'
+    implementation project(':api')
 
     implementation 'com.fathzer:javaluator:3.0.6'
     implementation 'net.kyori:adventure-platform-bukkit:4.4.1'
