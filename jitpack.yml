@@ -1,0 +1,8 @@
+jdk:
+  - openjdk21
+
+before_install:
+  - sdk install java 21.0.3-tem < /dev/null || true
+
+install:
+  - ./gradlew :api:publishToMavenLocal -x test
