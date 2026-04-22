@@ -29,7 +29,7 @@ public abstract class Activator implements Listener {
      * @param player Player to open menu
      */
     protected void openMenu(Object ctx, Player player) {
-        AbstractMenusProvider.get().openMenu(this, ctx, player, menu);
+        AbstractMenusApi.get().openMenu(this, ctx, player, menu);
     }
 
     /**

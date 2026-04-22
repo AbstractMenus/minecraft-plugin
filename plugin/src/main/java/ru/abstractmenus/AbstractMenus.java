@@ -61,7 +61,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Getter
-public final class AbstractMenus extends JavaPlugin implements AbstractMenusPlugin {
+public final class AbstractMenus extends JavaPlugin {
 
     private static AbstractMenus instance;
 
@@ -74,28 +74,22 @@ public final class AbstractMenus extends JavaPlugin implements AbstractMenusPlug
     @Setter
     public boolean isProxyMode;
 
-    @Override
     public Plugin getPlugin() {
         return this;
     }
 
     public AbstractMenusApi getApi() { return api; }
 
-    @Override
     public VariableManager getVariableManager() {
         return VariableManagerImpl.instance();
     }
 
-    @Override
     public Optional<Menu> getOpenedMenu(Player player) {
         return Optional.ofNullable(MenuManager.instance().getOpenedMenu(player));
     }
 
     @Override
     public void onLoad() {
-        AbstractMenusProvider.init(this);
-        getServer().getServicesManager()
-                .register(AbstractMenusPlugin.class, this, this, ServicePriority.Normal);
     }
 
     @Override
@@ -173,7 +167,6 @@ public final class AbstractMenus extends JavaPlugin implements AbstractMenusPlug
         }
     }
 
-    @Override
     public void loadMenus() {
         try {
             MenuManager.instance().loadMenus();
@@ -183,12 +176,10 @@ public final class AbstractMenus extends JavaPlugin implements AbstractMenusPlug
         }
     }
 
-    @Override
     public void openMenu(Player player, Menu menu) {
         MenuManager.instance().openMenu(player, menu);
     }
 
-    @Override
     public void openMenu(Activator activator, Object ctx, Player player, Menu menu) {
         MenuManager.instance().openMenu(activator, ctx, player, menu);
     }
