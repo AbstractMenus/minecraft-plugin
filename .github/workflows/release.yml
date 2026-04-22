@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing release tag to attach a rebuilt JAR to'
+        description: 'Existing release tag to attach rebuilt JARs to'
         required: true
         type: string
 
@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   attach-jar:
-    name: Build + attach JAR to release
+    name: Build + attach JARs to release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout (release tag)
@@ -36,30 +36,38 @@ jobs:
       - name: Verify tag matches project version
         run: |
           TAG="${{ github.event.release.tag_name || inputs.tag }}"
-          # Strip a leading 'v' if present (v1.18.0 → 1.18.0)
           TAG_VERSION="${TAG#v}"
-          GRADLE_VERSION=$(grep -E "^version\s+['\"]" build.gradle | sed -E "s/.*['\"]([^'\"]+)['\"].*/\1/")
-          echo "release tag:      $TAG"
-          echo "tag version:      $TAG_VERSION"
-          echo "gradle version:   $GRADLE_VERSION"
+          GRADLE_VERSION=$(grep -E "^\s*version\s*=?\s*['\"]" build.gradle | head -n1 | sed -E "s/.*['\"]([^'\"]+)['\"].*/\1/")
+          echo "release tag:     $TAG"
+          echo "tag version:     $TAG_VERSION"
+          echo "gradle version:  $GRADLE_VERSION"
           if [ "$TAG_VERSION" != "$GRADLE_VERSION" ]; then
-            echo "::error::Release tag version ($TAG_VERSION) does not match build.gradle version ($GRADLE_VERSION). Bump build.gradle before tagging, or retag."
+            echo "::error::Release tag version ($TAG_VERSION) does not match root build.gradle version ($GRADLE_VERSION). Bump build.gradle before tagging, or retag."
             exit 1
           fi
 
-      - name: Build shaded JAR (skip tests — already run in Build workflow on the tagged commit)
-        run: ./gradlew --no-daemon shadowJar
+      - name: Build shadow plugin + api artifacts (skip tests — already run on the tagged commit by build.yml)
+        run: ./gradlew --no-daemon :plugin:shadowJar :api:build
 
-      - name: Resolve JAR path
-        id: jar
+      - name: Resolve artifact paths
+        id: paths
         run: |
-          JAR=$(ls build/libs/AbstractMenus-*.jar | head -n1)
-          echo "path=$JAR"       >> "$GITHUB_OUTPUT"
-          echo "name=$(basename "$JAR")" >> "$GITHUB_OUTPUT"
+          PLUGIN=$(ls plugin/build/libs/AbstractMenus-*.jar | head -n1)
+          API_BIN=$(ls api/build/libs/api-*.jar | grep -v 'sources\|javadoc' | head -n1)
+          API_SRC=$(ls api/build/libs/api-*-sources.jar | head -n1)
+          API_DOC=$(ls api/build/libs/api-*-javadoc.jar | head -n1)
+          echo "plugin=$PLUGIN"  >> "$GITHUB_OUTPUT"
+          echo "api_bin=$API_BIN" >> "$GITHUB_OUTPUT"
+          echo "api_src=$API_SRC" >> "$GITHUB_OUTPUT"
+          echo "api_doc=$API_DOC" >> "$GITHUB_OUTPUT"
 
-      - name: Attach JAR to release
+      - name: Attach JARs to release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.release.tag_name || inputs.tag }}
-          files: ${{ steps.jar.outputs.path }}
+          files: |
+            ${{ steps.paths.outputs.plugin }}
+            ${{ steps.paths.outputs.api_bin }}
+            ${{ steps.paths.outputs.api_src }}
+            ${{ steps.paths.outputs.api_doc }}
           fail_on_unmatched_files: true
