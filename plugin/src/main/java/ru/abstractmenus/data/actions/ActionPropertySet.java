@@ -1,6 +1,5 @@
 package ru.abstractmenus.data.actions;
 
-import ru.abstractmenus.data.properties.ItemProps;
 import ru.abstractmenus.datatype.TypeSlot;
 import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
@@ -40,7 +39,7 @@ public class ActionPropertySet implements Action {
         slot.getSlots(index -> {
             // Just modifying ItemStack from inventory won't work because remProperty breaks it
             Item item = menu.getItem(index);
-            item.removeProperty(ItemProps.BINDINGS);
+            item.removeProperty("bindings");
             item.setProperties(properties);
             menu.setItem(SlotIndex.of(index), item, player);
         });

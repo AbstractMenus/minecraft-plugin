@@ -29,11 +29,8 @@ import ru.abstractmenus.commands.am.CommandReload;
 import ru.abstractmenus.commands.am.CommandServe;
 import ru.abstractmenus.commands.var.*;
 import ru.abstractmenus.commands.varp.*;
-import ru.abstractmenus.data.actions.MenuActions;
-import ru.abstractmenus.data.activators.Activators;
-import ru.abstractmenus.data.catalogs.Catalogs;
-import ru.abstractmenus.data.properties.ItemProps;
-import ru.abstractmenus.data.rules.MenuRules;
+import ru.abstractmenus.api.MenuExtension;
+import ru.abstractmenus.core.CoreExtension;
 import ru.abstractmenus.handlers.*;
 import ru.abstractmenus.handlers.placeholder.PlaceholderCustomHandler;
 import ru.abstractmenus.handlers.placeholder.PlaceholderDefaultHandler;
@@ -151,11 +148,12 @@ public final class AbstractMenus extends JavaPlugin implements AbstractMenusPlug
             registerCommands(config);
 
             Serializers.init(this);
-            ItemProps.init();
-            Activators.init();
-            MenuActions.init();
-            MenuRules.init();
-            Catalogs.init();
+
+            // Core extension — dogfood: the plugin registers its own types through
+            // the same SPI external addons will use.
+            MenuExtension core = new CoreExtension();
+            core.onLoad(api);
+            core.onEnable(api);
 
             loadMenus();
 
