@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -40,8 +41,114 @@ public final class AddonManager {
      * creates it and returns without enabling anything.
      */
     public void loadAll() {
-        // Impl — Tasks 6 + 7
-        Logger.info("AddonManager.loadAll — not yet implemented");
+        Map<String, LoadedAddon> pending = discover();
+        if (pending.isEmpty()) {
+            Logger.info("No AM-loaded addons found in " + addonsDir);
+            return;
+        }
+
+        // Soft-filter: drop addons whose required Bukkit plugin deps are missing.
+        var pluginManager = plugin.getServer().getPluginManager();
+        var byName = new LinkedHashMap<String, LoadedAddon>();
+        for (LoadedAddon la : pending.values()) {
+            AddonConf c = la.conf();
+            boolean missing = false;
+            for (String dep : c.pluginDependencies()) {
+                if (pluginManager.getPlugin(dep) == null) {
+                    Logger.warning("Addon " + c.name()
+                            + " requires plugin '" + dep + "' which is not installed — skipping");
+                    la.markFailed(new IllegalStateException("missing plugin dependency: " + dep));
+                    missing = true;
+                    break;
+                }
+            }
+            if (missing) {
+                addons.put(c.name().toLowerCase(), la);  // keep the failed entry visible in /am addons list
+                continue;
+            }
+            byName.put(c.name().toLowerCase(), la);
+        }
+
+        if (byName.isEmpty()) return;
+
+        // Sort by addon-level dependencies.
+        Map<String, List<String>> depGraph = new LinkedHashMap<>();
+        for (var e : byName.entrySet()) {
+            List<String> deps = e.getValue().conf().addonDependencies().stream()
+                    .map(String::toLowerCase).toList();
+            depGraph.put(e.getKey(), deps);
+        }
+        List<String> order;
+        try {
+            order = AddonDependencyGraph.topoSort(depGraph);
+        } catch (AddonDependencyException ex) {
+            Logger.severe("Addon dependency graph error: " + ex.getMessage());
+            for (var la : byName.values()) {
+                la.markFailed(ex);
+                addons.put(la.conf().name().toLowerCase(), la);
+            }
+            return;
+        }
+
+        // Stage 1: onLoad for all — ordering-independent setup.
+        for (String k : order) {
+            LoadedAddon la = byName.get(k);
+            try {
+                la.setExtension(instantiate(la));
+                la.extension().onLoad(api);
+            } catch (Throwable t) {
+                Logger.severe("Addon " + la.conf().name() + " failed in onLoad: " + t);
+                t.printStackTrace();
+                la.markFailed(t);
+            }
+        }
+
+        // Stage 2: onEnable in dependency order.
+        for (String k : order) {
+            LoadedAddon la = byName.get(k);
+            if (la.status() == AddonStatus.FAILED) {
+                addons.put(k, la);
+                continue;
+            }
+            try {
+                la.extension().onEnable(api);
+                la.markEnabled();
+                Logger.info("Enabled addon: " + la.conf().name()
+                        + " v" + la.conf().version()
+                        + (la.conf().targetApiVersion() == null
+                            ? ""
+                            : " (built against API " + la.conf().targetApiVersion() + ")"));
+            } catch (Throwable t) {
+                Logger.severe("Addon " + la.conf().name() + " failed in onEnable: " + t);
+                t.printStackTrace();
+                la.markFailed(t);
+                rollbackRegistrations(la);
+            }
+            addons.put(k, la);
+        }
+    }
+
+    /**
+     * Reflectively instantiate the addon's main class and verify it implements
+     * MenuExtension.
+     */
+    private ru.abstractmenus.api.MenuExtension instantiate(LoadedAddon la) throws Exception {
+        Class<?> main = la.classLoader().loadClass(la.conf().main());
+        if (!ru.abstractmenus.api.MenuExtension.class.isAssignableFrom(main)) {
+            throw new IllegalStateException("main class " + main.getName()
+                    + " does not implement MenuExtension");
+        }
+        return (ru.abstractmenus.api.MenuExtension) main.getDeclaredConstructor().newInstance();
+    }
+
+    /** Strip any type registrations the failed addon managed to make. */
+    private void rollbackRegistrations(LoadedAddon la) {
+        if (la.extension() == null) return;
+        api.actions().unregisterAll(la.extension());
+        api.rules().unregisterAll(la.extension());
+        api.activators().unregisterAll(la.extension());
+        api.itemProperties().unregisterAll(la.extension());
+        api.catalogs().unregisterAll(la.extension());
     }
 
     /**
@@ -143,6 +250,4 @@ public final class AddonManager {
         return new LoadedAddon(conf, cl);
     }
 
-    // package-private helpers filled in by subsequent tasks (instantiate,
-    // rollbackRegistrations, findJarByName)
 }
