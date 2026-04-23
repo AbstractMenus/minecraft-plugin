@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Item;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 
 public class ActionGroupAdd implements Action {
 
@@ -19,8 +19,8 @@ public class ActionGroupAdd implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        String group = Handlers.getPlaceholderHandler().replace(player, this.group);
-        Handlers.getPermissionsHandler().addGroup(player, group);
+        String group = AbstractMenusApi.get().providers().placeholders().replace(player, this.group);
+        AbstractMenusApi.get().providers().permissions().addGroup(player, group);
     }
 
     public static class Serializer implements NodeSerializer<ActionGroupAdd> {

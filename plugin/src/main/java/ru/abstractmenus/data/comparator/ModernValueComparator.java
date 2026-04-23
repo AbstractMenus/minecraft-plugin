@@ -5,7 +5,7 @@ import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
 import org.bukkit.entity.Player;
 import ru.abstractmenus.api.inventory.Menu;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 
 public final class ModernValueComparator implements ValueComparator {
 
@@ -18,7 +18,7 @@ public final class ModernValueComparator implements ValueComparator {
 
     @Override
     public boolean compare(Player player, Menu menu) {
-        String replaced = Handlers.getPlaceholderHandler().replace(player, expression);
+        String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, expression);
         String result = EVALUATOR.evaluate(replaced);
         return Boolean.parseBoolean(result);
     }

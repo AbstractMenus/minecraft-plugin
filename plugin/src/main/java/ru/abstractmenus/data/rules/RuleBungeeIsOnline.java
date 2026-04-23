@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Rule;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.Menu;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.services.BungeeManager;
 
 public class RuleBungeeIsOnline implements Rule {
@@ -20,7 +20,7 @@ public class RuleBungeeIsOnline implements Rule {
 
     @Override
     public boolean check(Player player, Menu menu, Item clickedItem) {
-        return BungeeManager.instance().isOnline(Handlers.getPlaceholderHandler().replace(player, server));
+        return BungeeManager.instance().isOnline(AbstractMenusApi.get().providers().placeholders().replace(player, server));
     }
 
     public static class Serializer implements NodeSerializer<RuleBungeeIsOnline> {

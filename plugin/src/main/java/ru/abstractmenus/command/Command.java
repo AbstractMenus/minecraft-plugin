@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.text.Colors;
 import ru.abstractmenus.command.args.Argument;
 import ru.abstractmenus.hocon.api.ConfigNode;
@@ -68,7 +68,7 @@ public class Command {
             } catch (Throwable t) {
                 if (arg.getDef() != null && sender instanceof Player) {
                     Player player = (Player) sender;
-                    String def = Handlers.getPlaceholderHandler().replace(player, arg.getDef());
+                    String def = AbstractMenusApi.get().providers().placeholders().replace(player, arg.getDef());
 
                     try {
                         Object defObj = arg.parse(sender, def);

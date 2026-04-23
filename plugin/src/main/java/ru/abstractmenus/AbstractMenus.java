@@ -286,7 +286,7 @@ public final class AbstractMenus extends JavaPlugin {
             Logger.info("Using bundled placeholders");
         }
 
-        Handlers.getPlaceholderHandler().registerAll();
+        AbstractMenusApi.get().providers().placeholders().registerAll();
 
         if (checkDependency("SkinsRestorer")) {
             Handlers.setSkinHandler(new SkinsRestorerHandler(isProxyMode, this));

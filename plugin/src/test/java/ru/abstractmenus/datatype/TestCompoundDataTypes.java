@@ -6,8 +6,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import ru.abstractmenus.api.Handlers;
 import ru.abstractmenus.api.handler.PlaceholderHandler;
+import ru.abstractmenus.testsupport.ApiTestSupport;
 import ru.abstractmenus.api.inventory.Slot;
 import ru.abstractmenus.api.inventory.slot.SlotIndex;
 import ru.abstractmenus.api.inventory.slot.SlotPos;
@@ -33,13 +33,13 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class TestCompoundDataTypes {
 
-    private static PlaceholderHandler previousHandler;
+    private static ApiTestSupport apiSupport;
 
     @BeforeAll
     static void installIdentityPlaceholderHandler() {
-        previousHandler = Handlers.getPlaceholderHandler();
+        apiSupport = ApiTestSupport.install();
         // Identity handler — tests in this file don't exercise actual replacement.
-        Handlers.setPlaceholderHandler(new PlaceholderHandler() {
+        apiSupport.installPlaceholderHandler(new PlaceholderHandler() {
             @Override public String replacePlaceholder(org.bukkit.entity.Player p, String s) { return s; }
             @Override public String replace(org.bukkit.entity.Player p, String s) { return s; }
             @Override public List<String> replace(org.bukkit.entity.Player p, List<String> l) { return l; }
@@ -49,7 +49,7 @@ class TestCompoundDataTypes {
 
     @AfterAll
     static void restorePlaceholderHandler() {
-        Handlers.setPlaceholderHandler(previousHandler);
+        apiSupport.close();
     }
 
     private static ConfigNode loadValueNode(String hocon) throws Exception {

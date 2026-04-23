@@ -6,7 +6,7 @@ import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
 import org.bukkit.entity.Player;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Item;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.services.BungeeManager;
 import ru.abstractmenus.api.Action;
 
@@ -20,7 +20,7 @@ public class ActionBungeeConnect implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        String replaced = Handlers.getPlaceholderHandler().replace(player, serverName);
+        String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, serverName);
         BungeeManager.instance().sendPluginMessage(player, "Connect", replaced);
     }
 

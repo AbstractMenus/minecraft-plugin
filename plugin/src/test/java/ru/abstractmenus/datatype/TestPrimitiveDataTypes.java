@@ -4,8 +4,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import ru.abstractmenus.api.Handlers;
 import ru.abstractmenus.api.handler.PlaceholderHandler;
+import ru.abstractmenus.testsupport.ApiTestSupport;
 import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.ConfigurationLoader;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
@@ -26,14 +26,14 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class TestPrimitiveDataTypes {
 
-    private static PlaceholderHandler previousHandler;
+    private static ApiTestSupport apiSupport;
     private static final Map<String, String> placeholderMap = new HashMap<>();
 
     @BeforeAll
     static void setUpPlaceholders() {
-        previousHandler = Handlers.getPlaceholderHandler();
+        apiSupport = ApiTestSupport.install();
         // Minimal PlaceholderHandler that echoes lookups from the map; unresolved → returned as-is.
-        Handlers.setPlaceholderHandler(new PlaceholderHandler() {
+        apiSupport.installPlaceholderHandler(new PlaceholderHandler() {
             @Override
             public String replacePlaceholder(org.bukkit.entity.Player p, String s) {
                 return replace(p, s);
@@ -61,7 +61,7 @@ class TestPrimitiveDataTypes {
 
     @AfterAll
     static void tearDown() {
-        Handlers.setPlaceholderHandler(previousHandler);
+        apiSupport.close();
         placeholderMap.clear();
     }
 

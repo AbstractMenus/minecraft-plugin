@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Rule;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Item;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.variables.VariableManagerImpl;
 
 public class RuleExistVar implements Rule {
@@ -22,12 +22,12 @@ public class RuleExistVar implements Rule {
 
     @Override
     public boolean check(Player p, Menu menu, Item clickedItem) {
-        String varName = Handlers.getPlaceholderHandler().replace(p, this.name);
+        String varName = AbstractMenusApi.get().providers().placeholders().replace(p, this.name);
 
         if(this.player == null) {
             return VariableManagerImpl.instance().getGlobal(varName) != null;
         } else {
-            String varPlayer = Handlers.getPlaceholderHandler().replace(p, this.player);
+            String varPlayer = AbstractMenusApi.get().providers().placeholders().replace(p, this.player);
             return VariableManagerImpl.instance().getPersonal(varPlayer, varName) != null;
         }
     }

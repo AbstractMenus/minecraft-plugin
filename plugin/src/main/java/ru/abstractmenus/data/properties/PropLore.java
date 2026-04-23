@@ -9,7 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.ItemProperty;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.text.Colors;
 import ru.abstractmenus.util.MiniMessageUtil;
 
@@ -68,7 +68,7 @@ public class PropLore implements ItemProperty {
             meta.setLore(preFormatted);
             return;
         }
-        List<String> replaced = Handlers.getPlaceholderHandler().replace(player, lore);
+        List<String> replaced = AbstractMenusApi.get().providers().placeholders().replace(player, lore);
         meta.setLore(MiniMessageUtil.parseToLegacy(replaced));
     }
 

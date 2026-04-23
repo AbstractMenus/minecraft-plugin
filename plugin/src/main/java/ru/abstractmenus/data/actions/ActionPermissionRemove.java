@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Item;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 
 import java.util.List;
 
@@ -23,8 +23,8 @@ public class ActionPermissionRemove implements Action {
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
         permissions.forEach(perm -> {
-            String replaced = Handlers.getPlaceholderHandler().replace(player, perm);
-            Handlers.getPermissionsHandler().removePermission(player, replaced);
+            String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, perm);
+            AbstractMenusApi.get().providers().permissions().removePermission(player, replaced);
         });
     }
 

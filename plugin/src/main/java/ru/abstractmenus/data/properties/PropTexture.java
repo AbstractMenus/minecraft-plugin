@@ -14,7 +14,7 @@ import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.ItemProperty;
 import ru.abstractmenus.util.bukkit.ItemUtil;
 import ru.abstractmenus.util.bukkit.Skulls;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
@@ -43,7 +43,7 @@ public class PropTexture implements ItemProperty {
 
     @Override
     public void apply(ItemStack item, ItemMeta meta, Player player, Menu menu) {
-        String replaced = Handlers.getPlaceholderHandler().replace(player, texture);
+        String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, texture);
         ItemStack skullItem = Skulls.getCustomSkull(fetchTextureUrl(replaced));
 
         if (skullItem != null) {

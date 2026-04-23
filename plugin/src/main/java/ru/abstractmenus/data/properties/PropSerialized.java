@@ -4,7 +4,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.Logger;
 import ru.abstractmenus.api.inventory.ItemProperty;
 import ru.abstractmenus.api.inventory.Menu;
@@ -33,7 +33,7 @@ public class PropSerialized implements ItemProperty {
 
     @Override
     public void apply(ItemStack item, ItemMeta meta, Player player, Menu menu) {
-        String base64 = Handlers.getPlaceholderHandler().replace(player, value);
+        String base64 = AbstractMenusApi.get().providers().placeholders().replace(player, value);
         ItemStack deserialized = ItemUtil.decodeStack(base64);
 
         if (deserialized == null) {

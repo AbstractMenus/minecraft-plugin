@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Rule;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Item;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.services.BungeeManager;
 import ru.abstractmenus.datatype.TypeInt;
 
@@ -24,7 +24,7 @@ public class RuleBungeeOnline implements Rule {
 
     @Override
     public boolean check(Player player, Menu menu, Item clickedItem) {
-        return BungeeManager.instance().getOnline(Handlers.getPlaceholderHandler().replace(player, server)) >= online.getInt(player, menu);
+        return BungeeManager.instance().getOnline(AbstractMenusApi.get().providers().placeholders().replace(player, server)) >= online.getInt(player, menu);
     }
 
     public static class Serializer implements NodeSerializer<RuleBungeeOnline> {

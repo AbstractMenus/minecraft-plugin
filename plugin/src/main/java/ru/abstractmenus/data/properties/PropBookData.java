@@ -10,7 +10,7 @@ import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.ItemProperty;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 
 import java.util.List;
 
@@ -35,9 +35,9 @@ public class PropBookData implements ItemProperty {
     @Override
     public void apply(ItemStack itemStack, ItemMeta meta, Player player, Menu menu) {
         if (meta instanceof BookMeta) {
-            String author = Handlers.getPlaceholderHandler().replace(player, data.getAuthor());
-            String title = Handlers.getPlaceholderHandler().replace(player, data.getTitle());
-            List<String> pages = Handlers.getPlaceholderHandler().replace(player, data.getPages());
+            String author = AbstractMenusApi.get().providers().placeholders().replace(player, data.getAuthor());
+            String title = AbstractMenusApi.get().providers().placeholders().replace(player, data.getTitle());
+            List<String> pages = AbstractMenusApi.get().providers().placeholders().replace(player, data.getPages());
 
             ((BookMeta) meta).setAuthor(author);
             ((BookMeta) meta).setTitle(title);

@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Item;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 
 public class ActionSkinSet implements Action {
 
@@ -21,9 +21,9 @@ public class ActionSkinSet implements Action {
     }
 
     public void activate(Player player, Menu menu, Item clickedItem) {
-        Handlers.getSkinHandler().setSkin(player,
-                Handlers.getPlaceholderHandler().replace(player, texture),
-                Handlers.getPlaceholderHandler().replace(player, signature));
+        AbstractMenusApi.get().providers().skins().setSkin(player,
+                AbstractMenusApi.get().providers().placeholders().replace(player, texture),
+                AbstractMenusApi.get().providers().placeholders().replace(player, signature));
     }
 
     public static class Serializer implements NodeSerializer<ActionSkinSet> {

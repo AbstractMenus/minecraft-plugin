@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Item;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.util.TimeUtil;
 import ru.abstractmenus.variables.VarData;
 import ru.abstractmenus.variables.VariableManagerImpl;
@@ -25,10 +25,10 @@ public class ActionVarSet implements Action {
 
     public void activate(Player p, Menu menu, Item clickedItem) {
         for (VarData data : dataList) {
-            String varName = Handlers.getPlaceholderHandler().replace(p, data.getName());
-            String varVal = Handlers.getPlaceholderHandler().replace(p, data.getValue());
+            String varName = AbstractMenusApi.get().providers().placeholders().replace(p, data.getName());
+            String varVal = AbstractMenusApi.get().providers().placeholders().replace(p, data.getValue());
 
-            long time = TimeUtil.parseTime(Handlers.getPlaceholderHandler().replace(p, data.getTime()));
+            long time = TimeUtil.parseTime(AbstractMenusApi.get().providers().placeholders().replace(p, data.getTime()));
             boolean replace = data.isReplace().getBool(p, menu);
 
             Var var = VariableManagerImpl.instance().createBuilder()
@@ -40,7 +40,7 @@ public class ActionVarSet implements Action {
             if (data.getPlayer() == null) {
                 VariableManagerImpl.instance().saveGlobal(var, replace);
             } else {
-                String playerName = Handlers.getPlaceholderHandler().replace(p, data.getPlayer());
+                String playerName = AbstractMenusApi.get().providers().placeholders().replace(p, data.getPlayer());
                 VariableManagerImpl.instance().savePersonal(playerName, var, replace);
             }
         }

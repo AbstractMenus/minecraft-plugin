@@ -10,7 +10,7 @@ import ru.abstractmenus.api.Logger;
 import ru.abstractmenus.api.inventory.Menu;
 
 import ru.abstractmenus.api.inventory.ItemProperty;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.util.bukkit.ItemUtil;
 
 import java.lang.invoke.MethodHandle;
@@ -62,7 +62,7 @@ public class PropOraxen implements ItemProperty {
     }
 
     private ItemStack getItem(Player player) {
-        String id = Handlers.getPlaceholderHandler().replace(player, this.id);
+        String id = AbstractMenusApi.get().providers().placeholders().replace(player, this.id);
         try {
             Object builder = getItemByIdMethod.invoke(id);
             if (builder == null)

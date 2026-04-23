@@ -11,7 +11,7 @@ import ru.abstractmenus.api.inventory.ItemProperty;
 import ru.abstractmenus.util.bukkit.ItemUtil;
 import ru.abstractmenus.api.inventory.Menu;
 
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.util.bukkit.Skulls;
 
 public class PropSkullOwner implements ItemProperty {
@@ -34,7 +34,7 @@ public class PropSkullOwner implements ItemProperty {
 
     @Override
     public void apply(ItemStack item, ItemMeta meta, Player player, Menu menu) {
-        String replaced = Handlers.getPlaceholderHandler().replace(player, owner);
+        String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, owner);
         ItemStack skullItem = Skulls.getPlayerSkull(replaced);
 
         if (skullItem == null) {

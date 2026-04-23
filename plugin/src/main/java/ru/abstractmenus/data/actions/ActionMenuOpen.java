@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Item;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.services.MenuManager;
 
 public class ActionMenuOpen implements Action {
@@ -21,7 +21,7 @@ public class ActionMenuOpen implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        String name = Handlers.getPlaceholderHandler().replace(player, this.menu);
+        String name = AbstractMenusApi.get().providers().placeholders().replace(player, this.menu);
         Menu menuToOpen = MenuManager.instance().getMenu(name);
 
         if (menuToOpen != null)

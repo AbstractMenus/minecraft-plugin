@@ -10,7 +10,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import ru.abstractmenus.api.inventory.Menu;
 
 import ru.abstractmenus.api.inventory.ItemProperty;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.util.bukkit.ItemUtil;
 import ru.abstractmenus.util.bukkit.Skulls;
 
@@ -48,7 +48,7 @@ public class PropHDB implements ItemProperty {
 
     @Override
     public void apply(ItemStack item, ItemMeta meta, Player player, Menu menu) {
-        String replaced = Handlers.getPlaceholderHandler().replace(player, id);
+        String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, id);
         ItemStack headItem = api().getItemHead(replaced);
 
         if (headItem == null)

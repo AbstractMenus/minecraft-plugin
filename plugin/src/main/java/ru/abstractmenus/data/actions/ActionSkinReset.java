@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Item;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 
 public class ActionSkinReset implements Action {
 
@@ -21,7 +21,7 @@ public class ActionSkinReset implements Action {
 
     public void activate(Player player, Menu menu, Item clickedItem) {
         if (reset.getBool(player, menu)) {
-            Handlers.getSkinHandler().resetSkin(player);
+            AbstractMenusApi.get().providers().skins().resetSkin(player);
         }
     }
 

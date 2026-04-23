@@ -5,7 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.Logger;
 import ru.abstractmenus.api.inventory.ItemProperty;
 import ru.abstractmenus.api.inventory.Menu;
@@ -60,7 +60,7 @@ public class PropEquipItem implements ItemProperty {
         Player target = player;
 
         if (playerName != null) {
-            String replaced = Handlers.getPlaceholderHandler().replace(player, playerName);
+            String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, playerName);
             Player found = Bukkit.getPlayerExact(replaced);
 
             if (found == null || !found.isOnline()) {

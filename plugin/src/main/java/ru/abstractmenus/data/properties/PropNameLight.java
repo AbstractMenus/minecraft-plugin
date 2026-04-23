@@ -3,7 +3,7 @@ package ru.abstractmenus.data.properties;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.inventory.ItemProperty;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.text.Colors;
@@ -31,7 +31,7 @@ public class PropNameLight implements ItemProperty {
 
     @Override
     public void apply(ItemStack itemStack, ItemMeta meta, Player player, Menu menu) {
-        String replaced = Handlers.getPlaceholderHandler().replace(player, name);
+        String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, name);
         meta.setDisplayName(replaced);
     }
 

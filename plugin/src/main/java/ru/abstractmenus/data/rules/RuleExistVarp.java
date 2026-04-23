@@ -1,7 +1,7 @@
 package ru.abstractmenus.data.rules;
 
 import org.bukkit.entity.Player;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.Rule;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.Menu;
@@ -20,7 +20,7 @@ public class RuleExistVarp implements Rule {
 
     @Override
     public boolean check(Player p, Menu menu, Item clickedItem) {
-        String varName = Handlers.getPlaceholderHandler().replace(p, this.name);
+        String varName = AbstractMenusApi.get().providers().placeholders().replace(p, this.name);
         return VariableManagerImpl.instance().getPersonal(p.getName(), varName) != null;
     }
 

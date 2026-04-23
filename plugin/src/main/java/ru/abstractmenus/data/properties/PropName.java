@@ -9,7 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.ItemProperty;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.text.Colors;
 import ru.abstractmenus.util.MiniMessageUtil;
 
@@ -58,7 +58,7 @@ public class PropName implements ItemProperty {
             meta.setDisplayName(preFormatted);
             return;
         }
-        String replaced = Handlers.getPlaceholderHandler().replace(player, name);
+        String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, name);
         meta.setDisplayName(MiniMessageUtil.parseToLegacy(replaced));
     }
 

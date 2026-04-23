@@ -11,7 +11,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.Rule;
 import ru.abstractmenus.datatype.TypeSlot;
 import ru.abstractmenus.menu.item.MenuItem;
@@ -323,7 +323,7 @@ public abstract class AbstractMenu implements Menu {
     }
 
     protected void createInventory(Player player, InventoryHolder holder) {
-        String title = Handlers.getPlaceholderHandler().replace(player, this.title);
+        String title = AbstractMenusApi.get().providers().placeholders().replace(player, this.title);
         title = MiniMessageUtil.parseToLegacy(title);
 
         if (this.type != null) {

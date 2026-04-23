@@ -2,7 +2,7 @@ package ru.abstractmenus.data.actions.varp;
 
 import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.hocon.api.ConfigNode;
@@ -24,7 +24,7 @@ public class ActionVarpMul implements Action {
 
     public void activate(Player p, Menu menu, Item clickedItem) {
         for (VarNumData data : dataList) {
-            String varName = Handlers.getPlaceholderHandler().replace(p, data.getName());
+            String varName = AbstractMenusApi.get().providers().placeholders().replace(p, data.getName());
             double value = data.getValue().getDouble(p, menu);
             Function<Double, Double> func = num -> num * value;
 

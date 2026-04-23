@@ -4,7 +4,7 @@ package ru.abstractmenus.data.actions;
 import lombok.Setter;
 import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.hocon.api.ConfigNode;
@@ -27,8 +27,8 @@ public class ActionPermissionGive implements Action {
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
         permissions.forEach(perm -> {
-            String replaced = isIgnorePlaceholder ? perm : Handlers.getPlaceholderHandler().replace(player, perm);
-            Handlers.getPermissionsHandler().addPermission(player, replaced);
+            String replaced = isIgnorePlaceholder ? perm : AbstractMenusApi.get().providers().placeholders().replace(player, perm);
+            AbstractMenusApi.get().providers().permissions().addPermission(player, replaced);
         });
     }
 

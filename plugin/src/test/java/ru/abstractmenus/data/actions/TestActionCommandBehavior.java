@@ -5,8 +5,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import ru.abstractmenus.api.Handlers;
 import ru.abstractmenus.api.handler.PlaceholderHandler;
+import ru.abstractmenus.testsupport.ApiTestSupport;
 import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.ConfigurationLoader;
 import ru.abstractmenus.hocon.api.source.ConfigSources;
@@ -26,12 +26,12 @@ import static org.mockito.Mockito.*;
  */
 class TestActionCommandBehavior {
 
-    private static PlaceholderHandler previousHandler;
+    private static ApiTestSupport apiSupport;
 
     @BeforeAll
     static void installIdentityHandler() {
-        previousHandler = Handlers.getPlaceholderHandler();
-        Handlers.setPlaceholderHandler(new PlaceholderHandler() {
+        apiSupport = ApiTestSupport.install();
+        apiSupport.installPlaceholderHandler(new PlaceholderHandler() {
             @Override public String replacePlaceholder(Player p, String s) { return s; }
             @Override public String replace(Player p, String s) { return s; }
             @Override public List<String> replace(Player p, List<String> l) { return l; }
@@ -41,7 +41,7 @@ class TestActionCommandBehavior {
 
     @AfterAll
     static void restore() {
-        Handlers.setPlaceholderHandler(previousHandler);
+        apiSupport.close();
     }
 
     @Test
@@ -84,13 +84,19 @@ class TestActionCommandBehavior {
         // The old impl called replace(...) twice ("replace(replace(...))"), the
         // new one replaces once. Install a counting handler to enforce.
         int[] callCount = {0};
-        PlaceholderHandler saved = Handlers.getPlaceholderHandler();
-        Handlers.setPlaceholderHandler(new PlaceholderHandler() {
+        // Register a higher-priority counting handler that preempts the identity
+        // one installed in @BeforeAll; unregister it in the finally block so the
+        // identity handler remains active for the other tests.
+        ru.abstractmenus.api.MenuExtension scratchOwner = new ru.abstractmenus.api.MenuExtension() {
+            @Override public String name() { return "countingTestOwner"; }
+            @Override public void onEnable(ru.abstractmenus.api.AbstractMenusApi api) {}
+        };
+        apiSupport.providers().registerPlaceholders("counting", new PlaceholderHandler() {
             @Override public String replacePlaceholder(Player p, String s) { return s; }
             @Override public String replace(Player p, String s) { callCount[0]++; return s; }
             @Override public List<String> replace(Player p, List<String> l) { return l; }
             @Override public void registerAll() {}
-        });
+        }, 200, scratchOwner);
         try {
             ActionCommand action = buildAction("{ player = \"give %player_name% gold\" }");
             Player player = mock(Player.class);
@@ -100,7 +106,7 @@ class TestActionCommandBehavior {
             org.junit.jupiter.api.Assertions.assertEquals(1, callCount[0],
                     "PlaceholderHandler.replace must be called exactly once per command");
         } finally {
-            Handlers.setPlaceholderHandler(saved);
+            apiSupport.providers().unregisterAll(scratchOwner);
         }
     }
 

@@ -2,7 +2,7 @@ package ru.abstractmenus.data.actions;
 
 import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.Logger;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.Menu;
@@ -20,7 +20,7 @@ public class ActionLog implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        Logger.info(Handlers.getPlaceholderHandler().replace(player, message));
+        Logger.info(AbstractMenusApi.get().providers().placeholders().replace(player, message));
     }
 
     public static class Serializer implements NodeSerializer<ActionLog> {

@@ -5,7 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import ru.abstractmenus.AbstractMenus;
 import ru.abstractmenus.api.Action;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.hocon.api.ConfigNode;
@@ -37,7 +37,7 @@ public class ActionCommand implements Action {
     public void activate(Player player, Menu menu, Item clickedItem) {
         for (String command : playerCommands) {
             if (command != null) {
-                String resultCommand = isIgnorePlaceholder ? command : Handlers.getPlaceholderHandler().replace(player, command);
+                String resultCommand = isIgnorePlaceholder ? command : AbstractMenusApi.get().providers().placeholders().replace(player, command);
                 player.performCommand(resultCommand);
             }
         }
@@ -46,7 +46,7 @@ public class ActionCommand implements Action {
             Bukkit.getServer().getGlobalRegionScheduler().execute(AbstractMenus.instance(), () -> {
                 for (String command : consoleCommands) {
                     if (command != null) {
-                        String resultCommand = isIgnorePlaceholder ? command : Handlers.getPlaceholderHandler().replace(player, command);
+                        String resultCommand = isIgnorePlaceholder ? command : AbstractMenusApi.get().providers().placeholders().replace(player, command);
                         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), resultCommand);
                     }
                 }

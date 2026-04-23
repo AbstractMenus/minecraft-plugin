@@ -7,7 +7,7 @@ import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
 import org.bukkit.event.EventHandler;
 import ru.abstractmenus.api.Activator;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.extractors.RegionExtractor;
 
 import java.util.List;
@@ -22,7 +22,7 @@ public class OpenRegionEnter extends Activator {
 
     @EventHandler
     public void onRegionJoin(RegionEnterEvent event) {
-        List<String> regions = Handlers.getPlaceholderHandler().replace(event.getPlayer(), this.regions);
+        List<String> regions = AbstractMenusApi.get().providers().placeholders().replace(event.getPlayer(), this.regions);
         if (regions.contains(event.getRegion().getId())) {
             openMenu(event.getRegion(), event.getPlayer());
         }

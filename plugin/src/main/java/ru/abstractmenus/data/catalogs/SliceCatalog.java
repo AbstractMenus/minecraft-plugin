@@ -2,7 +2,7 @@ package ru.abstractmenus.data.catalogs;
 
 import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Catalog;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.ValueExtractor;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.hocon.api.ConfigNode;
@@ -36,7 +36,7 @@ public class SliceCatalog implements Catalog<String> {
 
     @Override
     public Collection<String> snapshot(Player player, Menu menu) {
-        String replaced = Handlers.getPlaceholderHandler().replace(player, value);
+        String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, value);
         String[] values = replaced.split(separator);
         return Arrays.stream(values)
                 .filter(val -> !val.isEmpty())

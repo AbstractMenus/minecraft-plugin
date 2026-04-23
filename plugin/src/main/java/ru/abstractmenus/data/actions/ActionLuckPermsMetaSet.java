@@ -4,7 +4,7 @@ package ru.abstractmenus.data.actions;
 import lombok.Setter;
 import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.data.properties.PropLPMeta;
@@ -24,8 +24,8 @@ public class ActionLuckPermsMetaSet implements Action {
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
         metaList.forEach(meta -> {
-            String replacedValue = isIgnorePlaceholder ? meta.getValue() : Handlers.getPlaceholderHandler().replace(player, meta.getValue());
-            if (Handlers.getPermissionsHandler() instanceof LuckPermsHandler handler) {
+            String replacedValue = isIgnorePlaceholder ? meta.getValue() : AbstractMenusApi.get().providers().placeholders().replace(player, meta.getValue());
+            if (AbstractMenusApi.get().providers().permissions() instanceof LuckPermsHandler handler) {
                 handler.addMeta(player, meta.getKey(), replacedValue);
             }
         });

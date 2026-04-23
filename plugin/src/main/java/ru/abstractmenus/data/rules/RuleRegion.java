@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Rule;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Item;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.util.RegionUtils;
 
 import java.util.List;
@@ -24,7 +24,7 @@ public class RuleRegion implements Rule {
     @Override
     public boolean check(Player player, Menu menu, Item clickedItem) {
         for (String reg : regions){
-            String replaced = Handlers.getPlaceholderHandler().replace(player, reg);
+            String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, reg);
             ProtectedRegion region = RegionUtils.getRegion(player.getWorld(), replaced);
 
             if(region != null && region.contains(

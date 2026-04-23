@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Item;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.nms.actionbar.ActionBar;
 import ru.abstractmenus.nms.title.Title;
 import ru.abstractmenus.api.text.Colors;
@@ -69,29 +69,29 @@ public class ActionMessage implements Action {
     public void activate(Player player, Menu menu, Item clickedItem) {
         if (player != null) {
             if (chatMessages != null) {
-                List<String> replaced = Handlers.getPlaceholderHandler().replace(player, chatMessages);
+                List<String> replaced = AbstractMenusApi.get().providers().placeholders().replace(player, chatMessages);
                 MiniMessageUtil.sendParsed(replaced, player);
             }
 
             if (json != null) {
                 BaseComponent[] component = ComponentSerializer.parse(
-                        Handlers.getPlaceholderHandler().replace(player, json));
+                        AbstractMenusApi.get().providers().placeholders().replace(player, json));
 
                 if (component != null)
                     player.spigot().sendMessage(component);
             }
 
             if (actionbar != null) {
-                String replaced = Handlers.getPlaceholderHandler().replace(player, actionbar);
+                String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, actionbar);
                 ActionBar.create().send(player, MiniMessageUtil.parseToLegacy(replaced));
             }
 
             if (!this.title.isEmpty() || !this.subtitle.isEmpty()) {
                 String title = MiniMessageUtil.parseToLegacy(
-                        Handlers.getPlaceholderHandler().replace(player, this.title)
+                        AbstractMenusApi.get().providers().placeholders().replace(player, this.title)
                 );
                 String subtitle = MiniMessageUtil.parseToLegacy(
-                        Handlers.getPlaceholderHandler().replace(player, this.subtitle)
+                        AbstractMenusApi.get().providers().placeholders().replace(player, this.subtitle)
                 );
 
                 new Title(

@@ -5,7 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import ru.abstractmenus.api.Activator;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.ValueExtractor;
 import ru.abstractmenus.data.EntityData;
 import ru.abstractmenus.extractors.EntityExtractor;
@@ -39,7 +39,7 @@ public class OpenShiftClickEntity extends Activator {
             }
 
             if (data.getName() == null) {
-                String name = Handlers.getPlaceholderHandler().replace(player, data.getName());
+                String name = AbstractMenusApi.get().providers().placeholders().replace(player, data.getName());
                 if (clickedEntity.getName().equalsIgnoreCase(name)) {
                     openMenu(clickedEntity, player);
                     return;

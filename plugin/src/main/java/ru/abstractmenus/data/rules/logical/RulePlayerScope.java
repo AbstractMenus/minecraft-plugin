@@ -2,7 +2,7 @@ package ru.abstractmenus.data.rules.logical;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.Rule;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.Menu;
@@ -22,7 +22,7 @@ public class RulePlayerScope implements Rule {
 
     @Override
     public boolean check(Player player, Menu menu, Item clickedItem) {
-        String replacedName = Handlers.getPlaceholderHandler().replace(player, playerName);
+        String replacedName = AbstractMenusApi.get().providers().placeholders().replace(player, playerName);
         Player target = Bukkit.getPlayerExact(replacedName);
 
         if (target != null && target.isOnline()) {

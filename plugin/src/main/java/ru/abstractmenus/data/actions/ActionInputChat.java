@@ -3,7 +3,7 @@ package ru.abstractmenus.data.actions;
 import lombok.Getter;
 import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.variables.Var;
@@ -34,7 +34,7 @@ public class ActionInputChat implements Action {
 
     @Override
     public void activate(Player player, Menu m, Item clickedItem) {
-        String name = Handlers.getPlaceholderHandler().replace(player, varName);
+        String name = AbstractMenusApi.get().providers().placeholders().replace(player, varName);
         InputAction action = new InputAction(player, name, global, cancelWord, onInput, onCancel);
         MenuManager.instance().saveInputAction(action);
         m.close(player);

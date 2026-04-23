@@ -2,7 +2,7 @@ package ru.abstractmenus.data.actions.varp;
 
 import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.hocon.api.ConfigNode;
@@ -23,7 +23,7 @@ public class ActionVarpRem implements Action {
 
     public void activate(Player p, Menu menu, Item clickedItem) {
         for (VarData data : dataList) {
-            String varName = Handlers.getPlaceholderHandler().replace(p, data.getName());
+            String varName = AbstractMenusApi.get().providers().placeholders().replace(p, data.getName());
 
             VariableManagerImpl.instance().deletePersonal(p.getName(), varName);
         }

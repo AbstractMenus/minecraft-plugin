@@ -10,7 +10,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import ru.abstractmenus.api.inventory.Menu;
 
 import ru.abstractmenus.api.inventory.ItemProperty;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.Logger;
 import ru.abstractmenus.util.bukkit.ItemUtil;
 
@@ -36,7 +36,7 @@ public class PropMmoItem implements ItemProperty {
 
     @Override
     public void apply(ItemStack item, ItemMeta meta, Player player, Menu menu) {
-        String[] arr = Handlers.getPlaceholderHandler().replace(player, id).split(":");
+        String[] arr = AbstractMenusApi.get().providers().placeholders().replace(player, id).split(":");
 
         if(arr.length >= 2) {
             ItemStack mmoItem = MMOItems.plugin.getItem(MMOItems.plugin.getTypes().get(arr[0]), arr[1]);

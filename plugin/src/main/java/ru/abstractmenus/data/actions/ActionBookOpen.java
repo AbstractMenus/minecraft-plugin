@@ -10,7 +10,7 @@ import ru.abstractmenus.nms.book.Book;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.Action;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 
 public class ActionBookOpen implements Action {
 
@@ -23,7 +23,7 @@ public class ActionBookOpen implements Action {
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
         BookData data = bookData.clone();
-        PlaceholderHandler handler = Handlers.getPlaceholderHandler();
+        PlaceholderHandler handler = AbstractMenusApi.get().providers().placeholders();
 
         data.setAuthor(handler.replace(player, bookData.getAuthor()));
         data.setTitle(handler.replace(player, bookData.getTitle()));

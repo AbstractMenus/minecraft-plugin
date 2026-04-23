@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Item;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 
 public class ActionXpTake implements Action {
 
@@ -20,7 +20,7 @@ public class ActionXpTake implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        Handlers.getLevelHandler().takeXp(player, xp.getInt(player, menu));
+        AbstractMenusApi.get().providers().levels().takeXp(player, xp.getInt(player, menu));
     }
 
     public static class Serializer implements NodeSerializer<ActionXpTake> {

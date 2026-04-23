@@ -7,12 +7,12 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import ru.abstractmenus.api.Handlers;
 import ru.abstractmenus.api.handler.PlaceholderHandler;
 import ru.abstractmenus.api.text.Colors;
 import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.ConfigurationLoader;
 import ru.abstractmenus.hocon.api.source.ConfigSources;
+import ru.abstractmenus.testsupport.ApiTestSupport;
 import ru.abstractmenus.util.MiniMessageUtil;
 
 import java.io.ByteArrayInputStream;
@@ -37,15 +37,15 @@ import static org.mockito.Mockito.*;
  */
 class TestPropNameLorePrecompute {
 
-    private static PlaceholderHandler previousHandler;
+    private static ApiTestSupport apiSupport;
     private static int replaceCallCount;
 
     @BeforeAll
     static void setUp() {
         MiniMessageUtil.init(false);
         Colors.init(false);  // pass-through; avoids LegacyComponentSerializer init.
-        previousHandler = Handlers.getPlaceholderHandler();
-        Handlers.setPlaceholderHandler(new PlaceholderHandler() {
+        apiSupport = ApiTestSupport.install();
+        apiSupport.installPlaceholderHandler(new PlaceholderHandler() {
             @Override public String replacePlaceholder(Player p, String s) { return s; }
             @Override public String replace(Player p, String s) { replaceCallCount++; return s; }
             @Override public List<String> replace(Player p, List<String> l) { replaceCallCount++; return l; }
@@ -55,7 +55,7 @@ class TestPropNameLorePrecompute {
 
     @AfterAll
     static void tearDown() {
-        Handlers.setPlaceholderHandler(previousHandler);
+        apiSupport.close();
         // Intentionally leave MiniMessageUtil in inactive mode: re-init(true)
         // would trigger LegacyComponentSerializer.builder(), which collides
         // on the test classpath (two Adventure Provider impls). No other test

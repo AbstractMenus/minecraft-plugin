@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Rule;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Item;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.datatype.TypeInt;
 
 public class RuleLevel implements Rule {
@@ -20,7 +20,7 @@ public class RuleLevel implements Rule {
 
     @Override
     public boolean check(Player player, Menu menu, Item clickedItem) {
-        return Handlers.getLevelHandler().getLevel(player) >= level.getInt(player, menu);
+        return AbstractMenusApi.get().providers().levels().getLevel(player) >= level.getInt(player, menu);
     }
 
     public static class Serializer implements NodeSerializer<RuleLevel> {

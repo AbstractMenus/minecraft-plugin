@@ -10,7 +10,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import ru.abstractmenus.api.inventory.Menu;
 
 import ru.abstractmenus.api.inventory.ItemProperty;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.util.bukkit.ItemUtil;
 
 public class PropItemsAdder implements ItemProperty {
@@ -33,7 +33,7 @@ public class PropItemsAdder implements ItemProperty {
 
     @Override
     public void apply(ItemStack item, ItemMeta meta, Player player, Menu menu) {
-        String id = Handlers.getPlaceholderHandler().replace(player, this.id);
+        String id = AbstractMenusApi.get().providers().placeholders().replace(player, this.id);
         CustomStack stack = CustomStack.getInstance(id);
 
         if (stack == null)

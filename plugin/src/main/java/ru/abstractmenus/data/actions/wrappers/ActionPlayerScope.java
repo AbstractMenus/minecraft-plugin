@@ -3,7 +3,7 @@ package ru.abstractmenus.data.actions.wrappers;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.data.Actions;
@@ -23,7 +23,7 @@ public class ActionPlayerScope implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        String replacedName = Handlers.getPlaceholderHandler().replace(player, playerName);
+        String replacedName = AbstractMenusApi.get().providers().placeholders().replace(player, playerName);
         Player target = Bukkit.getPlayerExact(replacedName);
 
         if (target != null && target.isOnline()) {

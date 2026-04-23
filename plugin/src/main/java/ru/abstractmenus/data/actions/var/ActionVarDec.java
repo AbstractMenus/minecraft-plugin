@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Item;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.variables.VarNumData;
 import ru.abstractmenus.variables.VariableManagerImpl;
 
@@ -24,14 +24,14 @@ public class ActionVarDec implements Action {
 
     public void activate(Player p, Menu menu, Item clickedItem) {
         for (VarNumData data : dataList) {
-            String varName = Handlers.getPlaceholderHandler().replace(p, data.getName());
+            String varName = AbstractMenusApi.get().providers().placeholders().replace(p, data.getName());
             double value = data.getValue().getDouble(p, menu);
             Function<Double, Double> func = num -> num - value;
 
             if (data.getPlayer() == null) {
                 VariableManagerImpl.instance().modifyNumericGlobal(varName, func);
             } else {
-                String playerName = Handlers.getPlaceholderHandler().replace(p, data.getPlayer());
+                String playerName = AbstractMenusApi.get().providers().placeholders().replace(p, data.getPlayer());
                 VariableManagerImpl.instance().modifyNumericPersonal(playerName, varName, func);
             }
         }

@@ -8,7 +8,7 @@ import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
 import org.bukkit.entity.Player;
 import ru.abstractmenus.api.inventory.Menu;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 
 import java.util.List;
 
@@ -49,11 +49,11 @@ public final class LegacyValueComparator implements ValueComparator {
         }
 
         public boolean compare(Player player, Menu menu){
-            String param = Handlers.getPlaceholderHandler().replace(player, getParam());
+            String param = AbstractMenusApi.get().providers().placeholders().replace(player, getParam());
 
             if(equals != null){
                 for(String str : equals){
-                    String val = Handlers.getPlaceholderHandler().replace(player, str);
+                    String val = AbstractMenusApi.get().providers().placeholders().replace(player, str);
 
                     try{
                         if(Double.parseDouble(param) == Double.parseDouble(val)) return true;
@@ -65,7 +65,7 @@ public final class LegacyValueComparator implements ValueComparator {
 
             if(equalsIgnoreCase != null){
                 for(String str : equalsIgnoreCase){
-                    String val = Handlers.getPlaceholderHandler().replace(player, str);
+                    String val = AbstractMenusApi.get().providers().placeholders().replace(player, str);
                     if(param.equalsIgnoreCase(val)){
                         return true;
                     }
@@ -74,7 +74,7 @@ public final class LegacyValueComparator implements ValueComparator {
 
             if(contains != null){
                 for(String str : contains){
-                    String val = Handlers.getPlaceholderHandler().replace(player, str);
+                    String val = AbstractMenusApi.get().providers().placeholders().replace(player, str);
                     if(param.toLowerCase().contains(val.toLowerCase())){
                         return true;
                     }

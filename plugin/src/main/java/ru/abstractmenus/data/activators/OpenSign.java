@@ -8,7 +8,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import ru.abstractmenus.api.Activator;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.ValueExtractor;
 import ru.abstractmenus.api.text.Colors;
 import ru.abstractmenus.extractors.BlockExtractor;
@@ -43,7 +43,7 @@ public class OpenSign extends Activator {
         String[] lines = sign.getLines();
         int compareLines = Math.min(text.size(), lines.length);
         for (int i = 0; i < compareLines; i++) {
-            String line = Handlers.getPlaceholderHandler().replace(player, text.get(i));
+            String line = AbstractMenusApi.get().providers().placeholders().replace(player, text.get(i));
             if (!line.equalsIgnoreCase(lines[i])) return;
         }
 

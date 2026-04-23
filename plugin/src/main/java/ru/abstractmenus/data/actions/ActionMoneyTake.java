@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 import ru.abstractmenus.api.Action;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Item;
-import ru.abstractmenus.api.Handlers;
+import ru.abstractmenus.api.AbstractMenusApi;
 
 public class ActionMoneyTake implements Action {
 
@@ -21,8 +21,8 @@ public class ActionMoneyTake implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        if (Handlers.getEconomyHandler() != null) {
-            Handlers.getEconomyHandler().takeBalance(player, money.getDouble(player, menu));
+        if (AbstractMenusApi.get().providers().economy() != null) {
+            AbstractMenusApi.get().providers().economy().takeBalance(player, money.getDouble(player, menu));
         }
     }
 
