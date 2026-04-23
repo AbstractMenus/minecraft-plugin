@@ -41,7 +41,7 @@ public final class AddonManager {
      * tests). Any addon with a non-empty {@code pluginDependencies} will fail
      * under this constructor.
      */
-    AddonManager(java.nio.file.Path addonsDir, ru.abstractmenus.api.AbstractMenusApi api) {
+    AddonManager(Path addonsDir, AbstractMenusApi api) {
         this.plugin = null;
         this.api = api;
         this.addonsDir = addonsDir;
@@ -66,7 +66,7 @@ public final class AddonManager {
         if (plugin != null) {
             var pluginManager = plugin.getServer().getPluginManager();
             for (LoadedAddon la : pending.values()) {
-                AddonConf c = la.conf();
+                AddonConf c = la.getConf();
                 boolean missing = false;
                 for (String dep : c.pluginDependencies()) {
                     if (pluginManager.getPlugin(dep) == null) {
@@ -92,7 +92,7 @@ public final class AddonManager {
         // Sort by addon-level dependencies.
         Map<String, List<String>> depGraph = new LinkedHashMap<>();
         for (var e : byName.entrySet()) {
-            List<String> deps = e.getValue().conf().addonDependencies().stream()
+            List<String> deps = e.getValue().getConf().addonDependencies().stream()
                     .map(String::toLowerCase).toList();
             depGraph.put(e.getKey(), deps);
         }
@@ -103,7 +103,7 @@ public final class AddonManager {
             Logger.severe("Addon dependency graph error: " + ex.getMessage());
             for (var la : byName.values()) {
                 la.markFailed(ex);
-                addons.put(la.conf().name().toLowerCase(), la);
+                addons.put(la.getConf().name().toLowerCase(), la);
             }
             return;
         }
@@ -113,9 +113,9 @@ public final class AddonManager {
             LoadedAddon la = byName.get(k);
             try {
                 la.setExtension(instantiate(la));
-                la.extension().onLoad(api);
+                la.getExtension().onLoad(api);
             } catch (Throwable t) {
-                Logger.severe("Addon " + la.conf().name() + " failed in onLoad: " + t);
+                Logger.severe("Addon " + la.getConf().name() + " failed in onLoad: " + t);
                 t.printStackTrace();
                 la.markFailed(t);
             }
@@ -124,20 +124,20 @@ public final class AddonManager {
         // Stage 2: onEnable in dependency order.
         for (String k : order) {
             LoadedAddon la = byName.get(k);
-            if (la.status() == AddonStatus.FAILED) {
+            if (la.getStatus() == AddonStatus.FAILED) {
                 addons.put(k, la);
                 continue;
             }
             try {
-                la.extension().onEnable(api);
+                la.getExtension().onEnable(api);
                 la.markEnabled();
-                Logger.info("Enabled addon: " + la.conf().name()
-                        + " v" + la.conf().version()
-                        + (la.conf().targetApiVersion() == null
+                Logger.info("Enabled addon: " + la.getConf().name()
+                        + " v" + la.getConf().version()
+                        + (la.getConf().targetApiVersion() == null
                             ? ""
-                            : " (built against API " + la.conf().targetApiVersion() + ")"));
+                            : " (built against API " + la.getConf().targetApiVersion() + ")"));
             } catch (Throwable t) {
-                Logger.severe("Addon " + la.conf().name() + " failed in onEnable: " + t);
+                Logger.severe("Addon " + la.getConf().name() + " failed in onEnable: " + t);
                 t.printStackTrace();
                 la.markFailed(t);
                 rollbackRegistrations(la);
@@ -151,7 +151,7 @@ public final class AddonManager {
      * MenuExtension.
      */
     private ru.abstractmenus.api.MenuExtension instantiate(LoadedAddon la) throws Exception {
-        Class<?> main = la.classLoader().loadClass(la.conf().main());
+        Class<?> main = la.getClassLoader().loadClass(la.getConf().main());
         if (!ru.abstractmenus.api.MenuExtension.class.isAssignableFrom(main)) {
             throw new IllegalStateException("main class " + main.getName()
                     + " does not implement MenuExtension");
@@ -161,12 +161,12 @@ public final class AddonManager {
 
     /** Strip any type registrations the failed addon managed to make. */
     private void rollbackRegistrations(LoadedAddon la) {
-        if (la.extension() == null) return;
-        api.actions().unregisterAll(la.extension());
-        api.rules().unregisterAll(la.extension());
-        api.activators().unregisterAll(la.extension());
-        api.itemProperties().unregisterAll(la.extension());
-        api.catalogs().unregisterAll(la.extension());
+        if (la.getExtension() == null) return;
+        api.actions().unregisterAll(la.getExtension());
+        api.rules().unregisterAll(la.getExtension());
+        api.activators().unregisterAll(la.getExtension());
+        api.itemProperties().unregisterAll(la.getExtension());
+        api.catalogs().unregisterAll(la.getExtension());
     }
 
     /**
@@ -179,20 +179,20 @@ public final class AddonManager {
         java.util.Collections.reverse(reversed);
         for (LoadedAddon la : reversed) {
             try {
-                if (la.status() == AddonStatus.ENABLED && la.extension() != null) {
-                    la.extension().onDisable(api);
+                if (la.getStatus() == AddonStatus.ENABLED && la.getExtension() != null) {
+                    la.getExtension().onDisable(api);
                 }
                 rollbackRegistrations(la);
                 la.markDisabled();
             } catch (Throwable t) {
-                Logger.severe("Addon " + la.conf().name() + " failed in onDisable: " + t);
+                Logger.severe("Addon " + la.getConf().name() + " failed in onDisable: " + t);
                 t.printStackTrace();
                 // Don't let one bad disable block the others.
             }
             try {
-                la.classLoader().close();
+                la.getClassLoader().close();
             } catch (Exception e) {
-                Logger.warning("Addon " + la.conf().name() + " classloader close failed: " + e);
+                Logger.warning("Addon " + la.getConf().name() + " classloader close failed: " + e);
             }
         }
         addons.clear();
@@ -213,15 +213,15 @@ public final class AddonManager {
 
         // Disable + unhook current instance.
         try {
-            if (existing.status() == AddonStatus.ENABLED && existing.extension() != null) {
-                existing.extension().onDisable(api);
+            if (existing.getStatus() == AddonStatus.ENABLED && existing.getExtension() != null) {
+                existing.getExtension().onDisable(api);
             }
             rollbackRegistrations(existing);
         } catch (Throwable t) {
-            Logger.warning("Addon " + existing.conf().name()
+            Logger.warning("Addon " + existing.getConf().name()
                     + " failed in onDisable during reload: " + t);
         }
-        try { existing.classLoader().close(); } catch (Exception ignored) {}
+        try { existing.getClassLoader().close(); } catch (Exception ignored) {}
         addons.remove(key);
 
         // Re-discover: find the jar whose addon.conf name matches.
@@ -244,17 +244,17 @@ public final class AddonManager {
         // enabled (they were, before this reload).
         try {
             fresh.setExtension(instantiate(fresh));
-            fresh.extension().onLoad(api);
-            fresh.extension().onEnable(api);
+            fresh.getExtension().onLoad(api);
+            fresh.getExtension().onEnable(api);
             fresh.markEnabled();
-            addons.put(fresh.conf().name().toLowerCase(), fresh);
-            Logger.info("Reloaded addon: " + fresh.conf().name() + " v" + fresh.conf().version());
+            addons.put(fresh.getConf().name().toLowerCase(), fresh);
+            Logger.info("Reloaded addon: " + fresh.getConf().name() + " v" + fresh.getConf().version());
         } catch (Throwable t) {
             Logger.severe("Addon " + name + " failed during reload: " + t);
             t.printStackTrace();
             fresh.markFailed(t);
             rollbackRegistrations(fresh);
-            addons.put(fresh.conf().name().toLowerCase(), fresh);
+            addons.put(fresh.getConf().name().toLowerCase(), fresh);
         }
 
         return Optional.of(fresh);
@@ -313,11 +313,11 @@ public final class AddonManager {
             for (Path jar : stream) {
                 try {
                     LoadedAddon addon = readAddonJar(jar);
-                    String key = addon.conf().name().toLowerCase();
+                    String key = addon.getConf().name().toLowerCase();
                     if (pending.containsKey(key)) {
-                        Logger.warning("Duplicate addon name '" + addon.conf().name()
+                        Logger.warning("Duplicate addon name '" + addon.getConf().name()
                                 + "' — ignoring " + jar.getFileName());
-                        try { addon.classLoader().close(); } catch (Exception ignored) {}
+                        try { addon.getClassLoader().close(); } catch (Exception ignored) {}
                         continue;
                     }
                     pending.put(key, addon);

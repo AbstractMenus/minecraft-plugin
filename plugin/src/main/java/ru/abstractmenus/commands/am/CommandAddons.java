@@ -48,15 +48,15 @@ public class CommandAddons extends Command {
         }
         sender.sendMessage(Colors.of("&e&lAddons (" + addons.size() + "):"));
         for (LoadedAddon la : addons) {
-            String color = switch (la.status()) {
+            String color = switch (la.getStatus()) {
                 case ENABLED  -> "&a";
                 case DISABLED -> "&7";
                 case FAILED   -> "&c";
                 case PENDING  -> "&e";
             };
-            sender.sendMessage(Colors.of(color + "  " + la.conf().name()
-                    + " &8v" + la.conf().version()
-                    + " &7[" + la.status() + "]"));
+            sender.sendMessage(Colors.of(color + "  " + la.getConf().name()
+                    + " &8v" + la.getConf().version()
+                    + " &7[" + la.getStatus() + "]"));
         }
     }
 
@@ -72,11 +72,11 @@ public class CommandAddons extends Command {
             return;
         }
         LoadedAddon la = result.get();
-        if (la.status() == AddonStatus.ENABLED) {
-            sender.sendMessage(Colors.of("&aReloaded " + la.conf().name() + "."));
+        if (la.getStatus() == AddonStatus.ENABLED) {
+            sender.sendMessage(Colors.of("&aReloaded " + la.getConf().name() + "."));
         } else {
             sender.sendMessage(Colors.of("&cReload failed: "
-                    + (la.error() == null ? "unknown error" : la.error().getMessage())));
+                    + (la.getError() == null ? "unknown error" : la.getError().getMessage())));
         }
     }
 
@@ -91,9 +91,9 @@ public class CommandAddons extends Command {
             return;
         }
         LoadedAddon la = opt.get();
-        var c = la.conf();
+        var c = la.getConf();
         sender.sendMessage(Colors.of("&e&l" + c.name() + " &7v" + c.version()));
-        sender.sendMessage(Colors.of("&7  status: &f" + la.status()));
+        sender.sendMessage(Colors.of("&7  status: &f" + la.getStatus()));
         if (!c.authors().isEmpty()) {
             sender.sendMessage(Colors.of("&7  authors: &f" + String.join(", ", c.authors())));
         }
@@ -111,8 +111,8 @@ public class CommandAddons extends Command {
             sender.sendMessage(Colors.of("&7  pluginDependencies: &f"
                     + String.join(", ", c.pluginDependencies())));
         }
-        if (la.status() == AddonStatus.FAILED && la.error() != null) {
-            sender.sendMessage(Colors.of("&7  error: &c" + la.error().getMessage()));
+        if (la.getStatus() == AddonStatus.FAILED && la.getError() != null) {
+            sender.sendMessage(Colors.of("&7  error: &c" + la.getError().getMessage()));
         }
     }
 }

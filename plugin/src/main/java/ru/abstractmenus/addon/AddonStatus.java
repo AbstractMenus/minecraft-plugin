@@ -8,6 +8,6 @@ public enum AddonStatus {
     ENABLED,
     /** Cleanly disabled — {@code onDisable} ran and registry entries were cleared. */
     DISABLED,
-    /** Failed to load or enable — see {@link LoadedAddon#error()} for the cause. */
+    /** Failed to load or enable — see {@link LoadedAddon#getError()} for the cause. */
     FAILED
 }

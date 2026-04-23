@@ -1,5 +1,8 @@
 package ru.abstractmenus.addon;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import ru.abstractmenus.api.MenuExtension;
 
 /**
@@ -10,27 +13,30 @@ import ru.abstractmenus.api.MenuExtension;
  * <p>Instances are created by {@code AddonManager} during discovery and
  * transition through enable → disable / failed states.
  */
+@RequiredArgsConstructor
+@Getter
 public final class LoadedAddon {
+
 
     private final AddonConf conf;
     private final AddonClassLoader classLoader;
+    @Setter
     private MenuExtension extension;     // null until onLoad completes
     private AddonStatus status = AddonStatus.PENDING;
     private Throwable error;             // non-null iff status == FAILED
 
-    public LoadedAddon(AddonConf conf, AddonClassLoader classLoader) {
-        this.conf = conf;
-        this.classLoader = classLoader;
+    public void markEnabled() {
+        this.status = AddonStatus.ENABLED;
+        this.error = null;
     }
 
-    public AddonConf        conf()        { return conf; }
-    public AddonClassLoader classLoader() { return classLoader; }
-    public MenuExtension    extension()   { return extension; }
-    public AddonStatus      status()      { return status; }
-    public Throwable        error()       { return error; }
+    public void markDisabled() {
+        this.status = AddonStatus.DISABLED;
+        this.error = null;
+    }
 
-    public void setExtension(MenuExtension e) { this.extension = e; }
-    public void markEnabled()                 { this.status = AddonStatus.ENABLED;  this.error = null; }
-    public void markDisabled()                { this.status = AddonStatus.DISABLED; this.error = null; }
-    public void markFailed(Throwable t)       { this.status = AddonStatus.FAILED;   this.error = t; }
+    public void markFailed(Throwable t) {
+        this.status = AddonStatus.FAILED;
+        this.error = t;
+    }
 }

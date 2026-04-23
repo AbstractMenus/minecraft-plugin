@@ -117,10 +117,10 @@ class AddonManagerIntegrationTest {
         // Verify: exactly one addon is loaded, with ENABLED status.
         assertEquals(1, manager.loaded().size());
         LoadedAddon loaded = manager.loaded().iterator().next();
-        assertEquals("TestAddon", loaded.conf().name());
-        assertEquals(AddonStatus.ENABLED, loaded.status(),
+        assertEquals("TestAddon", loaded.getConf().name());
+        assertEquals(AddonStatus.ENABLED, loaded.getStatus(),
                 "addon must reach ENABLED status (error: "
-                        + (loaded.error() == null ? "none" : loaded.error()) + ")");
+                        + (loaded.getError() == null ? "none" : loaded.getError()) + ")");
 
         // Verify: the action is registered.
         assertNotNull(api.actions().get("testPing"),
