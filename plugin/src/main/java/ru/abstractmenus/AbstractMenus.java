@@ -66,6 +66,7 @@ public final class AbstractMenus extends JavaPlugin {
     private FoliaLib foliaLib;
     private AbstractMenusApi api;
     private AddonManager addonManager;
+    private MainConfig mainConfig;
 
     @Getter
     @Setter
@@ -100,7 +101,8 @@ public final class AbstractMenus extends JavaPlugin {
             metrics = new Metrics(this);
             foliaLib = new FoliaLib(this);
 
-            MainConfig config = new MainConfig();
+            mainConfig = new MainConfig();
+            MainConfig config = mainConfig;
 
             config.load(this, ConfigurationLoader.builder()
                     .source(ConfigSources.resource("/config.conf", this)

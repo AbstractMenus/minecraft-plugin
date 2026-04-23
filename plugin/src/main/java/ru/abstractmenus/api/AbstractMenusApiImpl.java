@@ -34,7 +34,9 @@ public final class AbstractMenusApiImpl implements AbstractMenusApi {
         this.activators     = new TypeRegistryImpl<>(serializers);
         this.itemProperties = new TypeRegistryImpl<>(serializers);
         this.catalogs       = new TypeRegistryImpl<>(serializers);
-        this.providers      = new ProviderRegistryImpl();
+        ProviderRegistryImpl providerImpl = new ProviderRegistryImpl();
+        providerImpl.setConfigDefaults(kind -> plugin.getMainConfig().providerDefault(kind));
+        this.providers      = providerImpl;
     }
 
     @Override public TypeRegistry<Action>        actions()        { return actions; }
