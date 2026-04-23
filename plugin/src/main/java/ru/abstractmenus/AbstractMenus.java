@@ -23,6 +23,7 @@ import ru.abstractmenus.commands.AbstractMenuCommand;
 import ru.abstractmenus.commands.Command;
 import ru.abstractmenus.commands.VarCommand;
 import ru.abstractmenus.commands.VarpCommand;
+import ru.abstractmenus.commands.am.CommandAddons;
 import ru.abstractmenus.commands.am.CommandOpen;
 import ru.abstractmenus.commands.am.CommandPluginVersion;
 import ru.abstractmenus.commands.am.CommandReload;
@@ -217,7 +218,8 @@ public final class AbstractMenus extends JavaPlugin {
                 .addSub("reload", new CommandReload())
                 .addSub("open", new CommandOpen(config))
                 .addSub("serve", new CommandServe())
-                .addSub("version", new CommandPluginVersion());
+                .addSub("version", new CommandPluginVersion())
+                .addSub("addons", new CommandAddons());
 
         Command var = new VarCommand("am.admin")
                 .addSub("get", new VarGet())
