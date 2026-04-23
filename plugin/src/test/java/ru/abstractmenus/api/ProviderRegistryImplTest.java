@@ -102,6 +102,39 @@ class ProviderRegistryImplTest {
         assertNull(registry.skins());
     }
 
+    @Test
+    void configDefault_prefersConfiguredId() {
+        EconomyHandler vault = mock(EconomyHandler.class);
+        EconomyHandler pp = mock(EconomyHandler.class);
+        registry.registerEconomy("vault", vault, 50, ownerA);
+        registry.registerEconomy("playerpoints", pp, 100, ownerA);
+
+        // Without config, auto prefers playerpoints (priority 100).
+        assertSame(pp, registry.economy());
+
+        // With config override to vault, vault wins despite lower priority.
+        registry.setConfigDefaults(kind -> "economy".equals(kind) ? "vault" : null);
+        assertSame(vault, registry.economy());
+    }
+
+    @Test
+    void configDefault_autoKeyword_fallsBackToAuto() {
+        EconomyHandler vault = mock(EconomyHandler.class);
+        registry.registerEconomy("vault", vault, 50, ownerA);
+
+        registry.setConfigDefaults(kind -> "auto");
+        assertSame(vault, registry.economy());
+    }
+
+    @Test
+    void configDefault_unknownId_fallsBackToAuto() {
+        EconomyHandler vault = mock(EconomyHandler.class);
+        registry.registerEconomy("vault", vault, 50, ownerA);
+
+        registry.setConfigDefaults(kind -> "ghost");  // not registered
+        assertSame(vault, registry.economy());  // auto fallback
+    }
+
     // --- helper ---
 
     static class DummyExtension implements MenuExtension {
