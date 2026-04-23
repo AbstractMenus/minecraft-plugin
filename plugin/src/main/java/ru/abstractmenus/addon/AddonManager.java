@@ -156,7 +156,28 @@ public final class AddonManager {
      * classloader resources. Called from plugin onDisable.
      */
     public void unloadAll() {
-        // Impl — Task 8
+        // Disable in reverse enable order.
+        var reversed = new java.util.ArrayList<>(addons.values());
+        java.util.Collections.reverse(reversed);
+        for (LoadedAddon la : reversed) {
+            try {
+                if (la.status() == AddonStatus.ENABLED && la.extension() != null) {
+                    la.extension().onDisable(api);
+                }
+                rollbackRegistrations(la);
+                la.markDisabled();
+            } catch (Throwable t) {
+                Logger.severe("Addon " + la.conf().name() + " failed in onDisable: " + t);
+                t.printStackTrace();
+                // Don't let one bad disable block the others.
+            }
+            try {
+                la.classLoader().close();
+            } catch (Exception e) {
+                Logger.warning("Addon " + la.conf().name() + " classloader close failed: " + e);
+            }
+        }
+        addons.clear();
     }
 
     /**
