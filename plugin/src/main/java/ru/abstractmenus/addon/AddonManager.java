@@ -73,6 +73,76 @@ public final class AddonManager {
         return Optional.ofNullable(addons.get(name.toLowerCase()));
     }
 
-    // package-private helpers filled in by subsequent tasks (discover, readAddonJar,
-    // instantiate, rollbackRegistrations, findJarByName)
+    /**
+     * Scan {@link #addonsDir} for {@code *.jar} files. For each, extract
+     * {@code addon.conf}, parse it, and build a LoadedAddon (without enabling
+     * — status stays PENDING).
+     *
+     * <p>Jars that are missing addon.conf, have malformed addon.conf, or
+     * duplicate a name already seen are logged and skipped — not fatal.
+     *
+     * @return map of name (lowercased) → PENDING LoadedAddon, in discovery
+     *         order (stable for the later topological sort)
+     */
+    Map<String, LoadedAddon> discover() {
+        Map<String, LoadedAddon> pending = new LinkedHashMap<>();
+
+        if (!java.nio.file.Files.isDirectory(addonsDir)) {
+            try {
+                java.nio.file.Files.createDirectories(addonsDir);
+            } catch (java.io.IOException e) {
+                Logger.warning("Could not create addons directory " + addonsDir + ": " + e.getMessage());
+            }
+            return pending;
+        }
+
+        try (var stream = java.nio.file.Files.newDirectoryStream(addonsDir, "*.jar")) {
+            for (Path jar : stream) {
+                try {
+                    LoadedAddon addon = readAddonJar(jar);
+                    String key = addon.conf().name().toLowerCase();
+                    if (pending.containsKey(key)) {
+                        Logger.warning("Duplicate addon name '" + addon.conf().name()
+                                + "' — ignoring " + jar.getFileName());
+                        try { addon.classLoader().close(); } catch (Exception ignored) {}
+                        continue;
+                    }
+                    pending.put(key, addon);
+                } catch (Exception e) {
+                    Logger.warning("Failed to load addon " + jar.getFileName() + ": " + e.getMessage());
+                }
+            }
+        } catch (java.io.IOException e) {
+            Logger.warning("Failed to scan addons directory: " + e.getMessage());
+        }
+
+        return pending;
+    }
+
+    /**
+     * Read a single addon jar: extract {@code addon.conf}, parse it, build a
+     * classloader. Throws if addon.conf is missing or malformed.
+     */
+    private LoadedAddon readAddonJar(Path jarPath) throws java.io.IOException {
+        String hocon;
+        try (var jar = new java.util.jar.JarFile(jarPath.toFile())) {
+            var entry = jar.getJarEntry("addon.conf");
+            if (entry == null) {
+                throw new java.io.IOException("no addon.conf at jar root");
+            }
+            try (var in = jar.getInputStream(entry)) {
+                hocon = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            }
+        }
+
+        AddonConf conf = AddonConf.parse(hocon);
+        AddonClassLoader cl = new AddonClassLoader(
+                new java.net.URL[]{jarPath.toUri().toURL()},
+                plugin.getClass().getClassLoader());
+
+        return new LoadedAddon(conf, cl);
+    }
+
+    // package-private helpers filled in by subsequent tasks (instantiate,
+    // rollbackRegistrations, findJarByName)
 }
