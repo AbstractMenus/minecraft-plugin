@@ -36,6 +36,18 @@ public final class AddonManager {
     }
 
     /**
+     * Test-only overload: inject addonsDir directly, skip Bukkit plugin-dep
+     * checks (since no {@code plugin.getServer()} is available in pure-unit
+     * tests). Any addon with a non-empty {@code pluginDependencies} will fail
+     * under this constructor.
+     */
+    AddonManager(java.nio.file.Path addonsDir, ru.abstractmenus.api.AbstractMenusApi api) {
+        this.plugin = null;
+        this.api = api;
+        this.addonsDir = addonsDir;
+    }
+
+    /**
      * Discover, parse, sort, and enable every addon in the addons directory.
      * Safe to call once during plugin enable. If the directory doesn't exist,
      * creates it and returns without enabling anything.
@@ -48,25 +60,31 @@ public final class AddonManager {
         }
 
         // Soft-filter: drop addons whose required Bukkit plugin deps are missing.
-        var pluginManager = plugin.getServer().getPluginManager();
+        // In test mode (plugin == null), skip this check — tests must not declare
+        // pluginDependencies.
         var byName = new LinkedHashMap<String, LoadedAddon>();
-        for (LoadedAddon la : pending.values()) {
-            AddonConf c = la.conf();
-            boolean missing = false;
-            for (String dep : c.pluginDependencies()) {
-                if (pluginManager.getPlugin(dep) == null) {
-                    Logger.warning("Addon " + c.name()
-                            + " requires plugin '" + dep + "' which is not installed — skipping");
-                    la.markFailed(new IllegalStateException("missing plugin dependency: " + dep));
-                    missing = true;
-                    break;
+        if (plugin != null) {
+            var pluginManager = plugin.getServer().getPluginManager();
+            for (LoadedAddon la : pending.values()) {
+                AddonConf c = la.conf();
+                boolean missing = false;
+                for (String dep : c.pluginDependencies()) {
+                    if (pluginManager.getPlugin(dep) == null) {
+                        Logger.warning("Addon " + c.name()
+                                + " requires plugin '" + dep + "' which is not installed — skipping");
+                        la.markFailed(new IllegalStateException("missing plugin dependency: " + dep));
+                        missing = true;
+                        break;
+                    }
                 }
+                if (missing) {
+                    addons.put(c.name().toLowerCase(), la);  // keep the failed entry visible in /am addons list
+                    continue;
+                }
+                byName.put(c.name().toLowerCase(), la);
             }
-            if (missing) {
-                addons.put(c.name().toLowerCase(), la);  // keep the failed entry visible in /am addons list
-                continue;
-            }
-            byName.put(c.name().toLowerCase(), la);
+        } else {
+            byName.putAll(pending);
         }
 
         if (byName.isEmpty()) return;
@@ -331,9 +349,12 @@ public final class AddonManager {
         }
 
         AddonConf conf = AddonConf.parse(hocon);
+        ClassLoader parent = (plugin != null)
+                ? plugin.getClass().getClassLoader()
+                : AddonManager.class.getClassLoader();
         AddonClassLoader cl = new AddonClassLoader(
                 new java.net.URL[]{jarPath.toUri().toURL()},
-                plugin.getClass().getClassLoader());
+                parent);
 
         return new LoadedAddon(conf, cl);
     }
