@@ -33,5 +33,6 @@ public final class CoreExtension implements MenuExtension {
         new CoreItemPropsBundle().register(api, this);
         new CoreActivatorsBundle().register(api, this);
         new CoreCatalogsBundle().register(api, this);
+        new CoreProvidersBundle().register(api, this);
     }
 }
