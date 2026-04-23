@@ -9,6 +9,8 @@ import ru.abstractmenus.api.Activator;
 import ru.abstractmenus.api.Catalog;
 import ru.abstractmenus.api.MenuExtension;
 import ru.abstractmenus.api.Rule;
+import ru.abstractmenus.api.ProviderRegistry;
+import ru.abstractmenus.api.ProviderRegistryImpl;
 import ru.abstractmenus.api.TypeRegistry;
 import ru.abstractmenus.api.TypeRegistryImpl;
 import ru.abstractmenus.api.inventory.ItemProperty;
@@ -153,12 +155,14 @@ class AddonManagerIntegrationTest {
         private final TypeRegistry<Activator>     activators     = new TypeRegistryImpl<>(serializers);
         private final TypeRegistry<ItemProperty>  itemProperties = new TypeRegistryImpl<>(serializers);
         private final TypeRegistry<Catalog<?>>    catalogs       = new TypeRegistryImpl<>(serializers);
+        private final ProviderRegistry            providers      = new ProviderRegistryImpl();
 
         @Override public TypeRegistry<Action>        actions()        { return actions; }
         @Override public TypeRegistry<Rule>          rules()          { return rules; }
         @Override public TypeRegistry<Activator>     activators()     { return activators; }
         @Override public TypeRegistry<ItemProperty>  itemProperties() { return itemProperties; }
         @Override public TypeRegistry<Catalog<?>>    catalogs()       { return catalogs; }
+        @Override public ProviderRegistry            providers()      { return providers; }
         @Override public NodeSerializers serializers() { return serializers; }
         @Override public VariableManager variables() { return null; }
         @Override public org.bukkit.plugin.Plugin getPlugin() { return null; }

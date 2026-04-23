@@ -25,6 +25,7 @@ public final class AbstractMenusApiImpl implements AbstractMenusApi {
     private final TypeRegistry<Activator>     activators;
     private final TypeRegistry<ItemProperty>  itemProperties;
     private final TypeRegistry<Catalog<?>>    catalogs;
+    private final ProviderRegistry            providers;
 
     public AbstractMenusApiImpl(AbstractMenus plugin) {
         this.plugin = plugin;
@@ -33,6 +34,7 @@ public final class AbstractMenusApiImpl implements AbstractMenusApi {
         this.activators     = new TypeRegistryImpl<>(serializers);
         this.itemProperties = new TypeRegistryImpl<>(serializers);
         this.catalogs       = new TypeRegistryImpl<>(serializers);
+        this.providers      = new ProviderRegistryImpl();
     }
 
     @Override public TypeRegistry<Action>        actions()        { return actions; }
@@ -40,6 +42,7 @@ public final class AbstractMenusApiImpl implements AbstractMenusApi {
     @Override public TypeRegistry<Activator>     activators()     { return activators; }
     @Override public TypeRegistry<ItemProperty>  itemProperties() { return itemProperties; }
     @Override public TypeRegistry<Catalog<?>>    catalogs()       { return catalogs; }
+    @Override public ProviderRegistry            providers()      { return providers; }
 
     @Override public NodeSerializers serializers() { return serializers; }
 
