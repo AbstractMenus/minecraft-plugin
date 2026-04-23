@@ -189,8 +189,75 @@ public final class AddonManager {
      * @return the freshly loaded addon, or empty if not found / no jar present
      */
     public Optional<LoadedAddon> reload(String name) {
-        // Impl — Task 9
-        return Optional.empty();
+        String key = name.toLowerCase();
+        LoadedAddon existing = addons.get(key);
+        if (existing == null) return Optional.empty();
+
+        // Disable + unhook current instance.
+        try {
+            if (existing.status() == AddonStatus.ENABLED && existing.extension() != null) {
+                existing.extension().onDisable(api);
+            }
+            rollbackRegistrations(existing);
+        } catch (Throwable t) {
+            Logger.warning("Addon " + existing.conf().name()
+                    + " failed in onDisable during reload: " + t);
+        }
+        try { existing.classLoader().close(); } catch (Exception ignored) {}
+        addons.remove(key);
+
+        // Re-discover: find the jar whose addon.conf name matches.
+        Path freshJar = findJarByName(name);
+        if (freshJar == null) {
+            Logger.warning("Addon " + name + " jar no longer present — not reloaded");
+            return Optional.empty();
+        }
+
+        LoadedAddon fresh;
+        try {
+            fresh = readAddonJar(freshJar);
+        } catch (Exception e) {
+            Logger.severe("Addon " + name + " jar failed to re-parse: " + e.getMessage());
+            return Optional.empty();
+        }
+
+        // Enable the single addon. We don't re-chain the full topological sort
+        // for a single-addon reload — assume its addonDependencies are already
+        // enabled (they were, before this reload).
+        try {
+            fresh.setExtension(instantiate(fresh));
+            fresh.extension().onLoad(api);
+            fresh.extension().onEnable(api);
+            fresh.markEnabled();
+            addons.put(fresh.conf().name().toLowerCase(), fresh);
+            Logger.info("Reloaded addon: " + fresh.conf().name() + " v" + fresh.conf().version());
+        } catch (Throwable t) {
+            Logger.severe("Addon " + name + " failed during reload: " + t);
+            t.printStackTrace();
+            fresh.markFailed(t);
+            rollbackRegistrations(fresh);
+            addons.put(fresh.conf().name().toLowerCase(), fresh);
+        }
+
+        return Optional.of(fresh);
+    }
+
+    /** Scan addonsDir again, return the first jar whose addon.conf.name matches. */
+    private Path findJarByName(String name) {
+        if (!java.nio.file.Files.isDirectory(addonsDir)) return null;
+        try (var stream = java.nio.file.Files.newDirectoryStream(addonsDir, "*.jar")) {
+            for (Path jar : stream) {
+                try (var jf = new java.util.jar.JarFile(jar.toFile())) {
+                    var entry = jf.getJarEntry("addon.conf");
+                    if (entry == null) continue;
+                    String hocon = new String(jf.getInputStream(entry).readAllBytes(),
+                            java.nio.charset.StandardCharsets.UTF_8);
+                    AddonConf c = AddonConf.parse(hocon);
+                    if (c.name().equalsIgnoreCase(name)) return jar;
+                } catch (Exception ignored) {}
+            }
+        } catch (Exception ignored) {}
+        return null;
     }
 
     public Collection<LoadedAddon> loaded() {
