@@ -29,6 +29,7 @@ import ru.abstractmenus.commands.am.CommandReload;
 import ru.abstractmenus.commands.am.CommandServe;
 import ru.abstractmenus.commands.var.*;
 import ru.abstractmenus.commands.varp.*;
+import ru.abstractmenus.addon.AddonManager;
 import ru.abstractmenus.api.MenuExtension;
 import ru.abstractmenus.core.CoreExtension;
 import ru.abstractmenus.handlers.*;
@@ -69,6 +70,7 @@ public final class AbstractMenus extends JavaPlugin {
     private Metrics metrics;
     private FoliaLib foliaLib;
     private AbstractMenusApi api;
+    private AddonManager addonManager;
 
     @Getter
     @Setter
@@ -79,6 +81,8 @@ public final class AbstractMenus extends JavaPlugin {
     }
 
     public AbstractMenusApi getApi() { return api; }
+
+    public AddonManager getAddonManager() { return addonManager; }
 
     public VariableManager getVariableManager() {
         return VariableManagerImpl.instance();
@@ -149,6 +153,11 @@ public final class AbstractMenus extends JavaPlugin {
             core.onLoad(api);
             core.onEnable(api);
 
+            // External addons (plugins/AbstractMenus/addons/*.jar) load here so
+            // their registered types are available before menus parse.
+            this.addonManager = new AddonManager(this, api);
+            addonManager.loadAll();
+
             loadMenus();
 
             getServer().getPluginManager().registerEvents(new InventoryListener(), this);
@@ -186,6 +195,8 @@ public final class AbstractMenus extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (addonManager != null) addonManager.unloadAll();
+
         if (MenuManager.instance() != null) {
             MenuManager.instance().unloadAll();
         }
