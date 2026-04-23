@@ -3,13 +3,10 @@ package ru.abstractmenus;
 import com.tcoded.folialib.FoliaLib;
 import lombok.Getter;
 import lombok.Setter;
-import net.luckperms.api.LuckPerms;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.abstractmenus.api.*;
@@ -33,9 +30,6 @@ import ru.abstractmenus.commands.varp.*;
 import ru.abstractmenus.addon.AddonManager;
 import ru.abstractmenus.api.MenuExtension;
 import ru.abstractmenus.core.CoreExtension;
-import ru.abstractmenus.handlers.*;
-import ru.abstractmenus.handlers.placeholder.PlaceholderCustomHandler;
-import ru.abstractmenus.handlers.placeholder.PlaceholderDefaultHandler;
 import ru.abstractmenus.hocon.api.ConfigurationLoader;
 import ru.abstractmenus.hocon.api.source.ConfigSources;
 import ru.abstractmenus.listeners.ChatListener;
@@ -143,7 +137,6 @@ public final class AbstractMenus extends JavaPlugin {
             getServer().getServicesManager().register(
                     AbstractMenusApi.class, api, this, ServicePriority.Normal);
 
-            registerProviders();
             registerCommands(config);
 
             Serializers.init(this);
@@ -246,52 +239,6 @@ public final class AbstractMenus extends JavaPlugin {
 
     private void disablePlugin() {
         getServer().getPluginManager().disablePlugin(this);
-    }
-
-    private void registerProviders() {
-        if (checkDependency("Vault")) {
-            RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(Economy.class);
-
-            if (economyProvider != null) {
-                Handlers.setEconomyHandler(new EconomyVaultHandler(economyProvider.getProvider()));
-            } else {
-                Logger.warning("Economy plugin doesn't installed");
-            }
-        } else {
-            Logger.warning("Vault doesn't installed. Economy actions and rules won't work");
-        }
-
-        if (checkDependency("LuckPerms")) {
-            RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
-
-            if (provider != null) {
-                Handlers.setPermissionsHandler(new LuckPermsHandler(provider.getProvider()));
-                Logger.info("Using LuckPerms");
-            } else {
-                Logger.severe("Cannot find registered LuckPerms service");
-            }
-        } else {
-            Handlers.setPermissionsHandler(new PermissionDefaultHandler(this));
-            Logger.info("Using bundled temporary permissions manager");
-            Logger.warning("LuckPerms doesn't installed. After reload all assigned permissions will be removed");
-        }
-
-        Handlers.setLevelHandler(new LevelDefaultHandler());
-
-        if (checkDependency("PlaceholderAPI")) {
-            Handlers.setPlaceholderHandler(new PlaceholderCustomHandler());
-            Logger.info("Using PlaceholderAPI");
-        } else {
-            Handlers.setPlaceholderHandler(new PlaceholderDefaultHandler());
-            Logger.info("Using bundled placeholders");
-        }
-
-        AbstractMenusApi.get().providers().placeholders().registerAll();
-
-        if (checkDependency("SkinsRestorer")) {
-            Handlers.setSkinHandler(new SkinsRestorerHandler(isProxyMode, this));
-            Logger.info("Using SkinsRestorer as skins provider");
-        }
     }
 
     public static boolean checkDependency(String plugin) {

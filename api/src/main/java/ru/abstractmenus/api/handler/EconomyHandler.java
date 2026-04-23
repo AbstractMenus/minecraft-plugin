@@ -1,7 +1,6 @@
 package ru.abstractmenus.api.handler;
 
 import org.bukkit.entity.Player;
-import ru.abstractmenus.api.Handlers;
 
 /**
  * Handler for economy operations invoked by money-related menu actions and rules.
@@ -20,15 +19,9 @@ import ru.abstractmenus.api.Handlers;
  *
  * <h2>Registration</h2>
  *
- * A single handler is active at a time. Install yours in your plugin's
- * {@code onEnable()}:
- *
- * <pre>{@code
- * @Override
- * public void onEnable() {
- *     Handlers.setEconomyHandler(new PlayerPointsEconomy(playerPointsApi));
- * }
- * }</pre>
+ * A single handler is active at a time. Register yours via
+ * {@link ru.abstractmenus.api.ProviderRegistry#registerEconomy} inside your
+ * addon's {@link ru.abstractmenus.api.MenuExtension#onEnable}:
  *
  * <h2>Example &mdash; bridging PlayerPoints</h2>
  *
@@ -83,8 +76,7 @@ import ru.abstractmenus.api.Handlers;
  * blocking IO; if the underlying economy plugin hits a database, cache the
  * last known balance and refresh asynchronously.
  *
- * @see Handlers#setEconomyHandler(EconomyHandler)
- * @see Handlers#getEconomyHandler()
+ * @see ru.abstractmenus.api.ProviderRegistry#registerEconomy
  * @see PermissionsHandler
  * @see LevelHandler
  */
