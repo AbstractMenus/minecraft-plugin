@@ -6,6 +6,9 @@ import ru.abstractmenus.hocon.api.ConfigNode;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Getter
 public final class MainConfig {
@@ -25,6 +28,8 @@ public final class MainConfig {
 
     private Path menusFolder;
     private Path dbFolder;
+
+    private final Map<String, String> providerDefaults = new HashMap<>();
 
     public void load(Plugin plugin, ConfigNode node) {
         useVariables = node.node("variables").getBoolean(true);
@@ -55,5 +60,14 @@ public final class MainConfig {
         } else {
             dbFolder = plugin.getDataFolder().toPath();
         }
+
+        for (String kind : List.of("economy", "permissions", "levels", "placeholders", "skins")) {
+            String val = node.node("providers").node(kind).getString("auto");
+            providerDefaults.put(kind, val);
+        }
+    }
+
+    public String providerDefault(String kind) {
+        return providerDefaults.getOrDefault(kind, "auto");
     }
 }
