@@ -61,6 +61,14 @@ public interface AbstractMenusApi {
     TypeRegistry<Catalog<?>> catalogs();
 
     /**
+     * Handler-provider registry (economy, permissions, levels, placeholders,
+     * skins). Replaces the old static {@code Handlers} facade.
+     *
+     * @return the provider registry
+     */
+    ProviderRegistry providers();
+
+    /**
      * Shared HOCON serializer collection. Type registrations add to this
      * automatically; consumers rarely need to access it directly.
      *
