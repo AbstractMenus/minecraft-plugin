@@ -3,7 +3,6 @@ package ru.abstractmenus.data.actions;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import ru.abstractmenus.AbstractMenus;
 import ru.abstractmenus.api.Action;
 import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.inventory.Item;
@@ -11,6 +10,8 @@ import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
+import ru.abstractmenus.util.bukkit.BukkitTasks;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,18 +36,29 @@ public class ActionCommand implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        for (String command : playerCommands) {
-            if (command != null) {
-                String resultCommand = isIgnorePlaceholder ? command : AbstractMenusApi.get().providers().placeholders().replace(player, command);
-                player.performCommand(resultCommand);
-            }
+        if (!playerCommands.isEmpty()) {
+            // performCommand executes as the player; on Folia this requires
+            // the player's region thread.
+            BukkitTasks.runForEntity(player, () -> {
+                for (String command : playerCommands) {
+                    if (command != null) {
+                        String resultCommand = isIgnorePlaceholder ? command
+                                : AbstractMenusApi.get().providers().placeholders().replace(player, command);
+                        player.performCommand(resultCommand);
+                    }
+                }
+            });
         }
 
         if (!consoleCommands.isEmpty()) {
-            Bukkit.getServer().getGlobalRegionScheduler().execute(AbstractMenus.instance(), () -> {
+            // Console commands are not entity-scoped — global scheduler is
+            // correct on Folia. Route via BukkitTasks for consistency with
+            // the rest of the codebase.
+            BukkitTasks.runTask(() -> {
                 for (String command : consoleCommands) {
                     if (command != null) {
-                        String resultCommand = isIgnorePlaceholder ? command : AbstractMenusApi.get().providers().placeholders().replace(player, command);
+                        String resultCommand = isIgnorePlaceholder ? command
+                                : AbstractMenusApi.get().providers().placeholders().replace(player, command);
                         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), resultCommand);
                     }
                 }

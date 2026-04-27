@@ -20,7 +20,10 @@ public class ActionTeleport implements Action {
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
         if (location != null) {
-            player.teleport(location.getLocation(player, menu));
+            // teleportAsync handles cross-region teleports on Folia (the sync
+            // teleport throws IllegalStateException when crossing regions) and
+            // is the recommended call on Paper 1.21+ regardless.
+            player.teleportAsync(location.getLocation(player, menu));
         }
     }
 

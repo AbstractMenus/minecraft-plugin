@@ -9,6 +9,7 @@ import ru.abstractmenus.api.Action;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.util.MiniMessageUtil;
+import ru.abstractmenus.util.bukkit.BukkitTasks;
 
 import java.util.List;
 
@@ -22,7 +23,11 @@ public class ActionPlayerChat implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        messages.forEach(player::chat);
+        // player.chat() requires the player's region thread on Folia. The
+        // activator that fires us may be running on the global scheduler
+        // (e.g., from a chained chat-input action), so dispatch via the
+        // entity scheduler.
+        BukkitTasks.runForEntity(player, () -> messages.forEach(player::chat));
     }
 
     public static class Serializer implements NodeSerializer<ActionPlayerChat> {

@@ -93,7 +93,9 @@ public class InventoryListener implements Listener {
         }
 
         menu.click(event.getSlot(), player, event.getClick());
-        BukkitTasks.runTaskLater(player::updateInventory, 2L);
+        // Pin to player's region: updateInventory writes to the player's
+        // inventory which on Folia is owned by the player's region thread.
+        BukkitTasks.runForEntityLater(player, player::updateInventory, 2L);
     }
 
     @EventHandler
@@ -146,7 +148,9 @@ public class InventoryListener implements Listener {
             }
 
             if (current != null && current.equals(closed)) {
-                BukkitTasks.runTaskLater(
+                // Pin to player's region: closeMenu calls player.closeInventory
+                // which on Folia must run on the player's region thread.
+                BukkitTasks.runForEntityLater(player,
                         () -> MenuManager.instance().closeMenu(player, false),
                         3L
                 );

@@ -430,11 +430,20 @@ public final class MenuManager {
         public void run() {
             // openedMenus stores a Player ref alongside each Menu; avoids a
             // Bukkit.getPlayer(uuid) lookup per entry per tick.
+            //
+            // The outer iteration runs on the global region scheduler on
+            // Folia (or main thread on Spigot/Paper). menu.update() touches
+            // the player's inventory, which on Folia is owned by the
+            // player's region thread - so each per-player update is
+            // dispatched via the entity scheduler. On non-Folia,
+            // runForEntity falls through to direct invocation, no overhead.
             for (OpenedMenu entry : openedMenus.values()) {
                 Player player = entry.player();
-                if (player.isOnline()) {
-                    entry.menu().update(player);
-                }
+                if (!player.isOnline()) continue;
+                Menu menu = entry.menu();
+                BukkitTasks.runForEntity(player, () -> {
+                    if (player.isOnline()) menu.update(player);
+                });
             }
         }
 
