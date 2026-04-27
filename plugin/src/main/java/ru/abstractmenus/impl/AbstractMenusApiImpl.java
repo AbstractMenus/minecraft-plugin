@@ -1,8 +1,15 @@
-package ru.abstractmenus.api;
+package ru.abstractmenus.impl;
 
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import ru.abstractmenus.AbstractMenus;
+import ru.abstractmenus.api.AbstractMenusApi;
+import ru.abstractmenus.api.Action;
+import ru.abstractmenus.api.Activator;
+import ru.abstractmenus.api.Catalog;
+import ru.abstractmenus.api.ProviderRegistry;
+import ru.abstractmenus.api.Rule;
+import ru.abstractmenus.api.TypeRegistry;
 import ru.abstractmenus.api.inventory.ItemProperty;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.variables.VariableManager;

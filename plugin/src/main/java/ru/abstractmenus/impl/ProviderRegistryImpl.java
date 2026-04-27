@@ -1,5 +1,7 @@
-package ru.abstractmenus.api;
+package ru.abstractmenus.impl;
 
+import ru.abstractmenus.api.MenuExtension;
+import ru.abstractmenus.api.ProviderRegistry;
 import ru.abstractmenus.api.handler.EconomyHandler;
 import ru.abstractmenus.api.handler.LevelHandler;
 import ru.abstractmenus.api.handler.PermissionsHandler;
@@ -96,7 +98,12 @@ public final class ProviderRegistryImpl implements ProviderRegistry {
 
     // ---- Cleanup ---------------------------------------------------------
 
-    @Override
+    /**
+     * Wipe every provider registered by {@code owner} across all five
+     * sections. Intentionally NOT on the public {@link ProviderRegistry}
+     * interface so an addon cannot wipe another extension's providers.
+     * Called only by AbstractMenus' internal addon manager.
+     */
     public void unregisterAll(MenuExtension owner) {
         economy.unregisterAll(owner);
         permissions.unregisterAll(owner);

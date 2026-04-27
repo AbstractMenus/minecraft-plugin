@@ -37,15 +37,19 @@ public final class Logger {
 
     /**
      * Install the backing JUL logger. Called once by AbstractMenus core during
-     * plugin {@code onEnable}.
-     *
-     * <p>Addons should not call this &mdash; replacing the logger would
-     * redirect <em>all</em> subsequent log output (including core's) away from
-     * the plugin's channel.
+     * plugin {@code onEnable}; throws on any subsequent call so an addon cannot
+     * replace the logger to silence or capture core's output.
      *
      * @param log the JUL logger to delegate to; never {@code null}
+     * @throws IllegalStateException if a logger has already been installed
+     * @throws NullPointerException  if {@code log} is null
      */
     public static void set(java.util.logging.Logger log){
+        if (log == null) throw new NullPointerException("logger");
+        if (logger != null) {
+            throw new IllegalStateException(
+                    "Logger already installed; AbstractMenus does not support replacement");
+        }
         logger = log;
     }
 

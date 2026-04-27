@@ -1,7 +1,9 @@
-package ru.abstractmenus.api;
+package ru.abstractmenus.impl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.abstractmenus.api.AbstractMenusApi;
+import ru.abstractmenus.api.MenuExtension;
 import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializers;

@@ -1,14 +1,18 @@
-package ru.abstractmenus.api;
+package ru.abstractmenus.impl;
 
+import ru.abstractmenus.api.MenuExtension;
+import ru.abstractmenus.api.TypeRegistry;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializers;
 
+import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -17,15 +21,35 @@ import java.util.logging.Logger;
  * server thread.
  *
  * <p>Note on {@code NodeSerializers.unregister}: hocon 1.0.6 does NOT expose
- * an {@code unregister(Class)} method. Therefore stale serializer entries
- * survive in {@link NodeSerializers} after {@link #unregisterAll(MenuExtension)},
- * but that is harmless — the {@link #byKey} map is the authoritative lookup
- * table, and a subsequent {@link #register} call for the same class token
- * overwrites the serializer entry.
+ * an {@code unregister(Class)} method. We therefore reach into its private
+ * backing map via reflection (one-time {@link Field} lookup, cached) so
+ * {@link #unregisterAll(MenuExtension)} can drop stale {@code Class} keys.
+ * Without this the {@code Class} object keeps the addon's now-closed
+ * classloader alive forever (native FDs, jar handle, all loaded classes).
  */
 public final class TypeRegistryImpl<T> implements TypeRegistry<T> {
 
     private static final Logger LOG = Logger.getLogger(TypeRegistryImpl.class.getName());
+
+    /**
+     * Reflective handle to {@link NodeSerializers}'s private
+     * {@code serializers} map field. Resolved once at class init; if hocon
+     * ever renames it, we log a warning and fall through to the harmless
+     * "leave the entry" behaviour.
+     */
+    private static final Field NODE_SERIALIZERS_MAP_FIELD;
+    static {
+        Field f = null;
+        try {
+            f = NodeSerializers.class.getDeclaredField("serializers");
+            f.setAccessible(true);
+        } catch (NoSuchFieldException e) {
+            LOG.log(Level.WARNING,
+                    "NodeSerializers.serializers field missing; addon-disable will leak classloader references",
+                    e);
+        }
+        NODE_SERIALIZERS_MAP_FIELD = f;
+    }
 
     private final NodeSerializers serializers;
 
@@ -81,7 +105,12 @@ public final class TypeRegistryImpl<T> implements TypeRegistry<T> {
         return Collections.unmodifiableSet(new HashSet<>(byKey.keySet()));
     }
 
-    @Override
+    /**
+     * Wipe every entry registered by {@code owner}. Intentionally NOT on the
+     * public {@link TypeRegistry} interface so that addons cannot use it to
+     * unregister another extension's entries. Called only by AbstractMenus'
+     * internal addon manager via a cast on the impl reference.
+     */
     public synchronized void unregisterAll(MenuExtension owner) {
         Set<String> keys = keysByOwner.remove(owner);
         if (keys == null) return;
@@ -90,11 +119,30 @@ public final class TypeRegistryImpl<T> implements TypeRegistry<T> {
             Class<? extends T> type = byKey.remove(k);
             if (type != null) {
                 byType.remove(type);
-                // NodeSerializers.unregister(Class) does not exist in hocon 1.0.6.
-                // The stale serializer entry in NodeSerializers is harmless —
-                // byKey is authoritative, and re-registration overwrites it.
-                // serializers.unregister(type);
+                removeSerializerEntry(type);
             }
+        }
+    }
+
+    /**
+     * Drop a {@code Class -> NodeSerializer} entry from the backing
+     * {@link NodeSerializers}. Done via reflection because hocon 1.0.6 does
+     * not expose an unregister method. Failure is non-fatal: we log and
+     * leave the entry, accepting the classloader-leak cost rather than
+     * crashing the disable path.
+     */
+    private void removeSerializerEntry(Class<?> type) {
+        if (NODE_SERIALIZERS_MAP_FIELD == null) return;
+        try {
+            @SuppressWarnings("unchecked")
+            Map<Class<?>, NodeSerializer<?>> backing =
+                    (Map<Class<?>, NodeSerializer<?>>) NODE_SERIALIZERS_MAP_FIELD.get(serializers);
+            backing.remove(type);
+        } catch (Throwable t) {
+            LOG.log(Level.WARNING,
+                    "Failed to drop NodeSerializers entry for " + type.getName()
+                            + "; addon classloader may be retained",
+                    t);
         }
     }
 }

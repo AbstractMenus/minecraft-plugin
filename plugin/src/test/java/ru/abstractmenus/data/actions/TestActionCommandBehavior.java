@@ -106,7 +106,7 @@ class TestActionCommandBehavior {
             org.junit.jupiter.api.Assertions.assertEquals(1, callCount[0],
                     "PlaceholderHandler.replace must be called exactly once per command");
         } finally {
-            apiSupport.providers().unregisterAll(scratchOwner);
+            ((ru.abstractmenus.impl.ProviderRegistryImpl) apiSupport.providers()).unregisterAll(scratchOwner);
         }
     }
 

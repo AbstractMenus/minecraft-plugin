@@ -160,14 +160,23 @@ public final class AddonManager {
         return (ru.abstractmenus.api.MenuExtension) main.getDeclaredConstructor().newInstance();
     }
 
-    /** Strip any type registrations the failed addon managed to make. */
+    /**
+     * Strip any type registrations the failed addon managed to make.
+     *
+     * <p>Casts each registry to its {@code Impl} because {@code unregisterAll}
+     * is intentionally not on the public {@link ru.abstractmenus.api.TypeRegistry}
+     * / {@link ru.abstractmenus.api.ProviderRegistry} interfaces - addons
+     * shouldn't be able to wipe each other's registrations.
+     */
     private void rollbackRegistrations(LoadedAddon la) {
         if (la.getExtension() == null) return;
-        api.actions().unregisterAll(la.getExtension());
-        api.rules().unregisterAll(la.getExtension());
-        api.activators().unregisterAll(la.getExtension());
-        api.itemProperties().unregisterAll(la.getExtension());
-        api.catalogs().unregisterAll(la.getExtension());
+        ru.abstractmenus.api.MenuExtension ext = la.getExtension();
+        ((ru.abstractmenus.impl.TypeRegistryImpl<?>) api.actions()).unregisterAll(ext);
+        ((ru.abstractmenus.impl.TypeRegistryImpl<?>) api.rules()).unregisterAll(ext);
+        ((ru.abstractmenus.impl.TypeRegistryImpl<?>) api.activators()).unregisterAll(ext);
+        ((ru.abstractmenus.impl.TypeRegistryImpl<?>) api.itemProperties()).unregisterAll(ext);
+        ((ru.abstractmenus.impl.TypeRegistryImpl<?>) api.catalogs()).unregisterAll(ext);
+        ((ru.abstractmenus.impl.ProviderRegistryImpl) api.providers()).unregisterAll(ext);
     }
 
     /**
@@ -361,6 +370,7 @@ public final class AddonManager {
             return Optional.empty();
         }
         enableSingle(la);
+        cachedAvailableAt = 0L;
         return Optional.of(la);
     }
 
@@ -384,17 +394,40 @@ public final class AddonManager {
             enableSingle(la);
             newlyLoaded.add(la);
         }
+        if (!newlyLoaded.isEmpty()) cachedAvailableAt = 0L;
         return newlyLoaded;
     }
 
     /**
+     * TTL for the availableNotLoaded() cache. Tab completion fires on every
+     * keystroke; without a cache that is N jar opens + N HOCON parses on the
+     * main thread per TAB. 2 seconds is short enough that the operator does
+     * not see staleness in practice (drop a jar, wait a beat, hit TAB).
+     */
+    private static final long AVAILABLE_CACHE_TTL_MS = 2_000L;
+    private volatile List<String> cachedAvailable = List.of();
+    private volatile long cachedAvailableAt = 0L;
+
+    /**
      * Return addon-conf {@code name}s found on disk under the addons
      * directory but not yet loaded into memory. Used by tab completion
-     * for {@code /am addons load <name>}. Cost is one jar open and one
-     * HOCON parse per .jar in the directory - acceptable at typical
-     * scale (1-20 addons), but be aware this is not free.
+     * for {@code /am addons load <name>}.
+     *
+     * <p>Result is cached for {@value #AVAILABLE_CACHE_TTL_MS} ms because
+     * tab completion runs synchronously on the main thread and a cold call
+     * does one jar open + HOCON parse per *.jar in the addons folder.
      */
     public List<String> availableNotLoaded() {
+        long now = System.currentTimeMillis();
+        if (now - cachedAvailableAt < AVAILABLE_CACHE_TTL_MS) {
+            return cachedAvailable;
+        }
+        cachedAvailable = scanAvailableNotLoaded();
+        cachedAvailableAt = now;
+        return cachedAvailable;
+    }
+
+    private List<String> scanAvailableNotLoaded() {
         if (!java.nio.file.Files.isDirectory(addonsDir)) return List.of();
         List<String> result = new ArrayList<>();
         try (var stream = java.nio.file.Files.newDirectoryStream(addonsDir, "*.jar")) {

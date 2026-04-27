@@ -13,9 +13,10 @@ import java.util.Set;
  * {@link AbstractMenusApi#itemProperties()}, and
  * {@link AbstractMenusApi#catalogs()} &mdash; one per extension surface.
  *
- * <p>Registration takes a {@link MenuExtension} "owner" so
- * {@link #unregisterAll(MenuExtension)} can wipe every entry an addon
- * contributed when that addon is disabled or reloaded.
+ * <p>Registration takes a {@link MenuExtension} "owner" so AbstractMenus'
+ * internal addon manager can wipe every entry an addon contributed when
+ * that addon is disabled or reloaded. Addons themselves cannot trigger
+ * that wipe; the cleanup hook lives on the impl, not on this interface.
  *
  * <h2>Example</h2>
  *
@@ -61,9 +62,9 @@ public interface TypeRegistry<T> {
      * @param key        HOCON-visible name (case-insensitive)
      * @param type       the class token; must be assignable to {@code T}
      * @param serializer HOCON serializer for {@code type}
-     * @param owner      the registering extension; used for later
-     *                   {@link #unregisterAll(MenuExtension)} cleanup. Pass
-     *                   the core extension for core registrations.
+     * @param owner      the registering extension; AbstractMenus' addon
+     *                   manager uses this for cleanup on disable/reload.
+     *                   Pass the core extension for core registrations.
      */
     <S extends T> void register(String key,
                                 Class<S> type,
@@ -92,12 +93,4 @@ public interface TypeRegistry<T> {
      * @return all registered keys (lowercased)
      */
     Set<String> keys();
-
-    /**
-     * Remove every entry registered by {@code owner}. Invoked by the addon
-     * manager when an extension is disabled or reloaded.
-     *
-     * @param owner the extension whose entries should be wiped
-     */
-    void unregisterAll(MenuExtension owner);
 }

@@ -23,7 +23,7 @@ import java.util.Collection;
  *             "playerpoints",
  *             new PlayerPointsEconomy(pp),
  *             100,          // priority — higher wins in auto-resolve
- *             this);        // owner for unregisterAll on reload
+ *             this);        // owner — AbstractMenus uses this for cleanup on reload
  *     }
  * }
  * }</pre>
@@ -85,14 +85,4 @@ public interface ProviderRegistry {
     SkinHandler skins(String id);
     Collection<SkinHandler> allSkins();
     boolean hasSkins(String id);
-
-    // ---- Cleanup ---------------------------------------------------------
-
-    /**
-     * Remove every provider registration (across all sections) owned by
-     * {@code owner}. Called by AddonManager when an addon is disabled.
-     *
-     * @param owner the extension whose providers should be cleared
-     */
-    void unregisterAll(MenuExtension owner);
 }

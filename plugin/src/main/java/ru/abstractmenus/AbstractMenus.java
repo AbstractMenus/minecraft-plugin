@@ -11,7 +11,7 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.abstractmenus.api.*;
 import ru.abstractmenus.api.AbstractMenusApi;
-import ru.abstractmenus.api.AbstractMenusApiImpl;
+import ru.abstractmenus.impl.AbstractMenusApiImpl;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.text.Colors;
 import ru.abstractmenus.api.variables.VariableManager;
@@ -207,7 +207,9 @@ public final class AbstractMenus extends JavaPlugin {
         if (BungeeManager.instance() != null)
             BungeeManager.instance().stopOnlineTimer();
 
-        VariableManagerImpl.instance().shutdown();
+        if (VariableManagerImpl.instance() != null) {
+            VariableManagerImpl.instance().shutdown();
+        }
         Events.unregisterAll();
 
         getServer().getMessenger().unregisterIncomingPluginChannel(this, "BungeeCord");
