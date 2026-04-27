@@ -234,9 +234,17 @@ public final class AbstractMenus extends JavaPlugin {
                 .addSub("mul", new VarpMul())
                 .addSub("div", new VarpDiv());
 
-        Objects.requireNonNull(getServer().getPluginCommand("am")).setExecutor(am);
-        Objects.requireNonNull(getServer().getPluginCommand("var")).setExecutor(var);
-        Objects.requireNonNull(getServer().getPluginCommand("varp")).setExecutor(varp);
+        var amCmd = Objects.requireNonNull(getServer().getPluginCommand("am"));
+        amCmd.setExecutor(am);
+        amCmd.setTabCompleter(am);
+
+        var varCmd = Objects.requireNonNull(getServer().getPluginCommand("var"));
+        varCmd.setExecutor(var);
+        varCmd.setTabCompleter(var);
+
+        var varpCmd = Objects.requireNonNull(getServer().getPluginCommand("varp"));
+        varpCmd.setExecutor(varp);
+        varpCmd.setTabCompleter(varp);
     }
 
     private void disablePlugin() {

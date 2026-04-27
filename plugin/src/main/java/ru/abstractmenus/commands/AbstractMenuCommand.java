@@ -14,7 +14,7 @@ public class AbstractMenuCommand extends Command {
                 Colors.of("&7/am reload &e- Reload all menu files. Also close all opened menus for player"),
                 Colors.of("&7/am serve &e- Turn on/off automatic menu reloading if file changed"),
                 Colors.of("&7/am version &e- show plugin version"),
-                Colors.of("&7/am addons list|reload|info &e- manage AM-loaded addons")
+                Colors.of("&7/am addons list|reload|info|load|rescan &e- manage AM-loaded addons")
         );
     }
 

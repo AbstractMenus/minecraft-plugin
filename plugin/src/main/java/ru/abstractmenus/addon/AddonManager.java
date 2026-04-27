@@ -5,6 +5,7 @@ import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.Logger;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -330,6 +331,141 @@ public final class AddonManager {
         }
 
         return pending;
+    }
+
+    /**
+     * Load a single addon by its addon.conf {@code name} from the addons
+     * directory. Useful when the operator drops one new jar at runtime
+     * and runs {@code /am addons load <name>} - no need to bounce the
+     * server to discover it.
+     *
+     * <p>Returns {@code Optional.empty()} if no jar with a matching
+     * {@code addon.conf name} is found, or if an addon with that name is
+     * already in the loaded map. Otherwise returns the {@link LoadedAddon}
+     * (which may be ENABLED or FAILED depending on what happened).
+     *
+     * @param name the addon-conf {@code name}, case-insensitive
+     */
+    public Optional<LoadedAddon> loadOne(String name) {
+        if (addons.containsKey(name.toLowerCase())) {
+            return Optional.empty();
+        }
+        Path jar = findJarByName(name);
+        if (jar == null) return Optional.empty();
+
+        LoadedAddon la;
+        try {
+            la = readAddonJar(jar);
+        } catch (Exception e) {
+            Logger.severe("Addon " + name + " failed to parse: " + e.getMessage());
+            return Optional.empty();
+        }
+        enableSingle(la);
+        return Optional.of(la);
+    }
+
+    /**
+     * Re-scan the addons directory and load every addon not already in
+     * the loaded map. Existing addons are left alone (their classloader
+     * is not rebuilt - use {@link #reload(String)} for that). Returns
+     * the list of addons that were attempted in this call (some may
+     * have ended up in FAILED state).
+     */
+    public List<LoadedAddon> rescan() {
+        List<LoadedAddon> newlyLoaded = new ArrayList<>();
+        Map<String, LoadedAddon> discovered = discover();
+        for (var entry : discovered.entrySet()) {
+            LoadedAddon la = entry.getValue();
+            if (addons.containsKey(entry.getKey())) {
+                // Already loaded - drop the redundant classloader we just built.
+                try { la.getClassLoader().close(); } catch (Exception ignored) {}
+                continue;
+            }
+            enableSingle(la);
+            newlyLoaded.add(la);
+        }
+        return newlyLoaded;
+    }
+
+    /**
+     * Return addon-conf {@code name}s found on disk under the addons
+     * directory but not yet loaded into memory. Used by tab completion
+     * for {@code /am addons load <name>}. Cost is one jar open and one
+     * HOCON parse per .jar in the directory - acceptable at typical
+     * scale (1-20 addons), but be aware this is not free.
+     */
+    public List<String> availableNotLoaded() {
+        if (!java.nio.file.Files.isDirectory(addonsDir)) return List.of();
+        List<String> result = new ArrayList<>();
+        try (var stream = java.nio.file.Files.newDirectoryStream(addonsDir, "*.jar")) {
+            for (Path jar : stream) {
+                try (var jf = new java.util.jar.JarFile(jar.toFile())) {
+                    var entry = jf.getJarEntry("addon.conf");
+                    if (entry == null) continue;
+                    String hocon = new String(jf.getInputStream(entry).readAllBytes(),
+                            java.nio.charset.StandardCharsets.UTF_8);
+                    AddonConf conf = AddonConf.parse(hocon);
+                    if (!addons.containsKey(conf.name().toLowerCase())) {
+                        result.add(conf.name());
+                    }
+                } catch (Exception ignored) {
+                    // Malformed jar - skip silently, the operator already saw
+                    // the warning at server-start discover() time.
+                }
+            }
+        } catch (Exception ignored) {}
+        return result;
+    }
+
+    /**
+     * Verify Bukkit-side and addon-side dependencies, then run
+     * onLoad + onEnable. Installs the result into the loaded map
+     * (regardless of success or failure - failed addons stay visible
+     * in {@code /am addons list} so the operator can debug them).
+     */
+    private void enableSingle(LoadedAddon la) {
+        String key = la.getConf().name().toLowerCase();
+
+        if (plugin != null) {
+            var pm = plugin.getServer().getPluginManager();
+            for (String dep : la.getConf().pluginDependencies()) {
+                if (pm.getPlugin(dep) == null) {
+                    String msg = "missing plugin dependency: " + dep;
+                    Logger.warning("Addon " + la.getConf().name() + " " + msg);
+                    la.markFailed(new IllegalStateException(msg));
+                    addons.put(key, la);
+                    return;
+                }
+            }
+        }
+
+        for (String dep : la.getConf().addonDependencies()) {
+            LoadedAddon depAddon = addons.get(dep.toLowerCase());
+            if (depAddon == null || depAddon.getStatus() != AddonStatus.ENABLED) {
+                String msg = "missing or unhealthy addon dependency: " + dep;
+                Logger.warning("Addon " + la.getConf().name() + " " + msg);
+                la.markFailed(new IllegalStateException(msg));
+                addons.put(key, la);
+                return;
+            }
+        }
+
+        try {
+            la.setExtension(instantiate(la));
+            la.getExtension().onLoad(api);
+            la.getExtension().onEnable(api);
+            la.markEnabled();
+            Logger.info("Enabled addon: " + la.getConf().name()
+                    + " v" + la.getConf().version()
+                    + (la.getConf().targetApiVersion() == null ? ""
+                        : " (built against API " + la.getConf().targetApiVersion() + ")"));
+        } catch (Throwable t) {
+            Logger.severe("Addon " + la.getConf().name() + " failed during enable: " + t);
+            t.printStackTrace();
+            la.markFailed(t);
+            rollbackRegistrations(la);
+        }
+        addons.put(key, la);
     }
 
     /**
