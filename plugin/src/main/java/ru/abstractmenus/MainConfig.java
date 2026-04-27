@@ -31,6 +31,9 @@ public final class MainConfig {
 
     private final Map<String, String> providerDefaults = new HashMap<>();
 
+    private long clickDebounceDefaultMs;
+    private long clickDebounceShiftMs;
+
     public void load(Plugin plugin, ConfigNode node) {
         useVariables = node.node("variables").getBoolean(true);
         syncVariables = node.node("syncVariables").getBoolean(false);
@@ -65,6 +68,9 @@ public final class MainConfig {
             String val = node.node("providers").node(kind).getString("auto");
             providerDefaults.put(kind, val);
         }
+
+        clickDebounceDefaultMs = node.node("clickDebounce", "default").getLong(80L);
+        clickDebounceShiftMs = node.node("clickDebounce", "shift").getLong(250L);
     }
 
     public String providerDefault(String kind) {
