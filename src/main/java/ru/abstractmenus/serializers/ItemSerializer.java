@@ -54,7 +54,7 @@ public class ItemSerializer implements NodeSerializer<Item> {
                 menuItem.setClicks(getClicks(menuItem, node.node("click")));
             }
 
-            if (node.node("clickCooldown") != null) {
+            if (node.node("clickCooldown").rawValue() != null) {
                 menuItem.setClickCooldown(node.node("clickCooldown").getInt());
             }
 

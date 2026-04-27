@@ -11,6 +11,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import ru.abstractmenus.AbstractMenus;
+import ru.abstractmenus.MainConfig;
 import ru.abstractmenus.api.Handlers;
 import ru.abstractmenus.api.Rule;
 import ru.abstractmenus.datatype.TypeSlot;
@@ -67,6 +69,28 @@ public abstract class AbstractMenu implements Menu {
 
     protected Inventory inventory;
     protected Map<Integer, Item> showedItems;
+
+    // Click cooldown lives on the menu (not on the per-clone MenuItem) so
+    // refreshMenu cannot reset it by re-cloning items. Keyed by (slot, type)
+    // so different click types on the same slot have independent windows.
+    protected Map<SlotClickKey, Long> slotClickExpiry = new HashMap<>();
+
+    // Floor on the per-click debounce window. Catches protocol-level duplicate
+    // events that the configured clickCooldown is too short to absorb. The
+    // vanilla Minecraft client emits ~3 extra QUICK_MOVE packets per physical
+    // shift-click at ~70ms intervals, with the last one ~200ms after the
+    // original; the SHIFT floor (configurable, default 250ms) catches those.
+    // Plain LEFT/RIGHT use a smaller floor because the synthetic DOUBLE_CLICK
+    // event Mojang piggybacks on rapid same-slot clicks is already filtered
+    // semantically inside MenuItem.doClick.
+    protected record SlotClickKey(int slot, ClickType type) {}
+
+    private static long debounceFloorMs(ClickType type) {
+        MainConfig conf = AbstractMenus.instance().getMainConfig();
+        return (type == ClickType.SHIFT_LEFT || type == ClickType.SHIFT_RIGHT)
+                ? conf.getClickDebounceShiftMs()
+                : conf.getClickDebounceDefaultMs();
+    }
 
     @Setter
     protected MenuListener openListener;
@@ -300,8 +324,19 @@ public abstract class AbstractMenu implements Menu {
     public void click(int slot, Player player, ClickType type) {
         Item item = getItem(slot);
 
-        if (item instanceof MenuItem)
-            ((MenuItem) item).doClick(type, this, player);
+        if (!(item instanceof MenuItem menuItem)) return;
+
+        int cooldownTicks = menuItem.getClickCooldown();
+        if (cooldownTicks > 0) {
+            long now = System.currentTimeMillis();
+            long cooldownMs = Math.max(debounceFloorMs(type), cooldownTicks * 50L);
+            SlotClickKey key = new SlotClickKey(slot, type);
+            Long expiry = slotClickExpiry.get(key);
+            if (expiry != null && now < expiry) return;
+            slotClickExpiry.put(key, now + cooldownMs);
+        }
+
+        menuItem.doClick(type, this, player);
     }
 
     @Override
@@ -339,6 +374,7 @@ public abstract class AbstractMenu implements Menu {
             AbstractMenu menu = (AbstractMenu) super.clone();
             menu.showedItems = new HashMap<>();
             menu.placedItems = new ConcurrentHashMap<>();
+            menu.slotClickExpiry = new HashMap<>();
             return menu;
         } catch (CloneNotSupportedException e) {
             return null;

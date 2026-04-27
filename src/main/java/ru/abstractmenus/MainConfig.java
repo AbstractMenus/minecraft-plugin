@@ -26,6 +26,9 @@ public final class MainConfig {
     private Path menusFolder;
     private Path dbFolder;
 
+    private long clickDebounceDefaultMs;
+    private long clickDebounceShiftMs;
+
     public void load(Plugin plugin, ConfigNode node) {
         useVariables = node.node("variables").getBoolean(true);
         syncVariables = node.node("syncVariables").getBoolean(false);
@@ -55,5 +58,8 @@ public final class MainConfig {
         } else {
             dbFolder = plugin.getDataFolder().toPath();
         }
+
+        clickDebounceDefaultMs = node.node("clickDebounce", "default").getLong(80L);
+        clickDebounceShiftMs = node.node("clickDebounce", "shift").getLong(250L);
     }
 }

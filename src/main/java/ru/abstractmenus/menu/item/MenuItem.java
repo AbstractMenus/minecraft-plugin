@@ -1,12 +1,12 @@
 package ru.abstractmenus.menu.item;
 
+import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import ru.abstractmenus.api.Rule;
 import ru.abstractmenus.data.Actions;
 import ru.abstractmenus.api.inventory.Menu;
-import ru.abstractmenus.util.TimeUtil;
 
 import java.util.Map;
 
@@ -21,19 +21,17 @@ public class MenuItem extends InventoryItem {
     @Setter
     private Rule minorRules;
 
+    @Getter
     @Setter
     private int clickCooldown = 1;
-    private long cooldownExpiry;
 
     public void doClick(ClickType type, Menu menu, Player clicker) {
-        if (clickCooldown > 0) {
-            if (TimeUtil.currentTimeTicks() < cooldownExpiry)
-                return;
-
-            cooldownExpiry = TimeUtil.currentTimeTicks() + clickCooldown;
-        }
-
-        if (anyClickActions != null)
+        // anyClickActions = the body of `click { ... }` without an explicit
+        // ClickType key. Treat it as "any single click" - DOUBLE_CLICK is a
+        // synthetic event Bukkit fires alongside a regular LEFT on rapid
+        // clicks, so it must not retrigger anyClickActions. An explicit
+        // `double_click { ... }` handler still runs via the `clicks` map.
+        if (anyClickActions != null && type != ClickType.DOUBLE_CLICK)
             anyClickActions.activate(clicker, menu, this);
 
         if (clicks != null) {
