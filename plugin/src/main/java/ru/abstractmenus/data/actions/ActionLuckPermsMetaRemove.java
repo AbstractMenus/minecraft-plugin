@@ -23,7 +23,7 @@ public class ActionLuckPermsMetaRemove implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        PermissionsHandler perms = AbstractMenusApi.get().providers().permissions();
+        PermissionsHandler perms = AbstractMenusApi.get().providers().permissions().resolve();
         if (!(perms instanceof LuckPermsHandler handler)) {
             Logger.warning("lpMetaRemove skipped: active permissions provider "
                     + (perms == null ? "null" : perms.getClass().getSimpleName())

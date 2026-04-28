@@ -70,7 +70,7 @@ public class ActionBroadcast implements Action {
     public void activate(Player player, Menu menu, Item clickedItem) {
         if (player != null) {
             if (chatMessages != null) {
-                List<String> replaced = AbstractMenusApi.get().providers().placeholders().replace(player, chatMessages);
+                List<String> replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, chatMessages);
 
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     MiniMessageUtil.sendParsed(replaced, p);
@@ -79,7 +79,7 @@ public class ActionBroadcast implements Action {
 
             if (json != null) {
                 BaseComponent[] component = ComponentSerializer.parse(
-                        AbstractMenusApi.get().providers().placeholders().replace(player, json));
+                        AbstractMenusApi.get().providers().placeholders().resolve().replace(player, json));
 
                 if (component != null) {
                     for (Player p : Bukkit.getOnlinePlayers())
@@ -88,7 +88,7 @@ public class ActionBroadcast implements Action {
             }
 
             if (actionbar != null) {
-                String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, actionbar);
+                String replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, actionbar);
                 ActionBar bar = ActionBar.create();
 
                 for (Player p : Bukkit.getOnlinePlayers())
@@ -97,10 +97,10 @@ public class ActionBroadcast implements Action {
 
             if (!this.title.isEmpty() || !this.subtitle.isEmpty()) {
                 String title = MiniMessageUtil.parseToLegacy(
-                        AbstractMenusApi.get().providers().placeholders().replace(player, this.title)
+                        AbstractMenusApi.get().providers().placeholders().resolve().replace(player, this.title)
                 );
                 String subtitle = MiniMessageUtil.parseToLegacy(
-                        AbstractMenusApi.get().providers().placeholders().replace(player, this.subtitle)
+                        AbstractMenusApi.get().providers().placeholders().resolve().replace(player, this.subtitle)
                 );
                 Title t = new Title(
                         title, subtitle,

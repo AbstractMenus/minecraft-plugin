@@ -36,7 +36,7 @@ public class SliceCatalog implements Catalog<String> {
 
     @Override
     public Collection<String> snapshot(Player player, Menu menu) {
-        String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, value);
+        String replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, value);
         String[] values = replaced.split(separator);
         return Arrays.stream(values)
                 .filter(val -> !val.isEmpty())

@@ -48,7 +48,7 @@ public class PropHDB implements ItemProperty {
 
     @Override
     public void apply(ItemStack item, ItemMeta meta, Player player, Menu menu) {
-        String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, id);
+        String replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, id);
         ItemStack headItem = api().getItemHead(replaced);
 
         if (headItem == null)

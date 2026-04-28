@@ -2,6 +2,7 @@ package ru.abstractmenus.impl;
 
 import ru.abstractmenus.api.MenuExtension;
 import ru.abstractmenus.api.ProviderRegistry;
+import ru.abstractmenus.api.ProviderSection;
 import ru.abstractmenus.api.handler.EconomyHandler;
 import ru.abstractmenus.api.handler.LevelHandler;
 import ru.abstractmenus.api.handler.PermissionsHandler;
@@ -20,81 +21,39 @@ import java.util.Set;
 import java.util.function.Function;
 
 /**
- * Default {@link ProviderRegistry} implementation. Five sections sharing an
- * inner generic {@link Section} class. Insertion-ordered per section so that
- * equal-priority ties resolve to the first-registered entry.
+ * Default {@link ProviderRegistry} implementation. Five sections backed by
+ * the inner {@link SectionImpl} class. Insertion-ordered per section so
+ * that equal-priority ties resolve to the first-registered entry.
  *
- * <p>Thread-safe for registration/unregistration via per-section synchronized
- * methods, but production use expects all mutation to happen on the main
- * server thread during plugin / extension enable/disable.
+ * <p>Sections are constructed once in this class's constructor with their
+ * "kind" string ({@code "economy"}, {@code "permissions"}, ...) so each
+ * one knows which {@code config.conf providers.<kind>} entry applies.
+ *
+ * <p>Thread-safe for registration/unregistration via per-section
+ * {@code synchronized} methods; production use expects all mutation on the
+ * main server thread during plugin / extension enable / disable.
  */
 public final class ProviderRegistryImpl implements ProviderRegistry {
 
-    private final Section<EconomyHandler>     economy      = new Section<>();
-    private final Section<PermissionsHandler> permissions  = new Section<>();
-    private final Section<LevelHandler>       levels       = new Section<>();
-    private final Section<PlaceholderHandler> placeholders = new Section<>();
-    private final Section<SkinHandler>        skins        = new Section<>();
-
     /** section kind → configured-default id (e.g. "economy" → "playerpoints"). */
-    private Function<String, String> configDefaults = kind -> null;  // no-op by default
+    private Function<String, String> configDefaults = kind -> null;
+
+    private final SectionImpl<EconomyHandler>     economy      = new SectionImpl<>("economy",      this);
+    private final SectionImpl<PermissionsHandler> permissions  = new SectionImpl<>("permissions",  this);
+    private final SectionImpl<LevelHandler>       levels       = new SectionImpl<>("levels",       this);
+    private final SectionImpl<PlaceholderHandler> placeholders = new SectionImpl<>("placeholders", this);
+    private final SectionImpl<SkinHandler>        skins        = new SectionImpl<>("skins",        this);
 
     /** Wire up the config-backed default source. Called once from AbstractMenusApiImpl. */
     public void setConfigDefaults(Function<String, String> lookup) {
         this.configDefaults = lookup;
     }
 
-    // ---- Config-default resolution helper --------------------------------
-
-    private <T> T resolveWithConfig(String kind, Section<T> section) {
-        // configDefaults is read here outside the section lock; that's
-        // intentional. The Function is only mutated once via setConfigDefaults
-        // during plugin startup, before any concurrent reads can happen.
-        String configured = configDefaults.apply(kind);
-        return section.resolveWithDefault(configured);
-    }
-
-    // ---- Economy ---------------------------------------------------------
-
-    @Override public void registerEconomy(String id, EconomyHandler h, int pr, MenuExtension o) { economy.put(id, h, pr, o); }
-    @Override public EconomyHandler economy()                 { return resolveWithConfig("economy", economy); }
-    @Override public EconomyHandler economy(String id)        { return economy.byId(id); }
-    @Override public Collection<EconomyHandler> allEconomy()  { return economy.all(); }
-    @Override public boolean hasEconomy(String id)            { return economy.has(id); }
-
-    // ---- Permissions -----------------------------------------------------
-
-    @Override public void registerPermissions(String id, PermissionsHandler h, int pr, MenuExtension o) { permissions.put(id, h, pr, o); }
-    @Override public PermissionsHandler permissions()                    { return resolveWithConfig("permissions", permissions); }
-    @Override public PermissionsHandler permissions(String id)           { return permissions.byId(id); }
-    @Override public Collection<PermissionsHandler> allPermissions()     { return permissions.all(); }
-    @Override public boolean hasPermissions(String id)                   { return permissions.has(id); }
-
-    // ---- Levels ----------------------------------------------------------
-
-    @Override public void registerLevels(String id, LevelHandler h, int pr, MenuExtension o) { levels.put(id, h, pr, o); }
-    @Override public LevelHandler levels()                 { return resolveWithConfig("levels", levels); }
-    @Override public LevelHandler levels(String id)        { return levels.byId(id); }
-    @Override public Collection<LevelHandler> allLevels()  { return levels.all(); }
-    @Override public boolean hasLevels(String id)          { return levels.has(id); }
-
-    // ---- Placeholders ----------------------------------------------------
-
-    @Override public void registerPlaceholders(String id, PlaceholderHandler h, int pr, MenuExtension o) { placeholders.put(id, h, pr, o); }
-    @Override public PlaceholderHandler placeholders()                    { return resolveWithConfig("placeholders", placeholders); }
-    @Override public PlaceholderHandler placeholders(String id)           { return placeholders.byId(id); }
-    @Override public Collection<PlaceholderHandler> allPlaceholders()     { return placeholders.all(); }
-    @Override public boolean hasPlaceholders(String id)                   { return placeholders.has(id); }
-
-    // ---- Skins -----------------------------------------------------------
-
-    @Override public void registerSkins(String id, SkinHandler h, int pr, MenuExtension o) { skins.put(id, h, pr, o); }
-    @Override public SkinHandler skins()                 { return resolveWithConfig("skins", skins); }
-    @Override public SkinHandler skins(String id)        { return skins.byId(id); }
-    @Override public Collection<SkinHandler> allSkins()  { return skins.all(); }
-    @Override public boolean hasSkins(String id)         { return skins.has(id); }
-
-    // ---- Cleanup ---------------------------------------------------------
+    @Override public ProviderSection<EconomyHandler>     economy()      { return economy; }
+    @Override public ProviderSection<PermissionsHandler> permissions()  { return permissions; }
+    @Override public ProviderSection<LevelHandler>       levels()       { return levels; }
+    @Override public ProviderSection<PlaceholderHandler> placeholders() { return placeholders; }
+    @Override public ProviderSection<SkinHandler>        skins()        { return skins; }
 
     /**
      * Wipe every provider registered by {@code owner} across all five
@@ -110,45 +69,36 @@ public final class ProviderRegistryImpl implements ProviderRegistry {
         skins.unregisterAll(owner);
     }
 
-    // ---- Inner section ---------------------------------------------------
+    // -----------------------------------------------------------------
+    //  SectionImpl - one instance per provider type
+    // -----------------------------------------------------------------
 
-    private static final class Section<T> {
+    private static final class SectionImpl<T> implements ProviderSection<T> {
+
+        private final String kind;
+        private final ProviderRegistryImpl owner;
         private final Map<String, Entry<T>> byId = new LinkedHashMap<>();
-        private final Map<MenuExtension, Set<String>> keysByOwner = new IdentityHashMap<>();
+        private final Map<MenuExtension, Set<String>> keysByExtension = new IdentityHashMap<>();
 
-        synchronized void put(String id, T handler, int priority, MenuExtension owner) {
+        SectionImpl(String kind, ProviderRegistryImpl owner) {
+            this.kind = kind;
+            this.owner = owner;
+        }
+
+        @Override
+        public synchronized void register(String id, T handler, int priority, MenuExtension extOwner) {
             String k = id.toLowerCase();
             byId.put(k, new Entry<>(handler, priority));
-            keysByOwner.computeIfAbsent(owner, o -> new HashSet<>()).add(k);
+            keysByExtension.computeIfAbsent(extOwner, o -> new HashSet<>()).add(k);
         }
 
-        synchronized T byId(String id) {
-            Entry<T> e = byId.get(id.toLowerCase());
-            return e == null ? null : e.handler;
-        }
-
-        synchronized boolean has(String id) {
-            return byId.containsKey(id.toLowerCase());
-        }
-
-        synchronized T auto() {
-            Entry<T> best = null;
-            for (Entry<T> e : byId.values()) {
-                if (best == null || e.priority > best.priority) best = e;
-            }
-            return best == null ? null : best.handler;
-        }
-
-        /**
-         * Resolve a provider in one critical section: try the configured id
-         * first, fall back to {@link #auto()} on miss. Holding the lock
-         * across both lookups closes the race where a concurrent register /
-         * unregister could move the configured id under our feet between
-         * the two separate calls.
-         */
-        synchronized T resolveWithDefault(String configuredId) {
-            if (configuredId != null && !configuredId.equalsIgnoreCase("auto")) {
-                Entry<T> e = byId.get(configuredId.toLowerCase());
+        @Override
+        public synchronized T resolve() {
+            // configDefaults is mutated only once (during plugin startup)
+            // so reading it without our lock is fine.
+            String configured = owner.configDefaults.apply(kind);
+            if (configured != null && !configured.equalsIgnoreCase("auto")) {
+                Entry<T> e = byId.get(configured.toLowerCase());
                 if (e != null) return e.handler;
             }
             Entry<T> best = null;
@@ -158,14 +108,26 @@ public final class ProviderRegistryImpl implements ProviderRegistry {
             return best == null ? null : best.handler;
         }
 
-        synchronized Collection<T> all() {
+        @Override
+        public synchronized T resolve(String id) {
+            Entry<T> e = byId.get(id.toLowerCase());
+            return e == null ? null : e.handler;
+        }
+
+        @Override
+        public synchronized Collection<T> all() {
             List<T> list = new ArrayList<>(byId.size());
             for (Entry<T> e : byId.values()) list.add(e.handler);
             return Collections.unmodifiableList(list);
         }
 
-        synchronized void unregisterAll(MenuExtension owner) {
-            Set<String> keys = keysByOwner.remove(owner);
+        @Override
+        public synchronized boolean has(String id) {
+            return byId.containsKey(id.toLowerCase());
+        }
+
+        synchronized void unregisterAll(MenuExtension extOwner) {
+            Set<String> keys = keysByExtension.remove(extOwner);
             if (keys == null) return;
             for (String k : keys) byId.remove(k);
         }

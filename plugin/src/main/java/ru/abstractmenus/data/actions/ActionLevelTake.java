@@ -21,7 +21,7 @@ public class ActionLevelTake implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        AbstractMenusApi.get().providers().levels().takeLevel(player, level.getInt(player, menu));
+        AbstractMenusApi.get().providers().levels().resolve().takeLevel(player, level.getInt(player, menu));
     }
 
     public static class Serializer implements NodeSerializer<ActionLevelTake> {

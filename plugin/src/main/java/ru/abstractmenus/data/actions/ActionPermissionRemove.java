@@ -23,8 +23,8 @@ public class ActionPermissionRemove implements Action {
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
         permissions.forEach(perm -> {
-            String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, perm);
-            AbstractMenusApi.get().providers().permissions().removePermission(player, replaced);
+            String replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, perm);
+            AbstractMenusApi.get().providers().permissions().resolve().removePermission(player, replaced);
         });
     }
 

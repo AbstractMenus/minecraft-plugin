@@ -21,7 +21,7 @@ public class ActionXpGive implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        AbstractMenusApi.get().providers().levels().giveXp(player, xp.getInt(player, menu));
+        AbstractMenusApi.get().providers().levels().resolve().giveXp(player, xp.getInt(player, menu));
     }
 
     public static class Serializer implements NodeSerializer<ActionXpGive> {

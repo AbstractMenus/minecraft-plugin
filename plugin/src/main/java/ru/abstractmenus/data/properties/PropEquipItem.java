@@ -60,7 +60,7 @@ public class PropEquipItem implements ItemProperty {
         Player target = player;
 
         if (playerName != null) {
-            String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, playerName);
+            String replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, playerName);
             Player found = Bukkit.getPlayerExact(replaced);
 
             if (found == null || !found.isOnline()) {

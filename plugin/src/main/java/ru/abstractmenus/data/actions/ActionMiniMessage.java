@@ -22,7 +22,7 @@ public class ActionMiniMessage implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, message);
+        String replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, message);
         MiniMessageUtil.sendParsed(Collections.singletonList(replaced), player);
     }
 

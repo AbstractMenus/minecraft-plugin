@@ -43,7 +43,7 @@ public class ActionCommand implements Action {
                 for (String command : playerCommands) {
                     if (command != null) {
                         String resultCommand = isIgnorePlaceholder ? command
-                                : AbstractMenusApi.get().providers().placeholders().replace(player, command);
+                                : AbstractMenusApi.get().providers().placeholders().resolve().replace(player, command);
                         player.performCommand(resultCommand);
                     }
                 }
@@ -58,7 +58,7 @@ public class ActionCommand implements Action {
                 for (String command : consoleCommands) {
                     if (command != null) {
                         String resultCommand = isIgnorePlaceholder ? command
-                                : AbstractMenusApi.get().providers().placeholders().replace(player, command);
+                                : AbstractMenusApi.get().providers().placeholders().resolve().replace(player, command);
                         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), resultCommand);
                     }
                 }

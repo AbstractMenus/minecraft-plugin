@@ -22,12 +22,12 @@ public class RuleExistVar implements Rule {
 
     @Override
     public boolean check(Player p, Menu menu, Item clickedItem) {
-        String varName = AbstractMenusApi.get().providers().placeholders().replace(p, this.name);
+        String varName = AbstractMenusApi.get().providers().placeholders().resolve().replace(p, this.name);
 
         if(this.player == null) {
             return VariableManagerImpl.instance().getGlobal(varName) != null;
         } else {
-            String varPlayer = AbstractMenusApi.get().providers().placeholders().replace(p, this.player);
+            String varPlayer = AbstractMenusApi.get().providers().placeholders().resolve().replace(p, this.player);
             return VariableManagerImpl.instance().getPersonal(varPlayer, varName) != null;
         }
     }

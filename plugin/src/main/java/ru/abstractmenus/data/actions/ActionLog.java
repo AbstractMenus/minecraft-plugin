@@ -20,7 +20,7 @@ public class ActionLog implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        Logger.info(AbstractMenusApi.get().providers().placeholders().replace(player, message));
+        Logger.info(AbstractMenusApi.get().providers().placeholders().resolve().replace(player, message));
     }
 
     public static class Serializer implements NodeSerializer<ActionLog> {

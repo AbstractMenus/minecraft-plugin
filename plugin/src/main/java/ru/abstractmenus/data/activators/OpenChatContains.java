@@ -24,7 +24,7 @@ public class OpenChatContains extends Activator {
     @EventHandler
     public void onChat(AsyncChatEvent event) {
         for (String str : messages) {
-            String msg = AbstractMenusApi.get().providers().placeholders().replace(event.getPlayer(), str);
+            String msg = AbstractMenusApi.get().providers().placeholders().resolve().replace(event.getPlayer(), str);
 
             if (event.signedMessage().message().contains(msg)) {
                 BukkitTasks.runTask(() -> openMenu(null, event.getPlayer()));

@@ -22,8 +22,8 @@ public class RulePermission implements Rule {
     @Override
     public boolean check(Player player, Menu menu, Item clickedItem) {
         for (String perm : permission){
-            String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, perm);
-            if(!AbstractMenusApi.get().providers().permissions().hasPermission(player, replaced)) return false;
+            String replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, perm);
+            if(!AbstractMenusApi.get().providers().permissions().resolve().hasPermission(player, replaced)) return false;
         }
         return true;
     }

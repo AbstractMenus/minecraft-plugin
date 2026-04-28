@@ -23,7 +23,7 @@ public class ActionBookOpen implements Action {
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
         BookData data = bookData.clone();
-        PlaceholderHandler handler = AbstractMenusApi.get().providers().placeholders();
+        PlaceholderHandler handler = AbstractMenusApi.get().providers().placeholders().resolve();
 
         data.setAuthor(handler.replace(player, bookData.getAuthor()));
         data.setTitle(handler.replace(player, bookData.getTitle()));

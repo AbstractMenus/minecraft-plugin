@@ -38,7 +38,7 @@ public class OpenClickEntity extends Activator {
             }
 
             if (data.getName() != null) {
-                String expectedName = AbstractMenusApi.get().providers().placeholders().replace(player, data.getName());
+                String expectedName = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, data.getName());
                 if (!clickedEntity.getName().equalsIgnoreCase(expectedName)) {
                     continue;
                 }

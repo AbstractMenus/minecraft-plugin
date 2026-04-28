@@ -38,7 +38,7 @@ final class CoreProvidersBundle {
                     Bukkit.getServicesManager().getRegistration(Economy.class);
 
             if (economyProvider != null) {
-                api.providers().registerEconomy(
+                api.providers().economy().register(
                         "vault",
                         new EconomyVaultHandler(economyProvider.getProvider()),
                         CORE_PRIORITY,
@@ -57,7 +57,7 @@ final class CoreProvidersBundle {
                     Bukkit.getServicesManager().getRegistration(LuckPerms.class);
 
             if (provider != null) {
-                api.providers().registerPermissions(
+                api.providers().permissions().register(
                         "luckperms",
                         new LuckPermsHandler(provider.getProvider()),
                         CORE_PRIORITY,
@@ -67,7 +67,7 @@ final class CoreProvidersBundle {
                 Logger.severe("Cannot find registered LuckPerms service");
             }
         } else {
-            api.providers().registerPermissions(
+            api.providers().permissions().register(
                     "default",
                     new PermissionDefaultHandler(plugin),
                     CORE_PRIORITY,
@@ -77,7 +77,7 @@ final class CoreProvidersBundle {
         }
 
         // ---- Levels ---------------------------------------------------------
-        api.providers().registerLevels(
+        api.providers().levels().register(
                 "default",
                 new LevelDefaultHandler(),
                 CORE_PRIORITY,
@@ -86,7 +86,7 @@ final class CoreProvidersBundle {
         // ---- Placeholders ---------------------------------------------------
         if (AbstractMenus.checkDependency("PlaceholderAPI")) {
             PlaceholderCustomHandler papiHandler = new PlaceholderCustomHandler();
-            api.providers().registerPlaceholders(
+            api.providers().placeholders().register(
                     "placeholderapi",
                     papiHandler,
                     CORE_PRIORITY,
@@ -95,7 +95,7 @@ final class CoreProvidersBundle {
             Logger.info("Using PlaceholderAPI");
         } else {
             PlaceholderDefaultHandler defaultHandler = new PlaceholderDefaultHandler();
-            api.providers().registerPlaceholders(
+            api.providers().placeholders().register(
                     "default",
                     defaultHandler,
                     CORE_PRIORITY,
@@ -106,7 +106,7 @@ final class CoreProvidersBundle {
 
         // ---- Skins ----------------------------------------------------------
         if (AbstractMenus.checkDependency("SkinsRestorer")) {
-            api.providers().registerSkins(
+            api.providers().skins().register(
                     "skinsrestorer",
                     new SkinsRestorerHandler(plugin.isProxyMode, plugin),
                     CORE_PRIORITY,

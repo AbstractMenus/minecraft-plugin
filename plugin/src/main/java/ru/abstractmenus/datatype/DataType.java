@@ -15,7 +15,7 @@ public abstract class DataType implements Cloneable {
     }
 
     public String replaceFor(Player player, Menu menu) {
-        return AbstractMenusApi.get().providers().placeholders().replace(player, value);
+        return AbstractMenusApi.get().providers().placeholders().resolve().replace(player, value);
     }
 
     public static boolean hasPlaceholder(String string) {

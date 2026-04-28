@@ -24,7 +24,7 @@ public class RuleRegion implements Rule {
     @Override
     public boolean check(Player player, Menu menu, Item clickedItem) {
         for (String reg : regions){
-            String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, reg);
+            String replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, reg);
             ProtectedRegion region = RegionUtils.getRegion(player.getWorld(), replaced);
 
             if(region != null && region.contains(

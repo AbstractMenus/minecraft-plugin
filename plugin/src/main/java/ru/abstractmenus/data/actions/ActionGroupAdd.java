@@ -19,8 +19,8 @@ public class ActionGroupAdd implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        String group = AbstractMenusApi.get().providers().placeholders().replace(player, this.group);
-        AbstractMenusApi.get().providers().permissions().addGroup(player, group);
+        String group = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, this.group);
+        AbstractMenusApi.get().providers().permissions().resolve().addGroup(player, group);
     }
 
     public static class Serializer implements NodeSerializer<ActionGroupAdd> {

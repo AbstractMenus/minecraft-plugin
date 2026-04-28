@@ -23,7 +23,7 @@ public class OpenChat extends Activator {
     @EventHandler
     public void onChat(AsyncChatEvent event) {
         for (String str : messages) {
-            String replaced = AbstractMenusApi.get().providers().placeholders().replace(event.getPlayer(), str);
+            String replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(event.getPlayer(), str);
 
             if (event.signedMessage().message().equalsIgnoreCase(replaced)) {
                 BukkitTasks.runTask(() -> openMenu(null, event.getPlayer()));

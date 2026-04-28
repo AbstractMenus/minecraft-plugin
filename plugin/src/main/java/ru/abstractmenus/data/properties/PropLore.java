@@ -68,7 +68,7 @@ public class PropLore implements ItemProperty {
             meta.setLore(preFormatted);
             return;
         }
-        List<String> replaced = AbstractMenusApi.get().providers().placeholders().replace(player, lore);
+        List<String> replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, lore);
         meta.setLore(MiniMessageUtil.parseToLegacy(replaced));
     }
 

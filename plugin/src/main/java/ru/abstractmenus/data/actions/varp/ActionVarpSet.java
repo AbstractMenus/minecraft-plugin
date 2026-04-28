@@ -25,10 +25,10 @@ public class ActionVarpSet implements Action {
 
     public void activate(Player p, Menu menu, Item clickedItem) {
         for (VarData data : dataList) {
-            String varName = AbstractMenusApi.get().providers().placeholders().replace(p, data.getName());
-            String varVal = AbstractMenusApi.get().providers().placeholders().replace(p, data.getValue());
+            String varName = AbstractMenusApi.get().providers().placeholders().resolve().replace(p, data.getName());
+            String varVal = AbstractMenusApi.get().providers().placeholders().resolve().replace(p, data.getValue());
 
-            long time = TimeUtil.parseTime(AbstractMenusApi.get().providers().placeholders().replace(p, data.getTime()));
+            long time = TimeUtil.parseTime(AbstractMenusApi.get().providers().placeholders().resolve().replace(p, data.getTime()));
             boolean replace = data.isReplace().getBool(p, menu);
 
             Var var = VariableManagerImpl.instance().createBuilder()

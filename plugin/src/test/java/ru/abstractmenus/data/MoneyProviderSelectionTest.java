@@ -54,8 +54,8 @@ class MoneyProviderSelectionTest {
         // can resolve 'amount' nodes. In production this is done in Serializers.init().
         support.api().serializers().register(TypeDouble.class, new TypeDouble.Serializer());
 
-        support.providers().registerEconomy("vault",        vault, VAULT_PRIORITY, support.owner());
-        support.providers().registerEconomy("playerpoints", pp,    PP_PRIORITY,    support.owner());
+        support.providers().economy().register("vault",        vault, VAULT_PRIORITY, support.owner());
+        support.providers().economy().register("playerpoints", pp,    PP_PRIORITY,    support.owner());
     }
 
     @AfterEach

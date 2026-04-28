@@ -21,9 +21,9 @@ public class ActionSkinSet implements Action {
     }
 
     public void activate(Player player, Menu menu, Item clickedItem) {
-        AbstractMenusApi.get().providers().skins().setSkin(player,
-                AbstractMenusApi.get().providers().placeholders().replace(player, texture),
-                AbstractMenusApi.get().providers().placeholders().replace(player, signature));
+        AbstractMenusApi.get().providers().skins().resolve().setSkin(player,
+                AbstractMenusApi.get().providers().placeholders().resolve().replace(player, texture),
+                AbstractMenusApi.get().providers().placeholders().resolve().replace(player, signature));
     }
 
     public static class Serializer implements NodeSerializer<ActionSkinSet> {

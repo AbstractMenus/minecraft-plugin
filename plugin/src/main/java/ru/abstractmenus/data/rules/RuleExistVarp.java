@@ -20,7 +20,7 @@ public class RuleExistVarp implements Rule {
 
     @Override
     public boolean check(Player p, Menu menu, Item clickedItem) {
-        String varName = AbstractMenusApi.get().providers().placeholders().replace(p, this.name);
+        String varName = AbstractMenusApi.get().providers().placeholders().resolve().replace(p, this.name);
         return VariableManagerImpl.instance().getPersonal(p.getName(), varName) != null;
     }
 

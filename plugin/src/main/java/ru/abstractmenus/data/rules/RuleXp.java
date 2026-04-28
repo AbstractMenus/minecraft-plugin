@@ -20,7 +20,7 @@ public class RuleXp implements Rule {
 
     @Override
     public boolean check(Player player, Menu menu, Item clickedItem) {
-        return AbstractMenusApi.get().providers().levels().getXp(player) >= xp.getFloat(player, menu);
+        return AbstractMenusApi.get().providers().levels().resolve().getXp(player) >= xp.getFloat(player, menu);
     }
 
     public static class Serializer implements NodeSerializer<RuleXp> {

@@ -34,7 +34,7 @@ public class PropSkullOwner implements ItemProperty {
 
     @Override
     public void apply(ItemStack item, ItemMeta meta, Player player, Menu menu) {
-        String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, owner);
+        String replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, owner);
         ItemStack skullItem = Skulls.getPlayerSkull(replaced);
 
         if (skullItem == null) {

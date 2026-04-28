@@ -6,83 +6,54 @@ import ru.abstractmenus.api.handler.PermissionsHandler;
 import ru.abstractmenus.api.handler.PlaceholderHandler;
 import ru.abstractmenus.api.handler.SkinHandler;
 
-import java.util.Collection;
-
 /**
  * Registry of pluggable handler providers (economy, permissions, levels,
- * placeholders, skins). Replaces the old static {@code Handlers.set*()/get*()}
- * facade with an owner-aware registry that supports multiple providers per
- * section plus priority-based auto-resolution.
+ * placeholders, skins). Replaces the old static {@code Handlers} facade with
+ * an owner-aware registry that supports multiple providers per section plus
+ * priority-based auto-resolution and a configurable default.
+ *
+ * <p>Each section ({@link #economy()}, {@link #permissions()},
+ * {@link #levels()}, {@link #placeholders()}, {@link #skins()}) returns a
+ * typed {@link ProviderSection} you register on and resolve from. The
+ * registry itself is just five getters - all per-type behaviour lives on
+ * {@link ProviderSection}, so adding a sixth provider type later means
+ * adding one method here, not five.
  *
  * <h2>Registration</h2>
  *
  * <pre>{@code
  * public final class MyEconomyAddon implements MenuExtension {
  *     @Override public void onEnable(AbstractMenusApi api) {
- *         api.providers().registerEconomy(
+ *         api.providers().economy().register(
  *             "playerpoints",
  *             new PlayerPointsEconomy(pp),
- *             100,          // priority — higher wins in auto-resolve
- *             this);        // owner — AbstractMenus uses this for cleanup on reload
+ *             100,          // priority - higher wins in auto-resolve
+ *             this);        // owner - AbstractMenus uses this for cleanup
  *     }
  * }
  * }</pre>
  *
- * <h2>Resolution</h2>
+ * <h2>Lookup</h2>
  *
- * <ul>
- *   <li>{@link #economy()} &mdash; highest-priority registered handler, or
- *       first-registered on ties. Returns {@code null} if none registered.</li>
- *   <li>{@link #economy(String)} &mdash; explicit lookup by id.</li>
- *   <li>{@link #allEconomy()} &mdash; every registration, for introspection.</li>
- *   <li>{@link #hasEconomy(String)} &mdash; validation helper (used by
- *       menu-serializers to fail-at-load when a HOCON file references an
- *       unknown provider).</li>
- * </ul>
+ * <pre>{@code
+ * EconomyHandler eco       = api.providers().economy().resolve();
+ * EconomyHandler vault     = api.providers().economy().resolve("vault");
+ * boolean hasPP            = api.providers().economy().has("playerpoints");
+ * Collection<EconomyHandler> all = api.providers().economy().all();
+ * }</pre>
  *
- * <p>Same shape for permissions / levels / placeholders / skins.
- *
+ * @see ProviderSection
  * @see AbstractMenusApi#providers()
  */
 public interface ProviderRegistry {
 
-    // ---- Economy ---------------------------------------------------------
+    ProviderSection<EconomyHandler>     economy();
 
-    void registerEconomy(String id, EconomyHandler handler, int priority, MenuExtension owner);
-    EconomyHandler economy();
-    EconomyHandler economy(String id);
-    Collection<EconomyHandler> allEconomy();
-    boolean hasEconomy(String id);
+    ProviderSection<PermissionsHandler> permissions();
 
-    // ---- Permissions -----------------------------------------------------
+    ProviderSection<LevelHandler>       levels();
 
-    void registerPermissions(String id, PermissionsHandler handler, int priority, MenuExtension owner);
-    PermissionsHandler permissions();
-    PermissionsHandler permissions(String id);
-    Collection<PermissionsHandler> allPermissions();
-    boolean hasPermissions(String id);
+    ProviderSection<PlaceholderHandler> placeholders();
 
-    // ---- Levels ----------------------------------------------------------
-
-    void registerLevels(String id, LevelHandler handler, int priority, MenuExtension owner);
-    LevelHandler levels();
-    LevelHandler levels(String id);
-    Collection<LevelHandler> allLevels();
-    boolean hasLevels(String id);
-
-    // ---- Placeholders ----------------------------------------------------
-
-    void registerPlaceholders(String id, PlaceholderHandler handler, int priority, MenuExtension owner);
-    PlaceholderHandler placeholders();
-    PlaceholderHandler placeholders(String id);
-    Collection<PlaceholderHandler> allPlaceholders();
-    boolean hasPlaceholders(String id);
-
-    // ---- Skins -----------------------------------------------------------
-
-    void registerSkins(String id, SkinHandler handler, int priority, MenuExtension owner);
-    SkinHandler skins();
-    SkinHandler skins(String id);
-    Collection<SkinHandler> allSkins();
-    boolean hasSkins(String id);
+    ProviderSection<SkinHandler>        skins();
 }

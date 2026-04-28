@@ -62,7 +62,7 @@ public class PropOraxen implements ItemProperty {
     }
 
     private ItemStack getItem(Player player) {
-        String id = AbstractMenusApi.get().providers().placeholders().replace(player, this.id);
+        String id = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, this.id);
         try {
             Object builder = getItemByIdMethod.invoke(id);
             if (builder == null)

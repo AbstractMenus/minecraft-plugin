@@ -25,7 +25,7 @@ public class ActionVarDiv implements Action {
 
     public void activate(Player p, Menu menu, Item clickedItem) {
         for (VarNumData data : dataList) {
-            String varName = AbstractMenusApi.get().providers().placeholders().replace(p, data.getName());
+            String varName = AbstractMenusApi.get().providers().placeholders().resolve().replace(p, data.getName());
             double value = data.getValue().getDouble(p, menu);
 
             if (value == 0) {
@@ -38,7 +38,7 @@ public class ActionVarDiv implements Action {
             if (data.getPlayer() == null) {
                 VariableManagerImpl.instance().modifyNumericGlobal(varName, func);
             } else {
-                String playerName = AbstractMenusApi.get().providers().placeholders().replace(p, data.getPlayer());
+                String playerName = AbstractMenusApi.get().providers().placeholders().resolve().replace(p, data.getPlayer());
                 VariableManagerImpl.instance().modifyNumericPersonal(playerName, varName, func);
             }
         }

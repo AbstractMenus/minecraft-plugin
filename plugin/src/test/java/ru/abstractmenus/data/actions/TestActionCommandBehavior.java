@@ -91,7 +91,7 @@ class TestActionCommandBehavior {
             @Override public String name() { return "countingTestOwner"; }
             @Override public void onEnable(ru.abstractmenus.api.AbstractMenusApi api) {}
         };
-        apiSupport.providers().registerPlaceholders("counting", new PlaceholderHandler() {
+        apiSupport.providers().placeholders().register("counting", new PlaceholderHandler() {
             @Override public String replacePlaceholder(Player p, String s) { return s; }
             @Override public String replace(Player p, String s) { callCount[0]++; return s; }
             @Override public List<String> replace(Player p, List<String> l) { return l; }

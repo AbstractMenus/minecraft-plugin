@@ -43,7 +43,7 @@ public class OpenSign extends Activator {
         String[] lines = sign.getLines();
         int compareLines = Math.min(text.size(), lines.length);
         for (int i = 0; i < compareLines; i++) {
-            String line = AbstractMenusApi.get().providers().placeholders().replace(player, text.get(i));
+            String line = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, text.get(i));
             if (!line.equalsIgnoreCase(lines[i])) return;
         }
 

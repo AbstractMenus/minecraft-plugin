@@ -21,7 +21,7 @@ public class ActionMenuOpen implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        String name = AbstractMenusApi.get().providers().placeholders().replace(player, this.menu);
+        String name = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, this.menu);
         Menu menuToOpen = MenuManager.instance().getMenu(name);
 
         if (menuToOpen != null)

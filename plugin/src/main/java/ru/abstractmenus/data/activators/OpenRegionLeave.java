@@ -22,7 +22,7 @@ public class OpenRegionLeave extends Activator {
 
     @EventHandler
     public void onRegionEnter(RegionLeaveEvent event) {
-        List<String> regions = AbstractMenusApi.get().providers().placeholders().replace(event.getPlayer(), this.regions);
+        List<String> regions = AbstractMenusApi.get().providers().placeholders().resolve().replace(event.getPlayer(), this.regions);
 
         if (regions.contains(event.getRegion().getId())) {
             openMenu(event.getRegion(), event.getPlayer());

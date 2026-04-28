@@ -23,7 +23,7 @@ public class ActionVarpRem implements Action {
 
     public void activate(Player p, Menu menu, Item clickedItem) {
         for (VarData data : dataList) {
-            String varName = AbstractMenusApi.get().providers().placeholders().replace(p, data.getName());
+            String varName = AbstractMenusApi.get().providers().placeholders().resolve().replace(p, data.getName());
 
             VariableManagerImpl.instance().deletePersonal(p.getName(), varName);
         }

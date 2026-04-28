@@ -33,7 +33,7 @@ public class PropSerialized implements ItemProperty {
 
     @Override
     public void apply(ItemStack item, ItemMeta meta, Player player, Menu menu) {
-        String base64 = AbstractMenusApi.get().providers().placeholders().replace(player, value);
+        String base64 = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, value);
         ItemStack deserialized = ItemUtil.decodeStack(base64);
 
         if (deserialized == null) {

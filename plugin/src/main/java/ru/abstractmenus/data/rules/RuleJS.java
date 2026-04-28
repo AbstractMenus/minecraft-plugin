@@ -41,7 +41,7 @@ public class RuleJS implements Rule {
     @Override
     public boolean check(Player player, Menu menu, Item clickedItem) {
         try{
-            Object result = ENGINE.eval(AbstractMenusApi.get().providers().placeholders().replace(player, js), bindings);
+            Object result = ENGINE.eval(AbstractMenusApi.get().providers().placeholders().resolve().replace(player, js), bindings);
             return result.toString().equals("true");
         } catch (ScriptException e){
             Logger.severe("Cannot execute JavaScript code: " + e.getMessage());

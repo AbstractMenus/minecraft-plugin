@@ -20,7 +20,7 @@ public class RuleLevel implements Rule {
 
     @Override
     public boolean check(Player player, Menu menu, Item clickedItem) {
-        return AbstractMenusApi.get().providers().levels().getLevel(player) >= level.getInt(player, menu);
+        return AbstractMenusApi.get().providers().levels().resolve().getLevel(player) >= level.getInt(player, menu);
     }
 
     public static class Serializer implements NodeSerializer<RuleLevel> {

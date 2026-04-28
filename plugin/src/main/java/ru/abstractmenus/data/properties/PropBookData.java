@@ -35,9 +35,9 @@ public class PropBookData implements ItemProperty {
     @Override
     public void apply(ItemStack itemStack, ItemMeta meta, Player player, Menu menu) {
         if (meta instanceof BookMeta) {
-            String author = AbstractMenusApi.get().providers().placeholders().replace(player, data.getAuthor());
-            String title = AbstractMenusApi.get().providers().placeholders().replace(player, data.getTitle());
-            List<String> pages = AbstractMenusApi.get().providers().placeholders().replace(player, data.getPages());
+            String author = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, data.getAuthor());
+            String title = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, data.getTitle());
+            List<String> pages = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, data.getPages());
 
             ((BookMeta) meta).setAuthor(author);
             ((BookMeta) meta).setTitle(title);

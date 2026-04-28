@@ -25,7 +25,7 @@ public class ActionLuckPermsMetaSet implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        PermissionsHandler perms = AbstractMenusApi.get().providers().permissions();
+        PermissionsHandler perms = AbstractMenusApi.get().providers().permissions().resolve();
         if (!(perms instanceof LuckPermsHandler handler)) {
             Logger.warning("lpMetaSet skipped: active permissions provider "
                     + (perms == null ? "null" : perms.getClass().getSimpleName())
@@ -35,7 +35,7 @@ public class ActionLuckPermsMetaSet implements Action {
         }
         metaList.forEach(meta -> {
             String replacedValue = isIgnorePlaceholder ? meta.getValue()
-                    : AbstractMenusApi.get().providers().placeholders().replace(player, meta.getValue());
+                    : AbstractMenusApi.get().providers().placeholders().resolve().replace(player, meta.getValue());
             handler.addMeta(player, meta.getKey(), replacedValue);
         });
     }

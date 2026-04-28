@@ -21,7 +21,7 @@ public class ActionSkinReset implements Action {
 
     public void activate(Player player, Menu menu, Item clickedItem) {
         if (reset.getBool(player, menu)) {
-            AbstractMenusApi.get().providers().skins().resetSkin(player);
+            AbstractMenusApi.get().providers().skins().resolve().resetSkin(player);
         }
     }
 

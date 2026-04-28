@@ -33,7 +33,7 @@ public class PropItemsAdder implements ItemProperty {
 
     @Override
     public void apply(ItemStack item, ItemMeta meta, Player player, Menu menu) {
-        String id = AbstractMenusApi.get().providers().placeholders().replace(player, this.id);
+        String id = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, this.id);
         CustomStack stack = CustomStack.getInstance(id);
 
         if (stack == null)

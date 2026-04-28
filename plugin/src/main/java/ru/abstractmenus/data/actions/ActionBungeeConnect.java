@@ -20,7 +20,7 @@ public class ActionBungeeConnect implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, serverName);
+        String replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, serverName);
         BungeeManager.instance().sendPluginMessage(player, "Connect", replaced);
     }
 

@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
  * @BeforeAll
  * static void setUp() {
  *     support = ApiTestSupport.install();
- *     support.providers().registerPlaceholders("test", myHandler, 100, support.owner());
+ *     support.providers().placeholders().register("test", myHandler, 100, support.owner());
  * }
  *
  * @AfterAll
@@ -78,7 +78,7 @@ public final class ApiTestSupport implements AutoCloseable {
 
     /** Shortcut: register {@code handler} as the test placeholder provider. */
     public void installPlaceholderHandler(PlaceholderHandler handler) {
-        api.providers().registerPlaceholders("test", handler, 100, owner);
+        api.providers().placeholders().register("test", handler, 100, owner);
     }
 
     @Override

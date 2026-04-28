@@ -20,7 +20,7 @@ public class RuleBungeeIsOnline implements Rule {
 
     @Override
     public boolean check(Player player, Menu menu, Item clickedItem) {
-        return BungeeManager.instance().isOnline(AbstractMenusApi.get().providers().placeholders().replace(player, server));
+        return BungeeManager.instance().isOnline(AbstractMenusApi.get().providers().placeholders().resolve().replace(player, server));
     }
 
     public static class Serializer implements NodeSerializer<RuleBungeeIsOnline> {

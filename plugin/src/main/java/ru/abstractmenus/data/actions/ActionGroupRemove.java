@@ -19,8 +19,8 @@ public class ActionGroupRemove implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        String groupName = AbstractMenusApi.get().providers().placeholders().replace(player, group);
-        AbstractMenusApi.get().providers().permissions().removeGroup(player, groupName);
+        String groupName = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, group);
+        AbstractMenusApi.get().providers().permissions().resolve().removeGroup(player, groupName);
     }
 
     public static class Serializer implements NodeSerializer<ActionGroupRemove> {

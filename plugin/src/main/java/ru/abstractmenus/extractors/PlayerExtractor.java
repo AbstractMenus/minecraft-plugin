@@ -12,7 +12,7 @@ public class PlayerExtractor implements ValueExtractor {
     @Override
     public String extract(Object obj, String placeholder) {
         return (obj instanceof Player player && player.isOnline())
-                ? AbstractMenusApi.get().providers().placeholders().replacePlaceholder(player, placeholder)
+                ? AbstractMenusApi.get().providers().placeholders().resolve().replacePlaceholder(player, placeholder)
                 : StringUtils.EMPTY;
     }
 }

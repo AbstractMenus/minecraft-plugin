@@ -34,7 +34,7 @@ public class ActionInputChat implements Action {
 
     @Override
     public void activate(Player player, Menu m, Item clickedItem) {
-        String name = AbstractMenusApi.get().providers().placeholders().replace(player, varName);
+        String name = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, varName);
         InputAction action = new InputAction(player, name, global, cancelWord, onInput, onCancel);
         MenuManager.instance().saveInputAction(action);
         m.close(player);

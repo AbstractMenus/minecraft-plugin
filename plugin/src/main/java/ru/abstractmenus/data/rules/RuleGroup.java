@@ -22,8 +22,8 @@ public class RuleGroup implements Rule {
     @Override
     public boolean check(Player player, Menu menu, Item clickedItem) {
         for (String group : groups) {
-            String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, group);
-            if (!AbstractMenusApi.get().providers().permissions().hasGroup(player, replaced)) return false;
+            String replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, group);
+            if (!AbstractMenusApi.get().providers().permissions().resolve().hasGroup(player, replaced)) return false;
         }
         return true;
     }

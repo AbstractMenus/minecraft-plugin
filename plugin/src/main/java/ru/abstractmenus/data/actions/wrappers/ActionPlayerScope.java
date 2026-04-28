@@ -23,7 +23,7 @@ public class ActionPlayerScope implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        String replacedName = AbstractMenusApi.get().providers().placeholders().replace(player, playerName);
+        String replacedName = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, playerName);
         Player target = Bukkit.getPlayerExact(replacedName);
 
         if (target != null && target.isOnline()) {

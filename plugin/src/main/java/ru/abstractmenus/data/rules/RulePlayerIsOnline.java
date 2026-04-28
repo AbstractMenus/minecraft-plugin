@@ -20,7 +20,7 @@ public class RulePlayerIsOnline implements Rule {
 
     @Override
     public boolean check(Player player, Menu menu, Item clickedItem) {
-        String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, playerName);
+        String replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, playerName);
         Player foundPlayer = Bukkit.getPlayerExact(replaced);
 
         return foundPlayer != null && foundPlayer.isOnline();

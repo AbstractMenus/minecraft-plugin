@@ -18,7 +18,7 @@ public final class ModernValueComparator implements ValueComparator {
 
     @Override
     public boolean compare(Player player, Menu menu) {
-        String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, expression);
+        String replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, expression);
         String result = EVALUATOR.evaluate(replaced);
         return Boolean.parseBoolean(result);
     }

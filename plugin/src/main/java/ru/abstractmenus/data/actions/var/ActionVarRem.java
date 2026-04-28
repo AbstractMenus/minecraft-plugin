@@ -23,12 +23,12 @@ public class ActionVarRem implements Action {
 
     public void activate(Player p, Menu menu, Item clickedItem) {
         for (VarData data : dataList) {
-            String varName = AbstractMenusApi.get().providers().placeholders().replace(p, data.getName());
+            String varName = AbstractMenusApi.get().providers().placeholders().resolve().replace(p, data.getName());
 
             if (data.getPlayer() == null) {
                 VariableManagerImpl.instance().deleteGlobal(varName);
             } else {
-                String playerName = AbstractMenusApi.get().providers().placeholders().replace(p, data.getPlayer());
+                String playerName = AbstractMenusApi.get().providers().placeholders().resolve().replace(p, data.getPlayer());
                 VariableManagerImpl.instance().deletePersonal(playerName, varName);
             }
         }

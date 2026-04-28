@@ -24,8 +24,8 @@ public class RuleMoney implements Rule {
     @Override
     public boolean check(Player player, Menu menu, Item clickedItem) {
         EconomyHandler eco = provider != null
-                ? AbstractMenusApi.get().providers().economy(provider)
-                : AbstractMenusApi.get().providers().economy();
+                ? AbstractMenusApi.get().providers().economy().resolve(provider)
+                : AbstractMenusApi.get().providers().economy().resolve();
         if (eco == null) {
             return false;
         }
@@ -47,9 +47,9 @@ public class RuleMoney implements Rule {
             }
 
             if (provider != null) {
-                if (!AbstractMenusApi.get().providers().hasEconomy(provider)) {
+                if (!AbstractMenusApi.get().providers().economy().has(provider)) {
                     StringBuilder known = new StringBuilder();
-                    for (EconomyHandler h : AbstractMenusApi.get().providers().allEconomy()) {
+                    for (EconomyHandler h : AbstractMenusApi.get().providers().economy().all()) {
                         if (known.length() > 0) known.append(", ");
                         known.append(h.getClass().getSimpleName());
                     }

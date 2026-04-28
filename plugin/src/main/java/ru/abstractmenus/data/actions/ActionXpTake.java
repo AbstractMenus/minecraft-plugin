@@ -20,7 +20,7 @@ public class ActionXpTake implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        AbstractMenusApi.get().providers().levels().takeXp(player, xp.getInt(player, menu));
+        AbstractMenusApi.get().providers().levels().resolve().takeXp(player, xp.getInt(player, menu));
     }
 
     public static class Serializer implements NodeSerializer<ActionXpTake> {

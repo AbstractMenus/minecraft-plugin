@@ -31,7 +31,7 @@ public class PropNameLight implements ItemProperty {
 
     @Override
     public void apply(ItemStack itemStack, ItemMeta meta, Player player, Menu menu) {
-        String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, name);
+        String replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, name);
         meta.setDisplayName(replaced);
     }
 

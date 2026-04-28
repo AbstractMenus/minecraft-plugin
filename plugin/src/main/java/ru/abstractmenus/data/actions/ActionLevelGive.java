@@ -20,7 +20,7 @@ public class ActionLevelGive implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        AbstractMenusApi.get().providers().levels().giveLevel(player, level.getInt(player, menu));
+        AbstractMenusApi.get().providers().levels().resolve().giveLevel(player, level.getInt(player, menu));
     }
 
     public static class Serializer implements NodeSerializer<ActionLevelGive> {

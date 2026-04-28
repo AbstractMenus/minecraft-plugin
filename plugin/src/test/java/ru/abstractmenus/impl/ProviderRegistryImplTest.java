@@ -25,116 +25,116 @@ class ProviderRegistryImplTest {
     @Test
     void register_singleProvider_resolvesByIdAndAuto() {
         EconomyHandler vault = mock(EconomyHandler.class);
-        registry.registerEconomy("vault", vault, 50, ownerA);
+        registry.economy().register("vault", vault, 50, ownerA);
 
-        assertSame(vault, registry.economy());
-        assertSame(vault, registry.economy("vault"));
-        assertEquals(1, registry.allEconomy().size());
-        assertTrue(registry.hasEconomy("vault"));
+        assertSame(vault, registry.economy().resolve());
+        assertSame(vault, registry.economy().resolve("vault"));
+        assertEquals(1, registry.economy().all().size());
+        assertTrue(registry.economy().has("vault"));
     }
 
     @Test
     void auto_returnsNullWhenEmpty() {
-        assertNull(registry.economy());
-        assertFalse(registry.hasEconomy("anything"));
+        assertNull(registry.economy().resolve());
+        assertFalse(registry.economy().has("anything"));
     }
 
     @Test
     void auto_highestPriorityWins() {
         EconomyHandler vault = mock(EconomyHandler.class);
         EconomyHandler pp = mock(EconomyHandler.class);
-        registry.registerEconomy("vault", vault, 50, ownerA);
-        registry.registerEconomy("playerpoints", pp, 100, ownerA);
+        registry.economy().register("vault", vault, 50, ownerA);
+        registry.economy().register("playerpoints", pp, 100, ownerA);
 
-        assertSame(pp, registry.economy());
+        assertSame(pp, registry.economy().resolve());
     }
 
     @Test
     void auto_tieBreaksToFirstRegistered() {
         EconomyHandler a = mock(EconomyHandler.class);
         EconomyHandler b = mock(EconomyHandler.class);
-        registry.registerEconomy("alpha", a, 50, ownerA);
-        registry.registerEconomy("beta",  b, 50, ownerA);
+        registry.economy().register("alpha", a, 50, ownerA);
+        registry.economy().register("beta",  b, 50, ownerA);
 
-        assertSame(a, registry.economy());
+        assertSame(a, registry.economy().resolve());
     }
 
     @Test
     void lookupById_caseInsensitive() {
         EconomyHandler vault = mock(EconomyHandler.class);
-        registry.registerEconomy("Vault", vault, 50, ownerA);
+        registry.economy().register("Vault", vault, 50, ownerA);
 
-        assertSame(vault, registry.economy("VAULT"));
-        assertSame(vault, registry.economy("vault"));
-        assertTrue(registry.hasEconomy("vAuLt"));
+        assertSame(vault, registry.economy().resolve("VAULT"));
+        assertSame(vault, registry.economy().resolve("vault"));
+        assertTrue(registry.economy().has("vAuLt"));
     }
 
     @Test
     void unregisterAll_removesOnlyThatOwner() {
         EconomyHandler ea = mock(EconomyHandler.class);
         EconomyHandler eb = mock(EconomyHandler.class);
-        registry.registerEconomy("a", ea, 50, ownerA);
-        registry.registerEconomy("b", eb, 50, ownerB);
+        registry.economy().register("a", ea, 50, ownerA);
+        registry.economy().register("b", eb, 50, ownerB);
 
         registry.unregisterAll(ownerA);
 
-        assertNull(registry.economy("a"));
-        assertSame(eb, registry.economy("b"));
-        assertEquals(1, registry.allEconomy().size());
+        assertNull(registry.economy().resolve("a"));
+        assertSame(eb, registry.economy().resolve("b"));
+        assertEquals(1, registry.economy().all().size());
     }
 
     @Test
     void overwrite_replacesPrevious() {
         EconomyHandler old = mock(EconomyHandler.class);
         EconomyHandler fresh = mock(EconomyHandler.class);
-        registry.registerEconomy("vault", old, 50, ownerA);
-        registry.registerEconomy("vault", fresh, 50, ownerB);
+        registry.economy().register("vault", old, 50, ownerA);
+        registry.economy().register("vault", fresh, 50, ownerB);
 
-        assertSame(fresh, registry.economy("vault"));
+        assertSame(fresh, registry.economy().resolve("vault"));
     }
 
     @Test
     void sectionsAreIndependent() {
         EconomyHandler e = mock(EconomyHandler.class);
-        registry.registerEconomy("e", e, 50, ownerA);
+        registry.economy().register("e", e, 50, ownerA);
 
-        assertNull(registry.permissions());
-        assertNull(registry.levels());
-        assertNull(registry.placeholders());
-        assertNull(registry.skins());
+        assertNull(registry.permissions().resolve());
+        assertNull(registry.levels().resolve());
+        assertNull(registry.placeholders().resolve());
+        assertNull(registry.skins().resolve());
     }
 
     @Test
     void configDefault_prefersConfiguredId() {
         EconomyHandler vault = mock(EconomyHandler.class);
         EconomyHandler pp = mock(EconomyHandler.class);
-        registry.registerEconomy("vault", vault, 50, ownerA);
-        registry.registerEconomy("playerpoints", pp, 100, ownerA);
+        registry.economy().register("vault", vault, 50, ownerA);
+        registry.economy().register("playerpoints", pp, 100, ownerA);
 
         // Without config, auto prefers playerpoints (priority 100).
-        assertSame(pp, registry.economy());
+        assertSame(pp, registry.economy().resolve());
 
         // With config override to vault, vault wins despite lower priority.
         registry.setConfigDefaults(kind -> "economy".equals(kind) ? "vault" : null);
-        assertSame(vault, registry.economy());
+        assertSame(vault, registry.economy().resolve());
     }
 
     @Test
     void configDefault_autoKeyword_fallsBackToAuto() {
         EconomyHandler vault = mock(EconomyHandler.class);
-        registry.registerEconomy("vault", vault, 50, ownerA);
+        registry.economy().register("vault", vault, 50, ownerA);
 
         registry.setConfigDefaults(kind -> "auto");
-        assertSame(vault, registry.economy());
+        assertSame(vault, registry.economy().resolve());
     }
 
     @Test
     void configDefault_unknownId_fallsBackToAuto() {
         EconomyHandler vault = mock(EconomyHandler.class);
-        registry.registerEconomy("vault", vault, 50, ownerA);
+        registry.economy().register("vault", vault, 50, ownerA);
 
         registry.setConfigDefaults(kind -> "ghost");  // not registered
-        assertSame(vault, registry.economy());  // auto fallback
+        assertSame(vault, registry.economy().resolve());  // auto fallback
     }
 
     // --- helper ---

@@ -43,7 +43,7 @@ public class PropTexture implements ItemProperty {
 
     @Override
     public void apply(ItemStack item, ItemMeta meta, Player player, Menu menu) {
-        String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, texture);
+        String replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, texture);
         ItemStack skullItem = Skulls.getCustomSkull(fetchTextureUrl(replaced));
 
         if (skullItem != null) {

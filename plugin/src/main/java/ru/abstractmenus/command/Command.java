@@ -68,7 +68,7 @@ public class Command {
             } catch (Throwable t) {
                 if (arg.getDef() != null && sender instanceof Player) {
                     Player player = (Player) sender;
-                    String def = AbstractMenusApi.get().providers().placeholders().replace(player, arg.getDef());
+                    String def = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, arg.getDef());
 
                     try {
                         Object defObj = arg.parse(sender, def);

@@ -58,7 +58,7 @@ public class PropName implements ItemProperty {
             meta.setDisplayName(preFormatted);
             return;
         }
-        String replaced = AbstractMenusApi.get().providers().placeholders().replace(player, name);
+        String replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, name);
         meta.setDisplayName(MiniMessageUtil.parseToLegacy(replaced));
     }
 

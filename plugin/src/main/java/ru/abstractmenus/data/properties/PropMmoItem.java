@@ -36,7 +36,7 @@ public class PropMmoItem implements ItemProperty {
 
     @Override
     public void apply(ItemStack item, ItemMeta meta, Player player, Menu menu) {
-        String[] arr = AbstractMenusApi.get().providers().placeholders().replace(player, id).split(":");
+        String[] arr = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, id).split(":");
 
         if(arr.length >= 2) {
             ItemStack mmoItem = MMOItems.plugin.getItem(MMOItems.plugin.getTypes().get(arr[0]), arr[1]);

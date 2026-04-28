@@ -27,8 +27,8 @@ public class ActionPermissionGive implements Action {
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
         permissions.forEach(perm -> {
-            String replaced = isIgnorePlaceholder ? perm : AbstractMenusApi.get().providers().placeholders().replace(player, perm);
-            AbstractMenusApi.get().providers().permissions().addPermission(player, replaced);
+            String replaced = isIgnorePlaceholder ? perm : AbstractMenusApi.get().providers().placeholders().resolve().replace(player, perm);
+            AbstractMenusApi.get().providers().permissions().resolve().addPermission(player, replaced);
         });
     }
 

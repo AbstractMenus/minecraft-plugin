@@ -49,11 +49,11 @@ public final class LegacyValueComparator implements ValueComparator {
         }
 
         public boolean compare(Player player, Menu menu){
-            String param = AbstractMenusApi.get().providers().placeholders().replace(player, getParam());
+            String param = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, getParam());
 
             if(equals != null){
                 for(String str : equals){
-                    String val = AbstractMenusApi.get().providers().placeholders().replace(player, str);
+                    String val = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, str);
 
                     try{
                         if(Double.parseDouble(param) == Double.parseDouble(val)) return true;
@@ -65,7 +65,7 @@ public final class LegacyValueComparator implements ValueComparator {
 
             if(equalsIgnoreCase != null){
                 for(String str : equalsIgnoreCase){
-                    String val = AbstractMenusApi.get().providers().placeholders().replace(player, str);
+                    String val = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, str);
                     if(param.equalsIgnoreCase(val)){
                         return true;
                     }
@@ -74,7 +74,7 @@ public final class LegacyValueComparator implements ValueComparator {
 
             if(contains != null){
                 for(String str : contains){
-                    String val = AbstractMenusApi.get().providers().placeholders().replace(player, str);
+                    String val = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, str);
                     if(param.toLowerCase().contains(val.toLowerCase())){
                         return true;
                     }
