@@ -114,6 +114,16 @@ public final class TypeRegistryImpl<T> implements TypeRegistry<T> {
     }
 
     /**
+     * Snapshot of every extension that has ever registered (and not since
+     * fully unregistered) at least one entry in this registry. Used by
+     * {@code /am addons list} to surface Path 1 plugin-as-addons that
+     * don't sit in the AddonManager's loaded map.
+     */
+    public synchronized Set<MenuExtension> seenOwners() {
+        return Collections.unmodifiableSet(new HashSet<>(keysByOwner.keySet()));
+    }
+
+    /**
      * Wipe every entry registered by {@code owner}. Intentionally NOT on the
      * public {@link TypeRegistry} interface so that addons cannot use it to
      * unregister another extension's entries. Called only by AbstractMenus'

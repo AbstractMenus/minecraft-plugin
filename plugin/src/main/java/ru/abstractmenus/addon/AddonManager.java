@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -320,6 +321,31 @@ public final class AddonManager {
 
     public Optional<LoadedAddon> get(String name) {
         return Optional.ofNullable(addons.get(name.toLowerCase()));
+    }
+
+    /**
+     * Every {@link MenuExtension} that has registered at least one type or
+     * provider on the running API. Includes:
+     * <ul>
+     *   <li>Path 2 AM-loaded addons (also in {@link #loaded()})</li>
+     *   <li>Path 1 plugin-as-addons (NOT in {@link #loaded()} — they live
+     *       on Bukkit's plugin lifecycle, we only see them through their
+     *       registry footprint)</li>
+     *   <li>Plugin-internal extensions like {@code CoreExtension}</li>
+     * </ul>
+     *
+     * <p>Used by {@code /am addons list} to surface Path 1 entries that
+     * would otherwise be invisible under {@code /am addons}.
+     */
+    public Set<MenuExtension> knownExtensions() {
+        Set<MenuExtension> all = new HashSet<>();
+        all.addAll(((TypeRegistryImpl<?>) api.actions()).seenOwners());
+        all.addAll(((TypeRegistryImpl<?>) api.rules()).seenOwners());
+        all.addAll(((TypeRegistryImpl<?>) api.activators()).seenOwners());
+        all.addAll(((TypeRegistryImpl<?>) api.itemProperties()).seenOwners());
+        all.addAll(((TypeRegistryImpl<?>) api.catalogs()).seenOwners());
+        all.addAll(((ProviderRegistryImpl) api.providers()).seenOwners());
+        return all;
     }
 
     /**

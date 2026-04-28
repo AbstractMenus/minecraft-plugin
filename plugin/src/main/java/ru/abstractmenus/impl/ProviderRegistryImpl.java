@@ -88,6 +88,22 @@ public final class ProviderRegistryImpl implements ProviderRegistry {
         skins.unregisterAll(owner);
     }
 
+    /**
+     * Union of every extension that has registered a provider in any of
+     * the five sections. Used by {@code /am addons list} to discover
+     * Path 1 plugin-as-addons whose only fingerprint is in the registry
+     * owner-tracking map.
+     */
+    public Set<MenuExtension> seenOwners() {
+        Set<MenuExtension> all = new HashSet<>();
+        all.addAll(economy.seenOwners());
+        all.addAll(permissions.seenOwners());
+        all.addAll(levels.seenOwners());
+        all.addAll(placeholders.seenOwners());
+        all.addAll(skins.seenOwners());
+        return Collections.unmodifiableSet(all);
+    }
+
     // -----------------------------------------------------------------
     //  SectionImpl - one instance per provider type
     // -----------------------------------------------------------------
@@ -155,6 +171,10 @@ public final class ProviderRegistryImpl implements ProviderRegistry {
             Set<String> keys = keysByExtension.remove(extOwner);
             if (keys == null) return;
             for (String k : keys) byId.remove(k);
+        }
+
+        synchronized Set<MenuExtension> seenOwners() {
+            return new HashSet<>(keysByExtension.keySet());
         }
 
         private static final class Entry<T> {

@@ -68,6 +68,12 @@ public final class AbstractMenus extends JavaPlugin {
     private AbstractMenusApi api;
     private AddonManager addonManager;
     private MainConfig mainConfig;
+    /**
+     * The plugin's own dogfood {@link MenuExtension}. Held as a field so
+     * {@code /am addons list} can render it as the {@code [built-in]} entry
+     * and tell it apart from operator-installed Path 1 / Path 2 addons.
+     */
+    private MenuExtension core;
 
     @Getter
     @Setter
@@ -146,7 +152,7 @@ public final class AbstractMenus extends JavaPlugin {
 
             // Core extension — dogfood: the plugin registers its own types through
             // the same SPI external addons will use.
-            MenuExtension core = new CoreExtension();
+            core = new CoreExtension();
             core.onLoad(api);
             core.onEnable(api);
 

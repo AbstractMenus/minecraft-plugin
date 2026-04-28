@@ -1,16 +1,21 @@
 package ru.abstractmenus.commands.am;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.plugin.java.JavaPlugin;
 import ru.abstractmenus.AbstractMenus;
 import ru.abstractmenus.addon.AddonManager;
 import ru.abstractmenus.addon.AddonStatus;
 import ru.abstractmenus.addon.LoadedAddon;
+import ru.abstractmenus.api.MenuExtension;
 import ru.abstractmenus.api.text.Colors;
 import ru.abstractmenus.commands.Command;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /** {@code /am addons [list|reload <name>|info <name>|load <name>|rescan]} */
@@ -86,13 +91,20 @@ public class CommandAddons extends Command {
     }
 
     private void list(CommandSender sender, AddonManager am) {
-        var addons = am.loaded();
-        if (addons.isEmpty()) {
-            sender.sendMessage(Colors.of("&7No AM-loaded addons."));
+        var path2 = am.loaded();
+        Set<MenuExtension> path1 = pathOneExtensions(am);
+        MenuExtension core = AbstractMenus.instance().getCore();
+
+        int total = path2.size() + path1.size() + (core != null ? 1 : 0);
+        if (total == 0) {
+            sender.sendMessage(Colors.of("&7No addons."));
             return;
         }
-        sender.sendMessage(Colors.of("&e&lAddons (" + addons.size() + "):"));
-        for (LoadedAddon la : addons) {
+
+        sender.sendMessage(Colors.of("&e&lAddons (" + total + "):"));
+
+        // Path 2 — render unchanged.
+        for (LoadedAddon la : path2) {
             String color = switch (la.getStatus()) {
                 case ENABLED -> "&a";
                 case DISABLED -> "&7";
@@ -103,6 +115,47 @@ public class CommandAddons extends Command {
                     + " &8v" + safe(la.getConf().version())
                     + " &7[" + la.getStatus() + "]"));
         }
+
+        // Path 1 — derived state from the JavaPlugin lifecycle when available.
+        for (MenuExtension ext : path1) {
+            boolean enabled = !(ext instanceof JavaPlugin jp) || jp.isEnabled();
+            String color = enabled ? "&a" : "&c";
+            String status = enabled ? "ENABLED" : "DISABLED";
+            sender.sendMessage(Colors.of(color + "  " + safe(ext.name())
+                    + " &8v" + safe(ext.version())
+                    + " &7[" + status + "] &8[as-plugin]"));
+        }
+
+        // Built-in (CoreExtension) — last so the operator's eye lands on
+        // operator-installed addons first.
+        if (core != null) {
+            sender.sendMessage(Colors.of("&a  " + safe(core.name())
+                    + " &8v" + safe(core.version())
+                    + " &7[ENABLED] &8[built-in]"));
+        }
+    }
+
+    /**
+     * Path 1 plugin-as-addons: every {@link MenuExtension} we see in the
+     * registry footprint that is neither a Path 2 AM-loaded addon nor the
+     * built-in {@code CoreExtension}.
+     */
+    private static Set<MenuExtension> pathOneExtensions(AddonManager am) {
+        // Names of Path 2 addons - their MenuExtension instances must be
+        // skipped from the "registry-footprint" set.
+        Set<MenuExtension> path2Exts = new LinkedHashSet<>();
+        for (LoadedAddon la : am.loaded()) {
+            if (la.getExtension() != null) path2Exts.add(la.getExtension());
+        }
+        MenuExtension core = AbstractMenus.instance().getCore();
+
+        Set<MenuExtension> path1 = new LinkedHashSet<>();
+        for (MenuExtension ext : am.knownExtensions()) {
+            if (ext == core) continue;
+            if (path2Exts.contains(ext)) continue;
+            path1.add(ext);
+        }
+        return path1;
     }
 
     private void reload(CommandSender sender, AddonManager am, String[] args) {
@@ -130,12 +183,34 @@ public class CommandAddons extends Command {
             sender.sendMessage(Colors.of("&cUsage: /am addons info <name>"));
             return;
         }
-        var opt = am.get(args[1]);
-        if (opt.isEmpty()) {
-            sender.sendMessage(Colors.of("&cAddon '" + safe(args[1]) + "' not found."));
+        String name = args[1];
+
+        // Path 2 — full addon.conf metadata.
+        var opt = am.get(name);
+        if (opt.isPresent()) {
+            renderPathTwoInfo(sender, opt.get());
             return;
         }
-        LoadedAddon la = opt.get();
+
+        // Built-in.
+        MenuExtension core = AbstractMenus.instance().getCore();
+        if (core != null && core.name().equalsIgnoreCase(name)) {
+            sender.sendMessage(Colors.of("&e&l" + safe(core.name()) + " &7v" + safe(core.version())));
+            sender.sendMessage(Colors.of("&7  status: &fENABLED &8[built-in]"));
+            return;
+        }
+
+        // Path 1 — surface the JavaPlugin description when available.
+        for (MenuExtension ext : pathOneExtensions(am)) {
+            if (!ext.name().equalsIgnoreCase(name)) continue;
+            renderPathOneInfo(sender, ext);
+            return;
+        }
+
+        sender.sendMessage(Colors.of("&cAddon '" + safe(name) + "' not found."));
+    }
+
+    private static void renderPathTwoInfo(CommandSender sender, LoadedAddon la) {
         var c = la.getConf();
         sender.sendMessage(Colors.of("&e&l" + safe(c.name()) + " &7v" + safe(c.version())));
         sender.sendMessage(Colors.of("&7  status: &f" + la.getStatus()));
@@ -158,6 +233,35 @@ public class CommandAddons extends Command {
         }
         if (la.getStatus() == AddonStatus.FAILED && la.getError() != null) {
             sender.sendMessage(Colors.of("&7  error: &c" + safe(la.getError().getMessage())));
+        }
+    }
+
+    private static void renderPathOneInfo(CommandSender sender, MenuExtension ext) {
+        sender.sendMessage(Colors.of("&e&l" + safe(ext.name()) + " &7v" + safe(ext.version())
+                + " &8[as-plugin]"));
+
+        if (ext instanceof JavaPlugin jp) {
+            PluginDescriptionFile desc = jp.getDescription();
+            sender.sendMessage(Colors.of("&7  status: &f" + (jp.isEnabled() ? "ENABLED" : "DISABLED")));
+            if (!desc.getAuthors().isEmpty()) {
+                sender.sendMessage(Colors.of("&7  authors: &f"
+                        + safe(String.join(", ", desc.getAuthors()))));
+            }
+            if (desc.getDescription() != null && !desc.getDescription().isEmpty()) {
+                sender.sendMessage(Colors.of("&7  description: &f" + safe(desc.getDescription())));
+            }
+            if (!desc.getDepend().isEmpty()) {
+                sender.sendMessage(Colors.of("&7  depend: &f"
+                        + safe(String.join(", ", desc.getDepend()))));
+            }
+            if (!desc.getSoftDepend().isEmpty()) {
+                sender.sendMessage(Colors.of("&7  softDepend: &f"
+                        + safe(String.join(", ", desc.getSoftDepend()))));
+            }
+        } else {
+            // Non-JavaPlugin Path 1 - rare but legal (an extension produced
+            // by a plugin's onEnable that isn't the plugin instance itself).
+            sender.sendMessage(Colors.of("&7  status: &fENABLED"));
         }
     }
 
@@ -202,6 +306,20 @@ public class CommandAddons extends Command {
         }
     }
 
+    /**
+     * Names valid for {@code /am addons info <name>} tab-complete: every
+     * Path 2 loaded addon, every Path 1 plugin-as-addon, and the built-in
+     * core extension.
+     */
+    private static List<String> allInfoNames(AddonManager am) {
+        List<String> names = new ArrayList<>();
+        for (LoadedAddon la : am.loaded()) names.add(la.getConf().name());
+        for (MenuExtension ext : pathOneExtensions(am)) names.add(ext.name());
+        MenuExtension core = AbstractMenus.instance().getCore();
+        if (core != null) names.add(core.name());
+        return names;
+    }
+
     @Override
     public List<String> tabComplete(CommandSender sender, String[] args) {
         if (args.length == 0) return Collections.emptyList();
@@ -220,9 +338,13 @@ public class CommandAddons extends Command {
             if (am == null) return Collections.emptyList();
             String prefix = args[1].toLowerCase();
             return switch (args[0].toLowerCase()) {
-                case "reload", "info" -> filterByPrefix(
+                // reload only works on Path 2 (the only ones with a jar in
+                // addons/ to re-read).
+                case "reload" -> filterByPrefix(
                         () -> am.loaded().stream().map(la -> la.getConf().name()).iterator(),
                         prefix);
+                // info works on all three: Path 2, Path 1, built-in core.
+                case "info" -> filterByPrefix(allInfoNames(am), prefix);
                 case "load" -> filterByPrefix(am.availableNotLoaded(), prefix);
                 default -> Collections.emptyList();
             };
