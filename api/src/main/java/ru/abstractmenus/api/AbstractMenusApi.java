@@ -134,7 +134,7 @@ public interface AbstractMenusApi {
      * diagnostic &mdash; logged on startup and surfaced in
      * {@code /am addons list}.
      *
-     * @return the API version (e.g. {@code "2.0.0-alpha"})
+     * @return the API version (e.g. {@code "2.0.0-alpha.2"})
      */
     String apiVersion();
 }

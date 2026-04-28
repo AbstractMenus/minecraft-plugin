@@ -1,7 +1,7 @@
 # AbstractMenus
 
-<a href="https://github.com/AbstractMenus/plugin/blob/master/LICENSE"><img src="https://img.shields.io/badge/License-MIT-red.svg" alt="license"/></a>
-<a href="https://github.com/AbstractMenus/plugin/blob/master/LICENSE"><img src="https://img.shields.io/badge/version-1.18.0-blue" alt="version"/></a>
+<a href="https://github.com/AbstractMenus/minecraft-plugin/blob/master/LICENSE"><img src="https://img.shields.io/badge/License-MIT-red.svg" alt="license"/></a>
+<a href="https://github.com/AbstractMenus/minecraft-plugin/releases"><img src="https://img.shields.io/badge/version-2.0.0--alpha.2-blue" alt="version"/></a>
 <img src="https://img.shields.io/badge/minecraft-1.20.6+-brightgreen" alt="minecraft"/>
 <img src="https://img.shields.io/badge/paper-1.21.11-brightgreen" alt="paper"/>
 <img src="https://img.shields.io/badge/java-21-orange" alt="java"/>
@@ -79,7 +79,9 @@ cd AbstractMenus
 ./gradlew shadowJar
 ```
 
-Output: `build/libs/AbstractMenus-<version>.jar`.
+Output: `build/dist/AbstractMenus-<version>.jar` (the aggregator also drops the
+api jar + sources + javadoc next to it; per-module jars stay in
+`plugin/build/libs/` and `api/build/libs/`).
 
 Other useful tasks:
 
