@@ -1,6 +1,12 @@
 // Common configuration applied to every subproject.
 // Subproject-specific plugins (java-library, shadow, paperweight) stay in subprojects.
 
+plugins {
+    // Root needs the base lifecycle ('build', 'assemble', 'clean') so we
+    // can hook the dist aggregator below into it.
+    id 'base'
+}
+
 allprojects {
     group   = 'ru.abstractmenus'
     version = '2.0.0-alpha'
@@ -27,4 +33,50 @@ subprojects {
     test {
         useJUnitPlatform()
     }
+}
+
+// -----------------------------------------------------------------------
+//  dist - aggregate every shipping artifact into <root>/build/dist/
+//
+//  Mirrors the user-facing files in one place so a server admin (or CI)
+//  can grab everything with a single cp / scp:
+//
+//      build/dist/
+//        AbstractMenus-<ver>.jar              (plugin, fat shadow)
+//        AbstractMenus-api-<ver>.jar          (api binary, Maven coord
+//                                              ru.abstractmenus:api:<ver>)
+//        AbstractMenus-api-<ver>-sources.jar
+//        AbstractMenus-api-<ver>-javadoc.jar
+//
+//  The per-module build/libs/ directories are unchanged - existing CI
+//  paths and Gradle's incremental cache keep working.
+//
+//  ./gradlew build automatically runs dist as a finalizer, so a normal
+//  build leaves everything in build/dist/. Run ./gradlew dist alone if
+//  you only need to refresh the aggregate (skips tests).
+// -----------------------------------------------------------------------
+tasks.register('dist', Copy) {
+    description = 'Aggregates shipping artifacts into build/dist/.'
+    group = 'distribution'
+
+    def pluginShadow = project(':plugin').tasks.named('shadowJar')
+    def apiJar       = project(':api').tasks.named('jar')
+    def apiSources   = project(':api').tasks.named('sourcesJar')
+    def apiJavadoc   = project(':api').tasks.named('javadocJar')
+
+    dependsOn pluginShadow, apiJar, apiSources, apiJavadoc
+
+    from(pluginShadow.flatMap { it.archiveFile })
+    from(apiJar.flatMap       { it.archiveFile })
+    from(apiSources.flatMap   { it.archiveFile })
+    from(apiJavadoc.flatMap   { it.archiveFile })
+
+    into layout.buildDirectory.dir('dist')
+}
+
+// Hook dist into the root 'build' lifecycle so plain `./gradlew build`
+// produces the aggregate. finalizedBy keeps it ordered correctly even if
+// some upstream task fails partway through.
+tasks.named('build').configure {
+    finalizedBy('dist')
 }
