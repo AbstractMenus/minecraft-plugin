@@ -1,6 +1,7 @@
 package ru.abstractmenus.api;
 
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * One section of the {@link ProviderRegistry}, holding registered handlers
@@ -86,6 +87,16 @@ public interface ProviderSection<T> {
 
     /** All registered handlers, in registration order. Read-only snapshot. */
     Collection<T> all();
+
+    /**
+     * All registered ids, lowercased and in registration order. Useful for
+     * "did you mean" or "unknown id, registered: [...]" error messages
+     * where you want to surface the actual configurable names rather than
+     * impl class names.
+     *
+     * @return read-only snapshot of registered ids
+     */
+    Set<String> ids();
 
     /**
      * @param id case-insensitive identifier

@@ -9,6 +9,7 @@ import ru.abstractmenus.api.handler.EconomyHandler;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.AbstractMenusApi;
+import ru.abstractmenus.data.actions.MoneyAmountSpec;
 import ru.abstractmenus.datatype.TypeDouble;
 
 public class RuleMoney implements Rule {
@@ -36,30 +37,8 @@ public class RuleMoney implements Rule {
 
         @Override
         public RuleMoney deserialize(Class type, ConfigNode node) throws NodeSerializeException {
-            TypeDouble money;
-            String provider = null;
-
-            if (node.isMap()) {
-                money = node.node("amount").getValue(TypeDouble.class);
-                provider = node.node("provider").getString(null);
-            } else {
-                money = node.getValue(TypeDouble.class);
-            }
-
-            if (provider != null) {
-                if (!AbstractMenusApi.get().providers().economy().has(provider)) {
-                    StringBuilder known = new StringBuilder();
-                    for (EconomyHandler h : AbstractMenusApi.get().providers().economy().all()) {
-                        if (known.length() > 0) known.append(", ");
-                        known.append(h.getClass().getSimpleName());
-                    }
-                    throw new NodeSerializeException(node,
-                            "Unknown economy provider '" + provider + "'. Registered: ["
-                                    + known + "]. Omit the 'provider' field for default selection.");
-                }
-            }
-
-            return new RuleMoney(money, provider);
+            MoneyAmountSpec spec = MoneyAmountSpec.parse(node);
+            return new RuleMoney(spec.amount, spec.provider);
         }
 
     }

@@ -141,6 +141,12 @@ public final class ProviderRegistryImpl implements ProviderRegistry {
         }
 
         @Override
+        public synchronized Set<String> ids() {
+            // Snapshot - byId keys may mutate after this returns.
+            return Collections.unmodifiableSet(new java.util.LinkedHashSet<>(byId.keySet()));
+        }
+
+        @Override
         public synchronized boolean has(String id) {
             return byId.containsKey(id.toLowerCase());
         }

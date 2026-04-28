@@ -37,30 +37,8 @@ public class ActionMoneyTake implements Action {
 
         @Override
         public ActionMoneyTake deserialize(Class type, ConfigNode node) throws NodeSerializeException {
-            TypeDouble money;
-            String provider = null;
-
-            if (node.isMap()) {
-                money = node.node("amount").getValue(TypeDouble.class);
-                provider = node.node("provider").getString(null);
-            } else {
-                money = node.getValue(TypeDouble.class);
-            }
-
-            if (provider != null) {
-                if (!AbstractMenusApi.get().providers().economy().has(provider)) {
-                    StringBuilder known = new StringBuilder();
-                    for (EconomyHandler h : AbstractMenusApi.get().providers().economy().all()) {
-                        if (known.length() > 0) known.append(", ");
-                        known.append(h.getClass().getSimpleName());
-                    }
-                    throw new NodeSerializeException(node,
-                            "Unknown economy provider '" + provider + "'. Registered: ["
-                                    + known + "]. Omit the 'provider' field for default selection.");
-                }
-            }
-
-            return new ActionMoneyTake(money, provider);
+            MoneyAmountSpec spec = MoneyAmountSpec.parse(node);
+            return new ActionMoneyTake(spec.amount, spec.provider);
         }
 
     }
