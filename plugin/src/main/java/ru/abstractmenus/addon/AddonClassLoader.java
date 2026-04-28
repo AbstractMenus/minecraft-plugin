@@ -24,6 +24,13 @@ public final class AddonClassLoader extends URLClassLoader {
             "io.papermc.",
             "com.destroystokyo.paper.",
             "net.kyori.adventure.",
+            // Paperweight-userdev exposes remapped NMS / Mojang internals to
+            // the plugin classloader. Keep them parent-first so an addon
+            // cannot ship its own copy of, say, net.minecraft.nbt.CompoundTag
+            // and have it hide the real one for any code that crosses the
+            // addon boundary.
+            "net.minecraft.",
+            "com.mojang.",
             "java.",
             "javax.",
             "jdk.",

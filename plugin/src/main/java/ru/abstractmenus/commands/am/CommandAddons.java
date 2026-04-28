@@ -11,12 +11,34 @@ import ru.abstractmenus.commands.Command;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /** {@code /am addons [list|reload <name>|info <name>|load <name>|rescan]} */
 public class CommandAddons extends Command {
 
     private static final List<String> SUBCOMMANDS =
             List.of("list", "reload", "info", "load", "rescan");
+
+    /**
+     * Strips legacy {@code &x}, section-sign {@code §x}, and hex
+     * {@code <#RRGGBB>} formatting tokens from a string. Applied to every
+     * addon-supplied value (names, versions, exception messages, etc.)
+     * before it is rendered through {@link Colors#of} into operator chat.
+     *
+     * <p>Without this, a malicious addon could put {@code "&aOK, password=XYZ"}
+     * in its addon.conf name or in an exception message and have it render
+     * as a green "legitimate-looking" line in the operator's console-out
+     * mirror. Threat model is operator-installed third-party addons - they
+     * are semi-trusted but should not be able to social-engineer the
+     * operator via formatted output.
+     */
+    private static final Pattern UNSAFE_FORMAT = Pattern.compile(
+            "&[0-9a-fk-orA-FK-OR]|§[0-9a-fk-orA-FK-OR]|<#[0-9a-fA-F]{6}>");
+
+    private static String safe(String untrusted) {
+        if (untrusted == null) return "";
+        return UNSAFE_FORMAT.matcher(untrusted).replaceAll("");
+    }
 
     public CommandAddons() {
         setUsage(
@@ -42,12 +64,12 @@ public class CommandAddons extends Command {
         }
 
         switch (args[0].toLowerCase()) {
-            case "list"    -> list(sender, am);
-            case "reload"  -> reload(sender, am, args);
-            case "info"    -> info(sender, am, args);
-            case "load"    -> load(sender, am, args);
-            case "rescan"  -> rescan(sender, am);
-            default        -> sender.sendMessage(getUsage());
+            case "list" -> list(sender, am);
+            case "reload" -> reload(sender, am, args);
+            case "info" -> info(sender, am, args);
+            case "load" -> load(sender, am, args);
+            case "rescan" -> rescan(sender, am);
+            default -> sender.sendMessage(getUsage());
         }
     }
 
@@ -60,13 +82,13 @@ public class CommandAddons extends Command {
         sender.sendMessage(Colors.of("&e&lAddons (" + addons.size() + "):"));
         for (LoadedAddon la : addons) {
             String color = switch (la.getStatus()) {
-                case ENABLED  -> "&a";
+                case ENABLED -> "&a";
                 case DISABLED -> "&7";
-                case FAILED   -> "&c";
-                case PENDING  -> "&e";
+                case FAILED -> "&c";
+                case PENDING -> "&e";
             };
-            sender.sendMessage(Colors.of(color + "  " + la.getConf().name()
-                    + " &8v" + la.getConf().version()
+            sender.sendMessage(Colors.of(color + "  " + safe(la.getConf().name())
+                    + " &8v" + safe(la.getConf().version())
                     + " &7[" + la.getStatus() + "]"));
         }
     }
@@ -79,15 +101,15 @@ public class CommandAddons extends Command {
         String name = args[1];
         var result = am.reload(name);
         if (result.isEmpty()) {
-            sender.sendMessage(Colors.of("&cAddon '" + name + "' not found or no jar present."));
+            sender.sendMessage(Colors.of("&cAddon '" + safe(name) + "' not found or no jar present."));
             return;
         }
         LoadedAddon la = result.get();
         if (la.getStatus() == AddonStatus.ENABLED) {
-            sender.sendMessage(Colors.of("&aReloaded " + la.getConf().name() + "."));
+            sender.sendMessage(Colors.of("&aReloaded " + safe(la.getConf().name()) + "."));
         } else {
             sender.sendMessage(Colors.of("&cReload failed: "
-                    + (la.getError() == null ? "unknown error" : la.getError().getMessage())));
+                    + (la.getError() == null ? "unknown error" : safe(la.getError().getMessage()))));
         }
     }
 
@@ -98,32 +120,32 @@ public class CommandAddons extends Command {
         }
         var opt = am.get(args[1]);
         if (opt.isEmpty()) {
-            sender.sendMessage(Colors.of("&cAddon '" + args[1] + "' not found."));
+            sender.sendMessage(Colors.of("&cAddon '" + safe(args[1]) + "' not found."));
             return;
         }
         LoadedAddon la = opt.get();
         var c = la.getConf();
-        sender.sendMessage(Colors.of("&e&l" + c.name() + " &7v" + c.version()));
+        sender.sendMessage(Colors.of("&e&l" + safe(c.name()) + " &7v" + safe(c.version())));
         sender.sendMessage(Colors.of("&7  status: &f" + la.getStatus()));
         if (!c.authors().isEmpty()) {
-            sender.sendMessage(Colors.of("&7  authors: &f" + String.join(", ", c.authors())));
+            sender.sendMessage(Colors.of("&7  authors: &f" + safe(String.join(", ", c.authors()))));
         }
         if (!c.description().isEmpty()) {
-            sender.sendMessage(Colors.of("&7  description: &f" + c.description()));
+            sender.sendMessage(Colors.of("&7  description: &f" + safe(c.description())));
         }
         if (c.targetApiVersion() != null) {
-            sender.sendMessage(Colors.of("&7  targetApiVersion: &f" + c.targetApiVersion()));
+            sender.sendMessage(Colors.of("&7  targetApiVersion: &f" + safe(c.targetApiVersion())));
         }
         if (!c.addonDependencies().isEmpty()) {
             sender.sendMessage(Colors.of("&7  addonDependencies: &f"
-                    + String.join(", ", c.addonDependencies())));
+                    + safe(String.join(", ", c.addonDependencies()))));
         }
         if (!c.pluginDependencies().isEmpty()) {
             sender.sendMessage(Colors.of("&7  pluginDependencies: &f"
-                    + String.join(", ", c.pluginDependencies())));
+                    + safe(String.join(", ", c.pluginDependencies()))));
         }
         if (la.getStatus() == AddonStatus.FAILED && la.getError() != null) {
-            sender.sendMessage(Colors.of("&7  error: &c" + la.getError().getMessage()));
+            sender.sendMessage(Colors.of("&7  error: &c" + safe(la.getError().getMessage())));
         }
     }
 
@@ -135,17 +157,17 @@ public class CommandAddons extends Command {
         String name = args[1];
         var result = am.loadOne(name);
         if (result.isEmpty()) {
-            sender.sendMessage(Colors.of("&cNo unloaded addon named '" + name + "' found in addons/. "
+            sender.sendMessage(Colors.of("&cNo unloaded addon named '" + safe(name) + "' found in addons/. "
                     + "Check the jar is in plugins/AbstractMenus/addons/ and addon.conf names it correctly."));
             return;
         }
         LoadedAddon la = result.get();
         if (la.getStatus() == AddonStatus.ENABLED) {
-            sender.sendMessage(Colors.of("&aLoaded " + la.getConf().name()
-                    + " v" + la.getConf().version() + "."));
+            sender.sendMessage(Colors.of("&aLoaded " + safe(la.getConf().name())
+                    + " v" + safe(la.getConf().version()) + "."));
         } else {
             sender.sendMessage(Colors.of("&cLoad failed: "
-                    + (la.getError() == null ? "unknown error" : la.getError().getMessage())));
+                    + (la.getError() == null ? "unknown error" : safe(la.getError().getMessage()))));
         }
     }
 
@@ -162,8 +184,8 @@ public class CommandAddons extends Command {
                 + (failed > 0 ? ", &c" + failed + " failed" : "") + "&a."));
         for (LoadedAddon la : newlyLoaded) {
             String color = la.getStatus() == AddonStatus.ENABLED ? "&a" : "&c";
-            sender.sendMessage(Colors.of(color + "  " + la.getConf().name()
-                    + " &8v" + la.getConf().version()
+            sender.sendMessage(Colors.of(color + "  " + safe(la.getConf().name())
+                    + " &8v" + safe(la.getConf().version())
                     + " &7[" + la.getStatus() + "]"));
         }
     }

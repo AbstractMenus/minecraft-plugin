@@ -82,8 +82,15 @@ public class Colors {
      *           {@code net.md_5.bungee.api.ChatColor} and reflectively looking up the
      *           {@code of(String)} method. Any {@link Throwable} is silently caught,
      *           treating the server as legacy-only.
+     *
+     * Set-once: subsequent calls are silently skipped so an addon cannot
+     * flip the global RGB-handling mode. The skip (rather than throw)
+     * keeps Bukkit {@code /reload} working; the trade-off is that a
+     * config flip of {@code useMiniMessage} doesn't take effect until
+     * a server restart.
      */
     public static void init(boolean replaceRgb) {
+        if (replacer != null) return;
         if (isSupportRgb() && replaceRgb) {
             replacer = new RgbReplacer();
         } else {

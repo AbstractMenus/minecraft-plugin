@@ -40,6 +40,15 @@ public final class AddonManager {
      */
     private static final long AVAILABLE_CACHE_TTL_MS = 2_000L;
 
+    /**
+     * Hard cap on the size of {@code addon.conf} read from a jar. A real
+     * addon.conf is well under a kilobyte; refusing to read more than 64 KB
+     * defends against a malicious or corrupted jar declaring a huge
+     * uncompressed size that would OOM the server when {@code readAllBytes}
+     * tries to allocate the buffer.
+     */
+    private static final int MAX_ADDON_CONF_BYTES = 64 * 1024;
+
     private final Path addonsDir;
     private final AbstractMenusApi api;
     private final PluginDepChecker depChecker;
@@ -430,13 +439,33 @@ public final class AddonManager {
                 try (var jf = new JarFile(jar.toFile())) {
                     JarEntry entry = jf.getJarEntry("addon.conf");
                     if (entry == null) continue;
-                    String hocon = new String(jf.getInputStream(entry).readAllBytes(),
-                            StandardCharsets.UTF_8);
-                    result.put(jar, AddonConf.parse(hocon));
+                    result.put(jar, AddonConf.parse(readBoundedAddonConf(jf, entry)));
                 } catch (Exception ignored) {}
             }
         } catch (Exception ignored) {}
         return result;
+    }
+
+    /**
+     * Read {@code addon.conf} into a String, refusing entries larger than
+     * {@link #MAX_ADDON_CONF_BYTES}. Both the declared uncompressed size
+     * (zip header) and the actual byte count are checked so a crafted
+     * jar can't lie about either one.
+     */
+    private static String readBoundedAddonConf(JarFile jar, JarEntry entry) throws IOException {
+        long declared = entry.getSize();
+        if (declared > MAX_ADDON_CONF_BYTES) {
+            throw new IOException("addon.conf too large (" + declared + " bytes, cap "
+                    + MAX_ADDON_CONF_BYTES + ")");
+        }
+        try (var in = jar.getInputStream(entry)) {
+            byte[] bytes = in.readNBytes(MAX_ADDON_CONF_BYTES + 1);
+            if (bytes.length > MAX_ADDON_CONF_BYTES) {
+                throw new IOException("addon.conf exceeded " + MAX_ADDON_CONF_BYTES
+                        + " bytes during read (declared size " + declared + ")");
+            }
+            return new String(bytes, StandardCharsets.UTF_8);
+        }
     }
 
     /**
@@ -527,9 +556,7 @@ public final class AddonManager {
             if (entry == null) {
                 throw new IOException("no addon.conf at jar root");
             }
-            try (var in = jar.getInputStream(entry)) {
-                hocon = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-            }
+            hocon = readBoundedAddonConf(jar, entry);
         }
 
         AddonConf conf = AddonConf.parse(hocon);
