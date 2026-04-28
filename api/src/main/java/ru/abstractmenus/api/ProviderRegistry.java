@@ -47,13 +47,13 @@ import ru.abstractmenus.api.handler.SkinHandler;
  */
 public interface ProviderRegistry {
 
-    ProviderSection<EconomyHandler>     economy();
+    ProviderSection<EconomyHandler> economy();
 
     ProviderSection<PermissionsHandler> permissions();
 
-    ProviderSection<LevelHandler>       levels();
+    ProviderSection<LevelHandler> levels();
 
     ProviderSection<PlaceholderHandler> placeholders();
 
-    ProviderSection<SkinHandler>        skins();
+    ProviderSection<SkinHandler> skins();
 }

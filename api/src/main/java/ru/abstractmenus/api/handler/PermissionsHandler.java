@@ -27,7 +27,7 @@ import org.bukkit.entity.Player;
  *
  * Multiple handlers may coexist &mdash; the highest-priority one is picked
  * when a menu does not name a provider explicitly. Register yours via
- * {@link ru.abstractmenus.api.ProviderRegistry#registerPermissions} inside
+ * {@link ru.abstractmenus.api.ProviderSection#register} inside
  * your addon's {@link ru.abstractmenus.api.MenuExtension#onEnable}.
  *
  * <p>If no permissions handler is registered, permission nodes are checked
@@ -112,7 +112,7 @@ import org.bukkit.entity.Player;
  * asynchronously provided the in-memory view updates before the next
  * {@code has*} call.
  *
- * @see ru.abstractmenus.api.ProviderRegistry#registerPermissions
+ * @see ru.abstractmenus.api.ProviderSection#register
  * @see EconomyHandler
  * @see LevelHandler
  */

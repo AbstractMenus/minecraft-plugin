@@ -48,15 +48,15 @@ public record AddonConf(
             throw new AddonConfParseException("Failed to parse addon.conf: " + e.getMessage(), e);
         }
 
-        String name        = requireString(root, "name");
-        String version     = requireString(root, "version");
-        String main        = requireString(root, "main");
+        String name = requireString(root, "name");
+        String version = requireString(root, "version");
+        String main = requireString(root, "main");
 
-        List<String> authors               = optionalStringList(root, "authors");
-        String description                 = root.node("description").getString("");
-        String targetApiVersion            = optionalString(root, "targetApiVersion");
-        List<String> addonDependencies     = optionalStringList(root, "addonDependencies");
-        List<String> pluginDependencies    = optionalStringList(root, "pluginDependencies");
+        List<String> authors = optionalStringList(root, "authors");
+        String description = root.node("description").getString("");
+        String targetApiVersion = optionalString(root, "targetApiVersion");
+        List<String> addonDependencies = optionalStringList(root, "addonDependencies");
+        List<String> pluginDependencies = optionalStringList(root, "pluginDependencies");
         List<String> pluginSoftDependencies = optionalStringList(root, "pluginSoftDependencies");
 
         return new AddonConf(

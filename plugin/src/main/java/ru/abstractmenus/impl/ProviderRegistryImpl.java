@@ -38,22 +38,41 @@ public final class ProviderRegistryImpl implements ProviderRegistry {
     /** section kind → configured-default id (e.g. "economy" → "playerpoints"). */
     private Function<String, String> configDefaults = kind -> null;
 
-    private final SectionImpl<EconomyHandler>     economy      = new SectionImpl<>("economy",      this);
-    private final SectionImpl<PermissionsHandler> permissions  = new SectionImpl<>("permissions",  this);
-    private final SectionImpl<LevelHandler>       levels       = new SectionImpl<>("levels",       this);
+    private final SectionImpl<EconomyHandler> economy = new SectionImpl<>("economy", this);
+    private final SectionImpl<PermissionsHandler> permissions = new SectionImpl<>("permissions", this);
+    private final SectionImpl<LevelHandler> levels = new SectionImpl<>("levels", this);
     private final SectionImpl<PlaceholderHandler> placeholders = new SectionImpl<>("placeholders", this);
-    private final SectionImpl<SkinHandler>        skins        = new SectionImpl<>("skins",        this);
+    private final SectionImpl<SkinHandler> skins = new SectionImpl<>("skins", this);
 
     /** Wire up the config-backed default source. Called once from AbstractMenusApiImpl. */
     public void setConfigDefaults(Function<String, String> lookup) {
         this.configDefaults = lookup;
     }
 
-    @Override public ProviderSection<EconomyHandler>     economy()      { return economy; }
-    @Override public ProviderSection<PermissionsHandler> permissions()  { return permissions; }
-    @Override public ProviderSection<LevelHandler>       levels()       { return levels; }
-    @Override public ProviderSection<PlaceholderHandler> placeholders() { return placeholders; }
-    @Override public ProviderSection<SkinHandler>        skins()        { return skins; }
+    @Override
+    public ProviderSection<EconomyHandler> economy() {
+        return economy;
+    }
+
+    @Override
+    public ProviderSection<PermissionsHandler> permissions() {
+        return permissions;
+    }
+
+    @Override
+    public ProviderSection<LevelHandler> levels() {
+        return levels;
+    }
+
+    @Override
+    public ProviderSection<PlaceholderHandler> placeholders() {
+        return placeholders;
+    }
+
+    @Override
+    public ProviderSection<SkinHandler> skins() {
+        return skins;
+    }
 
     /**
      * Wipe every provider registered by {@code owner} across all five

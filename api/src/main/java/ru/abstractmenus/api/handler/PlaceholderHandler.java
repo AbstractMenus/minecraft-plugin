@@ -34,7 +34,7 @@ import java.util.List;
  * Although the placeholder handler lives in
  * {@link ru.abstractmenus.api.ProviderRegistry} for API symmetry with the
  * other sections, in practice it is registered <strong>once globally</strong>
- * via {@link ru.abstractmenus.api.ProviderRegistry#registerPlaceholders} at
+ * via {@link ru.abstractmenus.api.ProviderSection#register} at
  * {@link ru.abstractmenus.api.MenuExtension#onEnable} time, not selected
  * per-action. Per-element provider selection is not meaningful for
  * placeholders &mdash; the core engine (PAPI) is chain-of-responsibility by
@@ -97,7 +97,7 @@ import java.util.List;
  * cache aggressively and serve stale values. The engine itself should never
  * block.
  *
- * @see ru.abstractmenus.api.ProviderRegistry#registerPlaceholders
+ * @see ru.abstractmenus.api.ProviderSection#register
  * @see EconomyHandler
  */
 public interface PlaceholderHandler {

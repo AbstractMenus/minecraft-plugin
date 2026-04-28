@@ -20,7 +20,7 @@ import org.bukkit.entity.Player;
  * <h2>Registration</h2>
  *
  * A single handler is active at a time. Register yours via
- * {@link ru.abstractmenus.api.ProviderRegistry#registerEconomy} inside your
+ * {@link ru.abstractmenus.api.ProviderSection#register} inside your
  * addon's {@link ru.abstractmenus.api.MenuExtension#onEnable}:
  *
  * <h2>Example &mdash; bridging PlayerPoints</h2>
@@ -76,7 +76,7 @@ import org.bukkit.entity.Player;
  * blocking IO; if the underlying economy plugin hits a database, cache the
  * last known balance and refresh asynchronously.
  *
- * @see ru.abstractmenus.api.ProviderRegistry#registerEconomy
+ * @see ru.abstractmenus.api.ProviderSection#register
  * @see PermissionsHandler
  * @see LevelHandler
  */

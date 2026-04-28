@@ -3,7 +3,14 @@ package ru.abstractmenus.addon;
 import ru.abstractmenus.AbstractMenus;
 import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.Logger;
+import ru.abstractmenus.api.MenuExtension;
+import ru.abstractmenus.impl.ProviderRegistryImpl;
+import ru.abstractmenus.impl.TypeRegistryImpl;
 
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,6 +19,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 /**
  * Loads, enables, and manages AM-loaded addons (the lightweight jars in
@@ -23,12 +32,23 @@ import java.util.Optional;
  */
 public final class AddonManager {
 
+    /**
+     * TTL for the availableNotLoaded() cache. Tab completion fires on every
+     * keystroke; without a cache that is N jar opens + N HOCON parses on the
+     * main thread per TAB. 2 seconds is short enough that the operator does
+     * not see staleness in practice (drop a jar, wait a beat, hit TAB).
+     */
+    private static final long AVAILABLE_CACHE_TTL_MS = 2_000L;
+
     private final AbstractMenus plugin;
     private final Path addonsDir;
     private final AbstractMenusApi api;
 
     /** name (lowercased) → LoadedAddon, insertion-ordered (matches enable order) */
     private final Map<String, LoadedAddon> addons = new LinkedHashMap<>();
+
+    private volatile List<String> cachedAvailable = List.of();
+    private volatile long cachedAvailableAt = 0L;
 
     public AddonManager(AbstractMenus plugin, AbstractMenusApi api) {
         this.plugin = plugin;
@@ -132,13 +152,13 @@ public final class AddonManager {
      * Reflectively instantiate the addon's main class and verify it implements
      * MenuExtension.
      */
-    private ru.abstractmenus.api.MenuExtension instantiate(LoadedAddon la) throws Exception {
+    private MenuExtension instantiate(LoadedAddon la) throws Exception {
         Class<?> main = la.getClassLoader().loadClass(la.getConf().main());
-        if (!ru.abstractmenus.api.MenuExtension.class.isAssignableFrom(main)) {
+        if (!MenuExtension.class.isAssignableFrom(main)) {
             throw new IllegalStateException("main class " + main.getName()
                     + " does not implement MenuExtension");
         }
-        return (ru.abstractmenus.api.MenuExtension) main.getDeclaredConstructor().newInstance();
+        return (MenuExtension) main.getDeclaredConstructor().newInstance();
     }
 
     /**
@@ -151,13 +171,13 @@ public final class AddonManager {
      */
     private void rollbackRegistrations(LoadedAddon la) {
         if (la.getExtension() == null) return;
-        ru.abstractmenus.api.MenuExtension ext = la.getExtension();
-        ((ru.abstractmenus.impl.TypeRegistryImpl<?>) api.actions()).unregisterAll(ext);
-        ((ru.abstractmenus.impl.TypeRegistryImpl<?>) api.rules()).unregisterAll(ext);
-        ((ru.abstractmenus.impl.TypeRegistryImpl<?>) api.activators()).unregisterAll(ext);
-        ((ru.abstractmenus.impl.TypeRegistryImpl<?>) api.itemProperties()).unregisterAll(ext);
-        ((ru.abstractmenus.impl.TypeRegistryImpl<?>) api.catalogs()).unregisterAll(ext);
-        ((ru.abstractmenus.impl.ProviderRegistryImpl) api.providers()).unregisterAll(ext);
+        MenuExtension ext = la.getExtension();
+        ((TypeRegistryImpl<?>) api.actions()).unregisterAll(ext);
+        ((TypeRegistryImpl<?>) api.rules()).unregisterAll(ext);
+        ((TypeRegistryImpl<?>) api.activators()).unregisterAll(ext);
+        ((TypeRegistryImpl<?>) api.itemProperties()).unregisterAll(ext);
+        ((TypeRegistryImpl<?>) api.catalogs()).unregisterAll(ext);
+        ((ProviderRegistryImpl) api.providers()).unregisterAll(ext);
     }
 
     /**
@@ -166,8 +186,8 @@ public final class AddonManager {
      */
     public void unloadAll() {
         // Disable in reverse enable order.
-        var reversed = new java.util.ArrayList<>(addons.values());
-        java.util.Collections.reverse(reversed);
+        var reversed = new ArrayList<>(addons.values());
+        Collections.reverse(reversed);
         for (LoadedAddon la : reversed) {
             try {
                 if (la.getStatus() == AddonStatus.ENABLED && la.getExtension() != null) {
@@ -253,14 +273,14 @@ public final class AddonManager {
 
     /** Scan addonsDir again, return the first jar whose addon.conf.name matches. */
     private Path findJarByName(String name) {
-        if (!java.nio.file.Files.isDirectory(addonsDir)) return null;
-        try (var stream = java.nio.file.Files.newDirectoryStream(addonsDir, "*.jar")) {
+        if (!Files.isDirectory(addonsDir)) return null;
+        try (var stream = Files.newDirectoryStream(addonsDir, "*.jar")) {
             for (Path jar : stream) {
-                try (var jf = new java.util.jar.JarFile(jar.toFile())) {
-                    var entry = jf.getJarEntry("addon.conf");
+                try (var jf = new JarFile(jar.toFile())) {
+                    JarEntry entry = jf.getJarEntry("addon.conf");
                     if (entry == null) continue;
                     String hocon = new String(jf.getInputStream(entry).readAllBytes(),
-                            java.nio.charset.StandardCharsets.UTF_8);
+                            StandardCharsets.UTF_8);
                     AddonConf c = AddonConf.parse(hocon);
                     if (c.name().equalsIgnoreCase(name)) return jar;
                 } catch (Exception ignored) {}
@@ -291,16 +311,16 @@ public final class AddonManager {
     Map<String, LoadedAddon> discover() {
         Map<String, LoadedAddon> pending = new LinkedHashMap<>();
 
-        if (!java.nio.file.Files.isDirectory(addonsDir)) {
+        if (!Files.isDirectory(addonsDir)) {
             try {
-                java.nio.file.Files.createDirectories(addonsDir);
-            } catch (java.io.IOException e) {
+                Files.createDirectories(addonsDir);
+            } catch (IOException e) {
                 Logger.warning("Could not create addons directory " + addonsDir + ": " + e.getMessage());
             }
             return pending;
         }
 
-        try (var stream = java.nio.file.Files.newDirectoryStream(addonsDir, "*.jar")) {
+        try (var stream = Files.newDirectoryStream(addonsDir, "*.jar")) {
             for (Path jar : stream) {
                 try {
                     LoadedAddon addon = readAddonJar(jar);
@@ -316,7 +336,7 @@ public final class AddonManager {
                     Logger.warning("Failed to load addon " + jar.getFileName() + ": " + e.getMessage());
                 }
             }
-        } catch (java.io.IOException e) {
+        } catch (IOException e) {
             Logger.warning("Failed to scan addons directory: " + e.getMessage());
         }
 
@@ -380,16 +400,6 @@ public final class AddonManager {
     }
 
     /**
-     * TTL for the availableNotLoaded() cache. Tab completion fires on every
-     * keystroke; without a cache that is N jar opens + N HOCON parses on the
-     * main thread per TAB. 2 seconds is short enough that the operator does
-     * not see staleness in practice (drop a jar, wait a beat, hit TAB).
-     */
-    private static final long AVAILABLE_CACHE_TTL_MS = 2_000L;
-    private volatile List<String> cachedAvailable = List.of();
-    private volatile long cachedAvailableAt = 0L;
-
-    /**
      * Return addon-conf {@code name}s found on disk under the addons
      * directory but not yet loaded into memory. Used by tab completion
      * for {@code /am addons load <name>}.
@@ -409,15 +419,15 @@ public final class AddonManager {
     }
 
     private List<String> scanAvailableNotLoaded() {
-        if (!java.nio.file.Files.isDirectory(addonsDir)) return List.of();
+        if (!Files.isDirectory(addonsDir)) return List.of();
         List<String> result = new ArrayList<>();
-        try (var stream = java.nio.file.Files.newDirectoryStream(addonsDir, "*.jar")) {
+        try (var stream = Files.newDirectoryStream(addonsDir, "*.jar")) {
             for (Path jar : stream) {
-                try (var jf = new java.util.jar.JarFile(jar.toFile())) {
-                    var entry = jf.getJarEntry("addon.conf");
+                try (var jf = new JarFile(jar.toFile())) {
+                    JarEntry entry = jf.getJarEntry("addon.conf");
                     if (entry == null) continue;
                     String hocon = new String(jf.getInputStream(entry).readAllBytes(),
-                            java.nio.charset.StandardCharsets.UTF_8);
+                            StandardCharsets.UTF_8);
                     AddonConf conf = AddonConf.parse(hocon);
                     if (!addons.containsKey(conf.name().toLowerCase())) {
                         result.add(conf.name());
@@ -518,15 +528,15 @@ public final class AddonManager {
      * Read a single addon jar: extract {@code addon.conf}, parse it, build a
      * classloader. Throws if addon.conf is missing or malformed.
      */
-    private LoadedAddon readAddonJar(Path jarPath) throws java.io.IOException {
+    private LoadedAddon readAddonJar(Path jarPath) throws IOException {
         String hocon;
-        try (var jar = new java.util.jar.JarFile(jarPath.toFile())) {
-            var entry = jar.getJarEntry("addon.conf");
+        try (var jar = new JarFile(jarPath.toFile())) {
+            JarEntry entry = jar.getJarEntry("addon.conf");
             if (entry == null) {
-                throw new java.io.IOException("no addon.conf at jar root");
+                throw new IOException("no addon.conf at jar root");
             }
             try (var in = jar.getInputStream(entry)) {
-                hocon = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                hocon = new String(in.readAllBytes(), StandardCharsets.UTF_8);
             }
         }
 
@@ -535,10 +545,9 @@ public final class AddonManager {
                 ? plugin.getClass().getClassLoader()
                 : AddonManager.class.getClassLoader();
         AddonClassLoader cl = new AddonClassLoader(
-                new java.net.URL[]{jarPath.toUri().toURL()},
+                new URL[]{jarPath.toUri().toURL()},
                 parent);
 
         return new LoadedAddon(conf, cl);
     }
-
 }

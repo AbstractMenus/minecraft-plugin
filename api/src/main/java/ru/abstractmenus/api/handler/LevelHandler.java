@@ -24,7 +24,7 @@ import org.bukkit.entity.Player;
  *
  * Multiple handlers may coexist &mdash; the highest-priority one is picked
  * when a menu does not name a provider explicitly. Register yours via
- * {@link ru.abstractmenus.api.ProviderRegistry#registerLevels} inside your
+ * {@link ru.abstractmenus.api.ProviderSection#register} inside your
  * addon's {@link ru.abstractmenus.api.MenuExtension#onEnable}.
  *
  * <h2>Example &mdash; bridging MMOCore</h2>
@@ -91,7 +91,7 @@ import org.bukkit.entity.Player;
  * blocking IO; if the underlying levelling plugin hits a database, serve the
  * last known value from memory and refresh asynchronously.
  *
- * @see ru.abstractmenus.api.ProviderRegistry#registerLevels
+ * @see ru.abstractmenus.api.ProviderSection#register
  * @see EconomyHandler
  * @see PermissionsHandler
  */

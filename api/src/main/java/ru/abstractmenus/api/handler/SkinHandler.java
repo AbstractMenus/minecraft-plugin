@@ -24,7 +24,7 @@ import org.bukkit.entity.Player;
  *
  * Multiple handlers may coexist &mdash; the highest-priority one is picked
  * when a menu does not name a provider explicitly. Register yours via
- * {@link ru.abstractmenus.api.ProviderRegistry#registerSkins} inside your
+ * {@link ru.abstractmenus.api.ProviderSection#register} inside your
  * addon's {@link ru.abstractmenus.api.MenuExtension#onEnable}.
  *
  * <p>When no skin handler is registered, {@code setSkin} and {@code resetSkin}
@@ -96,7 +96,7 @@ import org.bukkit.entity.Player;
  * and apply on the main thread &mdash; blocking here freezes every online
  * player.
  *
- * @see ru.abstractmenus.api.ProviderRegistry#registerSkins
+ * @see ru.abstractmenus.api.ProviderSection#register
  * @see EconomyHandler
  */
 public interface SkinHandler {
