@@ -51,7 +51,8 @@ jobs:
 
       - name: Resolve plugin JAR path
         id: plugin_jar
-        run: echo "path=$(ls plugin/build/libs/AbstractMenus-*.jar | head -n1)" >> "$GITHUB_OUTPUT"
+        # Skip the dev-only -thin jar; only the shaded fat jar ships.
+        run: echo "path=$(ls plugin/build/libs/AbstractMenus-*.jar | grep -v -- '-thin\.jar$' | head -n1)" >> "$GITHUB_OUTPUT"
 
       - name: Resolve API JAR paths
         id: api_jars

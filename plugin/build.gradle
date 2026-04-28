@@ -95,10 +95,23 @@ dependencies {
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.44'
 }
 
+// The :plugin module ships as a fat jar named AbstractMenus-<ver>.jar.
+// Default Gradle naming would produce 'plugin-<ver>.jar' (using the
+// subproject directory name), which is misleading on disk for ops.
+base {
+    archivesName = 'AbstractMenus'
+}
+
 processResources {
     filesMatching("plugin.yml") {
         expand([version: project.version])
     }
+}
+
+// Thin jar lands as AbstractMenus-<ver>-thin.jar so it cannot be confused
+// with the user-facing fat jar produced by shadowJar. Devs-only artifact.
+jar {
+    archiveClassifier.set('thin')
 }
 
 shadowJar {
@@ -106,7 +119,9 @@ shadowJar {
     dependencies {
         exclude dependency('org.inventivetalent.spiget-update:bukkit')
     }
-    archiveFileName.set("AbstractMenus-${project.version}.jar")
+    // Drop the default 'all' classifier so the fat jar is the canonical
+    // AbstractMenus-<ver>.jar that operators drop into plugins/.
+    archiveClassifier.set('')
 }
 
 test {
