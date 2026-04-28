@@ -80,25 +80,31 @@ public interface MenuExtension {
     }
 
     /**
-     * Display name. Used by {@code /am addons list} and log messages. May
-     * return {@code null}; for AM-loaded addons (Path 2) the name from
-     * {@code addon.conf} is used as a fallback.
+     * Display name. Used by {@code /am addons list} and log messages.
      *
-     * @return the extension display name, or {@code null} to defer
+     * <p>Default falls back to {@code getClass().getSimpleName()} so a
+     * Path 1 plugin-as-addon that forgets to override does not render
+     * as "null" in operator output. Path 2 implementations should
+     * override this to match the {@code name} field in {@code addon.conf}.
+     *
+     * @return the extension display name; never {@code null} by default
      */
     default String name() {
-        return null;
+        return getClass().getSimpleName();
     }
 
     /**
-     * Extension version string. Used for diagnostics. May return {@code null}
-     * &mdash; Path 2 falls back to the {@code version} from
-     * {@code addon.conf}.
+     * Extension version string. Used for diagnostics.
      *
-     * @return the version, or {@code null} to defer
+     * <p>Default returns {@code "unknown"} so {@code /am addons list}
+     * does not render "vnull". Path 1 plugins should override to return
+     * their plugin.yml version; Path 2 implementations should match the
+     * {@code version} field in {@code addon.conf}.
+     *
+     * @return the version; never {@code null} by default
      */
     default String version() {
-        return null;
+        return "unknown";
     }
 
     /**

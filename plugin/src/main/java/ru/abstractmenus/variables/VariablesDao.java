@@ -104,7 +104,10 @@ public class VariablesDao {
         }
 
         try {
-            connection = DriverManager.getConnection("jdbc:sqlite:" + path, "root", "");
+            // SQLite is a serverless single-file database - no credentials.
+            // The earlier "root", "" args were a copy-paste leftover from
+            // a MySQL setup; SQLite ignored them but they read confusingly.
+            connection = DriverManager.getConnection("jdbc:sqlite:" + path);
             String sql = FileUtils.getResourceAsString("/variables.sql");
             execute(sql);
         } catch (SQLException e) {

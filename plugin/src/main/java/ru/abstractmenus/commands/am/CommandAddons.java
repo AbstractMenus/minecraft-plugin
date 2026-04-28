@@ -209,7 +209,7 @@ public class CommandAddons extends Command {
             String prefix = args[1].toLowerCase();
             return switch (args[0].toLowerCase()) {
                 case "reload", "info" -> filterByPrefix(
-                        am.loaded().stream().map(la -> la.getConf().name()).toList(),
+                        () -> am.loaded().stream().map(la -> la.getConf().name()).iterator(),
                         prefix);
                 case "load" -> filterByPrefix(am.availableNotLoaded(), prefix);
                 default -> Collections.emptyList();
