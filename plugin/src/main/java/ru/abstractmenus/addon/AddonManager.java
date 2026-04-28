@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -103,18 +104,39 @@ public final class AddonManager {
 
         if (byName.isEmpty()) return;
 
-        // Sort by addon-level dependencies.
+        // Build the addon-dep graph.
         Map<String, List<String>> depGraph = new LinkedHashMap<>();
         for (var e : byName.entrySet()) {
             List<String> deps = e.getValue().getConf().addonDependencies().stream()
                     .map(String::toLowerCase).toList();
             depGraph.put(e.getKey(), deps);
         }
+
+        // Pre-filter addons whose deps point to names not in the graph -
+        // typically because the dep is a plugin-as-addon (Path 1) which
+        // doesn't show up in the addons/ folder, or simply a typo. Mark
+        // them FAILED individually instead of poisoning the whole batch
+        // through topoSort.
+        Set<String> unsatisfied = AddonDependencyGraph.unsatisfied(depGraph);
+        for (String key : unsatisfied) {
+            LoadedAddon la = byName.remove(key);
+            depGraph.remove(key);
+            String missing = la.getConf().addonDependencies().stream()
+                    .filter(d -> !byName.containsKey(d.toLowerCase()))
+                    .findFirst().orElse("?");
+            String msg = "missing addon dependency: " + missing;
+            Logger.warning("Addon " + la.getConf().name() + " " + msg + " - skipping");
+            la.markFailed(new IllegalStateException(msg));
+            addons.put(key, la);
+        }
+
+        if (byName.isEmpty()) return;
+
         List<String> order;
         try {
             order = AddonDependencyGraph.topoSort(depGraph);
-        } catch (AddonDependencyException ex) {
-            Logger.severe("Addon dependency graph error: " + ex.getMessage());
+        } catch (AddonDependencyCycleException ex) {
+            Logger.severe("Addon dependency cycle detected: " + ex.getMessage());
             for (var la : byName.values()) {
                 la.markFailed(ex);
                 addons.put(la.getConf().name().toLowerCase(), la);

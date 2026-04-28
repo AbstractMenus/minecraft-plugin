@@ -175,6 +175,13 @@ public final class AbstractMenus extends JavaPlugin {
         } catch (Exception e) {
             Logger.severe("Cannot enable plugin: " + e.getMessage());
             e.printStackTrace();
+            // disablePlugin() from inside onEnable is re-entrant: Bukkit calls
+            // our onDisable while we are still in this stack frame. Every
+            // singleton accessed in onDisable is null-guarded so a partial
+            // init does not NPE on the way out. Rethrowing instead would
+            // skip our cleanup (service-manager registrations, listeners,
+            // database connections) since Bukkit does not call onDisable
+            // for plugins whose onEnable threw.
             disablePlugin();
         }
     }
@@ -268,7 +275,12 @@ public final class AbstractMenus extends JavaPlugin {
         return instance;
     }
 
-    // from SkinRestorer
+    // from SkinRestorer.
+    //
+    // YamlConfiguration.loadConfiguration below reads spigot.yml / paper.yml
+    // synchronously on the main thread. These files are <10 KB on a real
+    // server and the call only fires once, during onEnable, before any
+    // gameplay can be affected. Acceptable startup-only IO.
     public boolean determineProxy() {
         Path spigotFile = Paths.get("spigot.yml");
         Path paperFile = Paths.get("paper.yml");

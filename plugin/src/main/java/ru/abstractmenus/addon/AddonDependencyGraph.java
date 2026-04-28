@@ -20,7 +20,34 @@ public final class AddonDependencyGraph {
     private AddonDependencyGraph() {}
 
     /**
-     * Sort addons into enabling order.
+     * Find every addon whose declared dependencies include a name that is
+     * not present in the graph. Useful for pre-filtering before
+     * {@link #topoSort} so a single bad addon does not poison the whole
+     * batch.
+     *
+     * @param dependencies graph (same shape as {@link #topoSort})
+     * @return set of addon names with at least one missing dependency, in
+     *         iteration order of {@code dependencies}
+     */
+    public static Set<String> unsatisfied(Map<String, List<String>> dependencies) {
+        Set<String> known = dependencies.keySet();
+        Set<String> bad = new LinkedHashSet<>();
+        for (Map.Entry<String, List<String>> e : dependencies.entrySet()) {
+            for (String dep : e.getValue()) {
+                if (!known.contains(dep)) {
+                    bad.add(e.getKey());
+                    break;
+                }
+            }
+        }
+        return bad;
+    }
+
+    /**
+     * Sort addons into enabling order. Caller must ensure every dep
+     * referenced is present in {@code dependencies} - use
+     * {@link #unsatisfied} first to filter out bad nodes. Cycle detection
+     * still throws.
      *
      * @param dependencies map from addon name → list of names it depends on.
      *                     Iteration order of the input map is preserved
@@ -28,22 +55,8 @@ public final class AddonDependencyGraph {
      *                     {@link java.util.LinkedHashMap} for determinism).
      * @return addon names in dependency-first order (deps before dependants)
      * @throws AddonDependencyCycleException if a cycle is detected
-     * @throws AddonDependencyException      if a declared dep refers to a
-     *                                       name not present in the graph
      */
     public static List<String> topoSort(Map<String, List<String>> dependencies) {
-        Set<String> known = dependencies.keySet();
-
-        // Validation: every declared dep must exist in the graph.
-        for (Map.Entry<String, List<String>> e : dependencies.entrySet()) {
-            for (String dep : e.getValue()) {
-                if (!known.contains(dep)) {
-                    throw new AddonDependencyException(
-                            "Addon '" + e.getKey() + "' depends on unknown addon '" + dep + "'");
-                }
-            }
-        }
-
         Set<String> permanent = new HashSet<>();
         Set<String> temporary = new LinkedHashSet<>();  // order preserved for cycle message
         List<String> order = new ArrayList<>();

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -77,11 +78,21 @@ class AddonDependencyGraphTest {
     }
 
     @Test
-    void unknownDependency_throws() {
-        Map<String, List<String>> deps = Map.of("a", List.of("ghost"));
-        AddonDependencyException ex = assertThrows(
-                AddonDependencyException.class,
-                () -> AddonDependencyGraph.topoSort(deps));
-        assertTrue(ex.getMessage().toLowerCase().contains("ghost"));
+    void unsatisfied_returnsAddonsWithMissingDeps() {
+        Map<String, List<String>> deps = new LinkedHashMap<>();
+        deps.put("a", List.of("ghost"));   // ghost not in graph
+        deps.put("b", List.of("a"));       // a IS in graph
+        deps.put("c", List.of());
+
+        Set<String> bad = AddonDependencyGraph.unsatisfied(deps);
+        assertEquals(Set.of("a"), bad);
+    }
+
+    @Test
+    void unsatisfied_emptyForCleanGraph() {
+        Map<String, List<String>> deps = Map.of(
+                "a", List.of(),
+                "b", List.of("a"));
+        assertTrue(AddonDependencyGraph.unsatisfied(deps).isEmpty());
     }
 }
