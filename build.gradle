@@ -74,9 +74,23 @@ tasks.register('dist', Copy) {
     into layout.buildDirectory.dir('dist')
 }
 
-// Hook dist into the root 'build' lifecycle so plain `./gradlew build`
-// produces the aggregate. finalizedBy keeps it ordered correctly even if
-// some upstream task fails partway through.
-tasks.named('build').configure {
-    finalizedBy('dist')
+// Hook dist into every common dev-cycle entry point so the aggregate in
+// build/dist/ is always fresh, regardless of which command the dev ran.
+//
+//   ./gradlew shadowJar  -> finalizes :dist (fast loop "fix -> server")
+//   ./gradlew assemble   -> finalizes :dist (all artifacts, no tests)
+//   ./gradlew build      -> finalizes :dist (artifacts + tests)
+//   ./gradlew dist       -> dist itself
+//
+// finalizedBy is correct here (vs dependsOn) because we want dist to run
+// AFTER the upstream task succeeds, not be pulled in as its dependency.
+tasks.named('build').configure { finalizedBy('dist') }
+tasks.named('assemble').configure { finalizedBy('dist') }
+
+// :plugin:shadowJar is the hot-path command during plugin development;
+// hook it directly so the dev-loop jar lands in build/dist/ too.
+project(':plugin').afterEvaluate {
+    project(':plugin').tasks.named('shadowJar').configure {
+        finalizedBy(':dist')
+    }
 }
