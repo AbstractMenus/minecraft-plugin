@@ -47,13 +47,11 @@ public final class ProviderRegistryImpl implements ProviderRegistry {
     // ---- Config-default resolution helper --------------------------------
 
     private <T> T resolveWithConfig(String kind, Section<T> section) {
+        // configDefaults is read here outside the section lock; that's
+        // intentional. The Function is only mutated once via setConfigDefaults
+        // during plugin startup, before any concurrent reads can happen.
         String configured = configDefaults.apply(kind);
-        if (configured != null && !configured.equalsIgnoreCase("auto")) {
-            T h = section.byId(configured);
-            if (h != null) return h;
-            // Configured id not found — fall back to auto.
-        }
-        return section.auto();
+        return section.resolveWithDefault(configured);
     }
 
     // ---- Economy ---------------------------------------------------------
@@ -134,6 +132,25 @@ public final class ProviderRegistryImpl implements ProviderRegistry {
         }
 
         synchronized T auto() {
+            Entry<T> best = null;
+            for (Entry<T> e : byId.values()) {
+                if (best == null || e.priority > best.priority) best = e;
+            }
+            return best == null ? null : best.handler;
+        }
+
+        /**
+         * Resolve a provider in one critical section: try the configured id
+         * first, fall back to {@link #auto()} on miss. Holding the lock
+         * across both lookups closes the race where a concurrent register /
+         * unregister could move the configured id under our feet between
+         * the two separate calls.
+         */
+        synchronized T resolveWithDefault(String configuredId) {
+            if (configuredId != null && !configuredId.equalsIgnoreCase("auto")) {
+                Entry<T> e = byId.get(configuredId.toLowerCase());
+                if (e != null) return e.handler;
+            }
             Entry<T> best = null;
             for (Entry<T> e : byId.values()) {
                 if (best == null || e.priority > best.priority) best = e;

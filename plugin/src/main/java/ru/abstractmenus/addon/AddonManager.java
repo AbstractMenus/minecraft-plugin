@@ -60,32 +60,13 @@ public final class AddonManager {
             return;
         }
 
-        // Soft-filter: drop addons whose required Bukkit plugin deps are missing.
-        // In test mode (plugin == null), skip this check — tests must not declare
-        // pluginDependencies.
+        // Filter out addons whose hard plugin deps are missing. Soft deps
+        // log a warning but do not block the addon.
         var byName = new LinkedHashMap<String, LoadedAddon>();
-        if (plugin != null) {
-            var pluginManager = plugin.getServer().getPluginManager();
-            for (LoadedAddon la : pending.values()) {
-                AddonConf c = la.getConf();
-                boolean missing = false;
-                for (String dep : c.pluginDependencies()) {
-                    if (pluginManager.getPlugin(dep) == null) {
-                        Logger.warning("Addon " + c.name()
-                                + " requires plugin '" + dep + "' which is not installed — skipping");
-                        la.markFailed(new IllegalStateException("missing plugin dependency: " + dep));
-                        missing = true;
-                        break;
-                    }
-                }
-                if (missing) {
-                    addons.put(c.name().toLowerCase(), la);  // keep the failed entry visible in /am addons list
-                    continue;
-                }
-                byName.put(c.name().toLowerCase(), la);
+        for (LoadedAddon la : pending.values()) {
+            if (checkPluginDeps(la)) {
+                byName.put(la.getConf().name().toLowerCase(), la);
             }
-        } else {
-            byName.putAll(pending);
         }
 
         if (byName.isEmpty()) return;
@@ -451,6 +432,49 @@ public final class AddonManager {
     }
 
     /**
+     * Verify hard {@code pluginDependencies} are present and log warnings
+     * for any missing {@code pluginSoftDependencies}.
+     *
+     * <p>If a hard dep is missing the addon is marked FAILED and parked
+     * in the loaded map (so {@code /am addons list} surfaces it) and the
+     * method returns false. Soft-dep misses log a warning but do not
+     * block enabling.
+     *
+     * <p>Skipped entirely in test mode (plugin == null). Tests must not
+     * declare pluginDependencies; declaring pluginSoftDependencies is fine
+     * but logs nothing.
+     *
+     * @return true if the addon may proceed to enable, false if a hard
+     *         dependency is missing
+     */
+    private boolean checkPluginDeps(LoadedAddon la) {
+        if (plugin == null) return true;
+        var pm = plugin.getServer().getPluginManager();
+        AddonConf c = la.getConf();
+        String key = c.name().toLowerCase();
+
+        for (String dep : c.pluginDependencies()) {
+            if (pm.getPlugin(dep) == null) {
+                String msg = "missing plugin dependency: " + dep;
+                Logger.warning("Addon " + c.name() + " " + msg + " - skipping");
+                la.markFailed(new IllegalStateException(msg));
+                addons.put(key, la);
+                return false;
+            }
+        }
+
+        for (String dep : c.pluginSoftDependencies()) {
+            if (pm.getPlugin(dep) == null) {
+                Logger.warning("Addon " + c.name()
+                        + " soft-depends on plugin '" + dep
+                        + "' which is not installed - features that need it may no-op");
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Verify Bukkit-side and addon-side dependencies, then run
      * onLoad + onEnable. Installs the result into the loaded map
      * (regardless of success or failure - failed addons stay visible
@@ -459,18 +483,7 @@ public final class AddonManager {
     private void enableSingle(LoadedAddon la) {
         String key = la.getConf().name().toLowerCase();
 
-        if (plugin != null) {
-            var pm = plugin.getServer().getPluginManager();
-            for (String dep : la.getConf().pluginDependencies()) {
-                if (pm.getPlugin(dep) == null) {
-                    String msg = "missing plugin dependency: " + dep;
-                    Logger.warning("Addon " + la.getConf().name() + " " + msg);
-                    la.markFailed(new IllegalStateException(msg));
-                    addons.put(key, la);
-                    return;
-                }
-            }
-        }
+        if (!checkPluginDeps(la)) return;
 
         for (String dep : la.getConf().addonDependencies()) {
             LoadedAddon depAddon = addons.get(dep.toLowerCase());
