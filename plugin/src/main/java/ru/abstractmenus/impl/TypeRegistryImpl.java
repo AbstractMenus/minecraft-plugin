@@ -78,9 +78,13 @@ public final class TypeRegistryImpl<T> implements TypeRegistry<T> {
             LOG.warning("TypeRegistry: overwriting existing entry '" + k
                     + "' (" + existing.getName() + " -> " + type.getName() + ")");
             byType.remove(existing);
-            // Intentionally do not remove from owner tracking — the old owner
-            // no longer has this key since it's overwritten; cleanup of their
-            // orphan entries happens on their own unregisterAll.
+            // Strip k from the old owner's set so their later unregisterAll
+            // doesn't wipe the new owner's entry. Without this the *new*
+            // owner's class would silently vanish from the registry the
+            // first time the *old* owner gets disabled.
+            for (Set<String> ownerKeys : keysByOwner.values()) {
+                ownerKeys.remove(k);
+            }
         }
 
         byKey.put(k, type);

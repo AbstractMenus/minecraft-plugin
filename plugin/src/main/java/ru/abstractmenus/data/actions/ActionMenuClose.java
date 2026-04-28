@@ -29,8 +29,8 @@ public class ActionMenuClose implements Action {
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
         if (ticks != null) {
-            BukkitTasks.runTaskLater(() ->
-                            MenuManager.instance().closeMenu(player),
+            BukkitTasks.runForEntityLater(player,
+                    () -> MenuManager.instance().closeMenu(player),
                     ticks.getInt(player, menu));
         } else {
             if (isClose.getBool(player, menu))

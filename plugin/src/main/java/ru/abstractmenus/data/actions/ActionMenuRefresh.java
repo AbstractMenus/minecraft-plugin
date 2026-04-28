@@ -29,7 +29,9 @@ public class ActionMenuRefresh implements Action {
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
         if (ticks != null) {
-            BukkitTasks.runTaskLater(() -> MenuManager.instance().refreshMenu(player), ticks.getInt(player, menu));
+            BukkitTasks.runForEntityLater(player,
+                    () -> MenuManager.instance().refreshMenu(player),
+                    ticks.getInt(player, menu));
             return;
         }
 

@@ -116,13 +116,16 @@ public final class AddonManager {
         // typically because the dep is a plugin-as-addon (Path 1) which
         // doesn't show up in the addons/ folder, or simply a typo. Mark
         // them FAILED individually instead of poisoning the whole batch
-        // through topoSort.
+        // through topoSort. Runs to fixed point so transitive failures
+        // (A -> B -> missing C) catch both A and B in the same pass.
         Set<String> unsatisfied = AddonDependencyGraph.unsatisfied(depGraph);
+        Set<String> originalGraphKeys = Set.copyOf(depGraph.keySet());
         for (String key : unsatisfied) {
             LoadedAddon la = byName.remove(key);
             depGraph.remove(key);
             String missing = la.getConf().addonDependencies().stream()
-                    .filter(d -> !byName.containsKey(d.toLowerCase()))
+                    .filter(d -> !originalGraphKeys.contains(d.toLowerCase())
+                            || unsatisfied.contains(d.toLowerCase()))
                     .findFirst().orElse("?");
             String msg = "missing addon dependency: " + missing;
             Logger.warning("Addon " + la.getConf().name() + " " + msg + " - skipping");
@@ -154,6 +157,11 @@ public final class AddonManager {
                 Logger.severe("Addon " + la.getConf().name() + " failed in onLoad: " + t);
                 t.printStackTrace();
                 la.markFailed(t);
+                // onLoad shouldn't register types per the contract, but a
+                // misbehaving addon might have done so before throwing -
+                // strip whatever it managed so the next addon's enable
+                // sees a clean registry state.
+                rollbackRegistrations(la);
             }
         }
 

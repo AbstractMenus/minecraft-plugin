@@ -81,11 +81,26 @@ class AddonDependencyGraphTest {
     void unsatisfied_returnsAddonsWithMissingDeps() {
         Map<String, List<String>> deps = new LinkedHashMap<>();
         deps.put("a", List.of("ghost"));   // ghost not in graph
-        deps.put("b", List.of("a"));       // a IS in graph
+        deps.put("b", List.of("a"));       // a IS in graph but transitively bad
         deps.put("c", List.of());
 
+        // Both a (direct miss) and b (transitive miss through a) must be
+        // flagged. A single-pass implementation would only catch a and let
+        // b leak into topoSort.
         Set<String> bad = AddonDependencyGraph.unsatisfied(deps);
-        assertEquals(Set.of("a"), bad);
+        assertEquals(Set.of("a", "b"), bad);
+    }
+
+    @Test
+    void unsatisfied_transitiveChain() {
+        Map<String, List<String>> deps = new LinkedHashMap<>();
+        deps.put("d", List.of("c"));
+        deps.put("c", List.of("b"));
+        deps.put("b", List.of("ghost"));
+        deps.put("a", List.of());
+
+        Set<String> bad = AddonDependencyGraph.unsatisfied(deps);
+        assertEquals(Set.of("b", "c", "d"), bad);
     }
 
     @Test

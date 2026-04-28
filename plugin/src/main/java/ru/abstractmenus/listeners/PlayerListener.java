@@ -19,6 +19,12 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
+        // Drop any tracked menu before the entity is gone. InventoryListener
+        // also closes via runForEntityLater(player, ..., 3L), but on Folia
+        // that task is silently dropped if the player quits inside the 3-tick
+        // window - leaving openedMenus with a stale entry. Removing here
+        // guarantees cleanup regardless of timing.
+        MenuManager.instance().removePlayerMenu(event.getPlayer());
         MenuManager.instance().getAndRemoveInputAction(event.getPlayer());
         ProfileStorage storage = ProfileStorage.instance();
         if (storage != null) {

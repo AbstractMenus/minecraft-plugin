@@ -21,25 +21,34 @@ public final class AddonDependencyGraph {
 
     /**
      * Find every addon whose declared dependencies include a name that is
-     * not present in the graph. Useful for pre-filtering before
-     * {@link #topoSort} so a single bad addon does not poison the whole
-     * batch.
+     * not present (or transitively unsatisfied) in the graph. Useful for
+     * pre-filtering before {@link #topoSort} so a single bad addon does
+     * not poison the whole batch.
+     *
+     * <p>Runs to a fixed point: if A depends on B and B depends on missing
+     * C, both A and B are reported. A single pass would only catch B,
+     * leaving A to fail later inside {@code topoSort} or {@code onEnable}.
      *
      * @param dependencies graph (same shape as {@link #topoSort})
-     * @return set of addon names with at least one missing dependency, in
-     *         iteration order of {@code dependencies}
+     * @return set of addon names whose dependency closure cannot be
+     *         satisfied, in iteration order of {@code dependencies}
      */
     public static Set<String> unsatisfied(Map<String, List<String>> dependencies) {
-        Set<String> known = dependencies.keySet();
         Set<String> bad = new LinkedHashSet<>();
-        for (Map.Entry<String, List<String>> e : dependencies.entrySet()) {
-            for (String dep : e.getValue()) {
-                if (!known.contains(dep)) {
-                    bad.add(e.getKey());
-                    break;
+        boolean changed;
+        do {
+            changed = false;
+            for (Map.Entry<String, List<String>> e : dependencies.entrySet()) {
+                if (bad.contains(e.getKey())) continue;
+                for (String dep : e.getValue()) {
+                    if (!dependencies.containsKey(dep) || bad.contains(dep)) {
+                        bad.add(e.getKey());
+                        changed = true;
+                        break;
+                    }
                 }
             }
-        }
+        } while (changed);
         return bad;
     }
 

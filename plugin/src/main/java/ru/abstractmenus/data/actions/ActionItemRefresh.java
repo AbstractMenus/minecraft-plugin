@@ -36,9 +36,9 @@ public class ActionItemRefresh implements Action {
 
         if (ticks != null) {
             Slot finalSlot = slot;
-            BukkitTasks.runTaskLater(() ->
-                    menu.refreshItem(finalSlot, player), ticks.getInt(player, menu)
-            );
+            BukkitTasks.runForEntityLater(player,
+                    () -> menu.refreshItem(finalSlot, player),
+                    ticks.getInt(player, menu));
             return;
         }
 

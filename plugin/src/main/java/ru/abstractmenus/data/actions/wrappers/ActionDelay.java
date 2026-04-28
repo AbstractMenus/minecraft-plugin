@@ -25,7 +25,9 @@ public class ActionDelay implements Action {
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
         if (actions != null) {
-            BukkitTasks.runTaskLater(() -> actions.activate(player, menu, clickedItem), delay.getInt(player, menu));
+            BukkitTasks.runForEntityLater(player,
+                    () -> actions.activate(player, menu, clickedItem),
+                    delay.getInt(player, menu));
         }
     }
 
