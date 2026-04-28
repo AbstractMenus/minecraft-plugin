@@ -35,6 +35,7 @@ import ru.abstractmenus.hocon.api.source.ConfigSources;
 import ru.abstractmenus.listeners.ChatListener;
 import ru.abstractmenus.listeners.InventoryListener;
 import ru.abstractmenus.listeners.PlayerListener;
+import ru.abstractmenus.listeners.ServerLoadListener;
 import ru.abstractmenus.listeners.wg.WGHandlers;
 import ru.abstractmenus.nms.actionbar.ActionBar;
 import ru.abstractmenus.nms.title.Title;
@@ -154,7 +155,13 @@ public final class AbstractMenus extends JavaPlugin {
             this.addonManager = new AddonManager(this, api);
             addonManager.loadAll();
 
-            loadMenus();
+            // Menus parse via ServerLoadEvent (after every plugin's onEnable
+            // has completed) so Path 1 plugin-as-addons - which Bukkit only
+            // enables AFTER us due to depend: AbstractMenus - have a chance to
+            // register their providers before HOCON parse-time validation
+            // runs. Path 2 addons are already loaded above, so they work
+            // either way.
+            getServer().getPluginManager().registerEvents(new ServerLoadListener(), this);
 
             getServer().getPluginManager().registerEvents(new InventoryListener(), this);
             getServer().getPluginManager().registerEvents(new ProfileStorage(), this);
