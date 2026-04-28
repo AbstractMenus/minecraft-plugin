@@ -9,10 +9,11 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Deque;
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
 public abstract class Command implements CommandExecutor, TabCompleter {
 
@@ -53,7 +54,9 @@ public abstract class Command implements CommandExecutor, TabCompleter {
         if (!checkPermission(sender, this)) return false;
 
         if (args.length > 0) {
-            Stack<Command> stack = new Stack<>();
+            // ArrayDeque (not Stack — Stack extends Vector and synchronises
+            // every op for no benefit on a single-threaded dispatch path).
+            Deque<Command> stack = new ArrayDeque<>();
             Command sub;
 
             for (String arg : args) {
@@ -137,4 +140,22 @@ public abstract class Command implements CommandExecutor, TabCompleter {
         return sub.tabComplete(sender, Arrays.copyOfRange(args, 1, args.length));
     }
 
+    /**
+     * Helper for subclasses overriding {@link #tabComplete}: filter
+     * {@code candidates} to entries whose lowercase form starts with
+     * {@code prefix.toLowerCase()}, and return them sorted alphabetically.
+     *
+     * <p>Pulled up to the base because at least three subcommand
+     * implementations (CommandAddons being the largest) used to ship a
+     * private static copy of this same five-line filter.
+     */
+    protected static List<String> filterByPrefix(Iterable<String> candidates, String prefix) {
+        String lower = prefix.toLowerCase();
+        List<String> result = new ArrayList<>();
+        for (String s : candidates) {
+            if (s.toLowerCase().startsWith(lower)) result.add(s);
+        }
+        Collections.sort(result);
+        return result;
+    }
 }

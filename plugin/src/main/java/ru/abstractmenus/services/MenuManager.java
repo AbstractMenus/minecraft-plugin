@@ -291,7 +291,11 @@ public final class MenuManager {
 
                         if (Files.isRegularFile(file) && System.currentTimeMillis() > lastUpdated + 100) {
                             Logger.info("Detected changes in " + filename + ". Loading ...");
-                            // Bukkit API / menu map mutation must happen on main thread.
+                            // We are on the WatchService thread - hop back into the
+                            // server scheduler before parsing. On Folia BukkitTasks.runTask
+                            // routes to the global region scheduler (loadFile mutates the
+                            // menus map, which is a ConcurrentHashMap, so the scheduler
+                            // affinity here is about ordering with /am reload, not safety).
                             BukkitTasks.runTask(() -> loadFile(file));
                             lastUpdated = System.currentTimeMillis();
                         }

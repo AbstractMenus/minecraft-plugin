@@ -219,12 +219,4 @@ public class CommandAddons extends Command {
         return Collections.emptyList();
     }
 
-    private static List<String> filterByPrefix(List<String> source, String prefix) {
-        List<String> result = new ArrayList<>();
-        for (String s : source) {
-            if (s.toLowerCase().startsWith(prefix)) result.add(s);
-        }
-        Collections.sort(result);
-        return result;
-    }
 }

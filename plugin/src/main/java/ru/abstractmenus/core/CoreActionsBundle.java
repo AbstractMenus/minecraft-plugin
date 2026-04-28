@@ -95,11 +95,7 @@ final class CoreActionsBundle {
         api.actions().register("setHealth", ActionHealthSet.class, new ActionHealthSet.Serializer(), owner);
         api.actions().register("sound", ActionSound.class, new ActionSound.Serializer(), owner);
 
-        try {
-            // SoundCategory missing on legacy Bukkit
-            api.actions().register("customSound", ActionSoundCustom.class, new ActionSoundCustom.Serializer(), owner);
-        } catch (Throwable ignore) {
-        }
+        api.actions().register("customSound", ActionSoundCustom.class, new ActionSoundCustom.Serializer(), owner);
 
         api.actions().register("takeLevel", ActionLevelTake.class, new ActionLevelTake.Serializer(), owner);
         api.actions().register("takeMoney", ActionMoneyTake.class, new ActionMoneyTake.Serializer(), owner);
