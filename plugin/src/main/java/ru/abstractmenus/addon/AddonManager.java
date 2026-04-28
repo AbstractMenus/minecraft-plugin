@@ -40,9 +40,10 @@ public final class AddonManager {
      */
     private static final long AVAILABLE_CACHE_TTL_MS = 2_000L;
 
-    private final AbstractMenus plugin;
     private final Path addonsDir;
     private final AbstractMenusApi api;
+    private final PluginDepChecker depChecker;
+    private final ClassLoader parentClassLoader;
 
     /** name (lowercased) → LoadedAddon, insertion-ordered (matches enable order) */
     private final Map<String, LoadedAddon> addons = new LinkedHashMap<>();
@@ -51,21 +52,23 @@ public final class AddonManager {
     private volatile long cachedAvailableAt = 0L;
 
     public AddonManager(AbstractMenus plugin, AbstractMenusApi api) {
-        this.plugin = plugin;
         this.api = api;
         this.addonsDir = plugin.getDataFolder().toPath().resolve("addons");
+        this.depChecker = name -> plugin.getServer().getPluginManager().getPlugin(name) != null;
+        this.parentClassLoader = plugin.getClass().getClassLoader();
     }
 
     /**
-     * Test-only overload: inject addonsDir directly, skip Bukkit plugin-dep
-     * checks (since no {@code plugin.getServer()} is available in pure-unit
-     * tests). Any addon with a non-empty {@code pluginDependencies} will fail
-     * under this constructor.
+     * Test-only overload: inject addonsDir directly. Bukkit-plugin
+     * dependency checks are stubbed to always report present so a test
+     * addon can declare {@code pluginDependencies} without booting a
+     * server.
      */
     AddonManager(Path addonsDir, AbstractMenusApi api) {
-        this.plugin = null;
         this.api = api;
         this.addonsDir = addonsDir;
+        this.depChecker = PluginDepChecker.ALL_PRESENT;
+        this.parentClassLoader = AddonManager.class.getClassLoader();
     }
 
     /**
@@ -126,7 +129,10 @@ public final class AddonManager {
         // Stage 2: onEnable in dependency order.
         for (String k : order) {
             LoadedAddon la = byName.get(k);
-            if (la.getStatus() == AddonStatus.FAILED) {
+            // Skip both FAILED entries and the defensive case where Stage 1
+            // somehow returned without an extension instance - either way,
+            // calling onEnable on a null extension would NPE.
+            if (la.getStatus() == AddonStatus.FAILED || la.getExtension() == null) {
                 addons.put(k, la);
                 continue;
             }
@@ -214,6 +220,11 @@ public final class AddonManager {
      * re-parse the jar → enable. Returns the new {@link LoadedAddon}, or
      * empty if no addon of that name is currently loaded.
      *
+     * <p>Goes through {@link #enableSingle} so plugin-dep and addon-dep
+     * checks re-run; a dependency that disappeared between the original
+     * load and this reload causes a clean FAILED state instead of a
+     * confusing trace deep inside {@code onEnable}.
+     *
      * @param name addon name (case-insensitive)
      * @return the freshly loaded addon, or empty if not found / no jar present
      */
@@ -234,6 +245,7 @@ public final class AddonManager {
         }
         try { existing.getClassLoader().close(); } catch (Exception ignored) {}
         addons.remove(key);
+        cachedAvailableAt = 0L;
 
         // Re-discover: find the jar whose addon.conf name matches.
         Path freshJar = findJarByName(name);
@@ -250,43 +262,17 @@ public final class AddonManager {
             return Optional.empty();
         }
 
-        // Enable the single addon. We don't re-chain the full topological sort
-        // for a single-addon reload — assume its addonDependencies are already
-        // enabled (they were, before this reload).
-        try {
-            fresh.setExtension(instantiate(fresh));
-            fresh.getExtension().onLoad(api);
-            fresh.getExtension().onEnable(api);
-            fresh.markEnabled();
-            addons.put(fresh.getConf().name().toLowerCase(), fresh);
-            Logger.info("Reloaded addon: " + fresh.getConf().name() + " v" + fresh.getConf().version());
-        } catch (Throwable t) {
-            Logger.severe("Addon " + name + " failed during reload: " + t);
-            t.printStackTrace();
-            fresh.markFailed(t);
-            rollbackRegistrations(fresh);
-            addons.put(fresh.getConf().name().toLowerCase(), fresh);
-        }
-
+        enableSingle(fresh);
         return Optional.of(fresh);
     }
 
     /** Scan addonsDir again, return the first jar whose addon.conf.name matches. */
     private Path findJarByName(String name) {
-        if (!Files.isDirectory(addonsDir)) return null;
-        try (var stream = Files.newDirectoryStream(addonsDir, "*.jar")) {
-            for (Path jar : stream) {
-                try (var jf = new JarFile(jar.toFile())) {
-                    JarEntry entry = jf.getJarEntry("addon.conf");
-                    if (entry == null) continue;
-                    String hocon = new String(jf.getInputStream(entry).readAllBytes(),
-                            StandardCharsets.UTF_8);
-                    AddonConf c = AddonConf.parse(hocon);
-                    if (c.name().equalsIgnoreCase(name)) return jar;
-                } catch (Exception ignored) {}
-            }
-        } catch (Exception ignored) {}
-        return null;
+        return scanJarConfs().entrySet().stream()
+                .filter(e -> e.getValue().name().equalsIgnoreCase(name))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
     }
 
     public Collection<LoadedAddon> loaded() {
@@ -413,14 +399,32 @@ public final class AddonManager {
         if (now - cachedAvailableAt < AVAILABLE_CACHE_TTL_MS) {
             return cachedAvailable;
         }
-        cachedAvailable = scanAvailableNotLoaded();
+        List<String> result = scanJarConfs().values().stream()
+                .map(AddonConf::name)
+                .filter(n -> !addons.containsKey(n.toLowerCase()))
+                .toList();
+        cachedAvailable = result;
         cachedAvailableAt = now;
-        return cachedAvailable;
+        return result;
     }
 
-    private List<String> scanAvailableNotLoaded() {
-        if (!Files.isDirectory(addonsDir)) return List.of();
-        List<String> result = new ArrayList<>();
+    /**
+     * One canonical pass over {@code addonsDir}: for each {@code *.jar},
+     * read its {@code addon.conf} entry and parse it. Entries that lack
+     * addon.conf or fail to parse are skipped silently (the operator
+     * already saw the warning at startup discover() time).
+     *
+     * <p>Sole shared helper for {@link #findJarByName} and
+     * {@link #availableNotLoaded} to avoid duplicating the open-read-parse
+     * triple. Note that {@link #discover()} is separate because it ALSO
+     * builds the {@link AddonClassLoader}, which we don't want for the
+     * tab-completion path.
+     *
+     * @return jar Path → parsed AddonConf, in directory iteration order
+     */
+    private Map<Path, AddonConf> scanJarConfs() {
+        if (!Files.isDirectory(addonsDir)) return Map.of();
+        Map<Path, AddonConf> result = new LinkedHashMap<>();
         try (var stream = Files.newDirectoryStream(addonsDir, "*.jar")) {
             for (Path jar : stream) {
                 try (var jf = new JarFile(jar.toFile())) {
@@ -428,14 +432,8 @@ public final class AddonManager {
                     if (entry == null) continue;
                     String hocon = new String(jf.getInputStream(entry).readAllBytes(),
                             StandardCharsets.UTF_8);
-                    AddonConf conf = AddonConf.parse(hocon);
-                    if (!addons.containsKey(conf.name().toLowerCase())) {
-                        result.add(conf.name());
-                    }
-                } catch (Exception ignored) {
-                    // Malformed jar - skip silently, the operator already saw
-                    // the warning at server-start discover() time.
-                }
+                    result.put(jar, AddonConf.parse(hocon));
+                } catch (Exception ignored) {}
             }
         } catch (Exception ignored) {}
         return result;
@@ -450,21 +448,15 @@ public final class AddonManager {
      * method returns false. Soft-dep misses log a warning but do not
      * block enabling.
      *
-     * <p>Skipped entirely in test mode (plugin == null). Tests must not
-     * declare pluginDependencies; declaring pluginSoftDependencies is fine
-     * but logs nothing.
-     *
      * @return true if the addon may proceed to enable, false if a hard
      *         dependency is missing
      */
     private boolean checkPluginDeps(LoadedAddon la) {
-        if (plugin == null) return true;
-        var pm = plugin.getServer().getPluginManager();
         AddonConf c = la.getConf();
         String key = c.name().toLowerCase();
 
         for (String dep : c.pluginDependencies()) {
-            if (pm.getPlugin(dep) == null) {
+            if (!depChecker.isPresent(dep)) {
                 String msg = "missing plugin dependency: " + dep;
                 Logger.warning("Addon " + c.name() + " " + msg + " - skipping");
                 la.markFailed(new IllegalStateException(msg));
@@ -474,7 +466,7 @@ public final class AddonManager {
         }
 
         for (String dep : c.pluginSoftDependencies()) {
-            if (pm.getPlugin(dep) == null) {
+            if (!depChecker.isPresent(dep)) {
                 Logger.warning("Addon " + c.name()
                         + " soft-depends on plugin '" + dep
                         + "' which is not installed - features that need it may no-op");
@@ -541,12 +533,9 @@ public final class AddonManager {
         }
 
         AddonConf conf = AddonConf.parse(hocon);
-        ClassLoader parent = (plugin != null)
-                ? plugin.getClass().getClassLoader()
-                : AddonManager.class.getClassLoader();
         AddonClassLoader cl = new AddonClassLoader(
                 new URL[]{jarPath.toUri().toURL()},
-                parent);
+                parentClassLoader);
 
         return new LoadedAddon(conf, cl);
     }
