@@ -30,7 +30,9 @@ public final class CoreExtension implements MenuExtension {
 
     @Override
     public String version() {
-        return version;
+        // Null between construction and onEnable - fall through to the
+        // default-style "unknown" so /am addons list never shows "vnull".
+        return version != null ? version : "unknown";
     }
 
     @Override

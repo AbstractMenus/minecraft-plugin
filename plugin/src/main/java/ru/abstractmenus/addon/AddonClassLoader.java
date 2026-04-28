@@ -21,6 +21,7 @@ public final class AddonClassLoader extends URLClassLoader {
     static final String[] PARENT_FIRST_PREFIXES = {
             "ru.abstractmenus.api.",
             "org.bukkit.",
+            "org.spigotmc.",
             "io.papermc.",
             "com.destroystokyo.paper.",
             "net.kyori.adventure.",
@@ -31,6 +32,16 @@ public final class AddonClassLoader extends URLClassLoader {
             // addon boundary.
             "net.minecraft.",
             "com.mojang.",
+            // Server-bundled libraries. If an addon ships its own copy with
+            // a different version or shaded-but-not-relocated, the same
+            // class loaded by two classloaders is not the same class -
+            // ClassCastException at the first hand-off. Force parent-first
+            // so everyone uses the server's copy.
+            "ca.spottedleaf.",       // Paper concurrent utilities
+            "io.netty.",             // Netty (Paper bundles)
+            "it.unimi.dsi.fastutil.",
+            "com.google.gson.",
+            "com.google.common.",    // Guava
             "java.",
             "javax.",
             "jdk.",

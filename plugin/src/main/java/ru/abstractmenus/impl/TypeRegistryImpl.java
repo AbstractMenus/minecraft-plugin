@@ -45,7 +45,11 @@ public final class TypeRegistryImpl<T> implements TypeRegistry<T> {
             f.setAccessible(true);
         } catch (NoSuchFieldException e) {
             LOG.log(Level.WARNING,
-                    "NodeSerializers.serializers field missing; addon-disable will leak classloader references",
+                    "NodeSerializers.serializers field not found - bundled hocon lib has "
+                            + "changed shape since AbstractMenus was built. Not an AbstractMenus "
+                            + "bug; needs an upstream hocon change to expose unregister(Class). "
+                            + "Side effect: every addon disable/reload from now on leaks its "
+                            + "classloader until a full server restart.",
                     e);
         }
         NODE_SERIALIZERS_MAP_FIELD = f;
@@ -144,8 +148,12 @@ public final class TypeRegistryImpl<T> implements TypeRegistry<T> {
             backing.remove(type);
         } catch (Throwable t) {
             LOG.log(Level.WARNING,
-                    "Failed to drop NodeSerializers entry for " + type.getName()
-                            + "; addon classloader may be retained",
+                    "Cannot remove NodeSerializer for " + type.getName()
+                            + ": bundled hocon lib has no public unregister(Class), and "
+                            + "our reflection workaround failed. Not an AbstractMenus bug - "
+                            + "needs an upstream hocon change. Side effect: this addon's "
+                            + "classloader stays in memory until a full server restart; the "
+                            + "leak compounds across reloads.",
                     t);
         }
     }

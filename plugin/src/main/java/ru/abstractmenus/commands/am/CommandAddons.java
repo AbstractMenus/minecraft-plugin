@@ -35,9 +35,21 @@ public class CommandAddons extends Command {
     private static final Pattern UNSAFE_FORMAT = Pattern.compile(
             "&[0-9a-fk-orA-FK-OR]|§[0-9a-fk-orA-FK-OR]|<#[0-9a-fA-F]{6}>");
 
+    /**
+     * Strips MiniMessage tags ({@code <red>}, {@code <click:run_command:...>},
+     * {@code <hover:show_text:...>}, etc.). Applied alongside
+     * {@link #UNSAFE_FORMAT} when MiniMessage rendering is enabled - without
+     * it a malicious addon could put a {@code <click:run_command:/op X>}
+     * tag in its name and turn an operator's {@code /am addons list} click
+     * into privilege escalation. Conservatively matches anything shaped like
+     * {@code <word ...>}; legit addon names don't need angle brackets.
+     */
+    private static final Pattern MM_TAG = Pattern.compile("<[/!?]?[a-zA-Z][^>]*>");
+
     private static String safe(String untrusted) {
         if (untrusted == null) return "";
-        return UNSAFE_FORMAT.matcher(untrusted).replaceAll("");
+        String stripped = UNSAFE_FORMAT.matcher(untrusted).replaceAll("");
+        return MM_TAG.matcher(stripped).replaceAll("");
     }
 
     public CommandAddons() {
