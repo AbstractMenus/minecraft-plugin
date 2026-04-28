@@ -45,8 +45,15 @@ dependencies {
     implementation project(':api')
 
     implementation 'com.fathzer:javaluator:3.0.6'
-    implementation 'net.kyori:adventure-platform-bukkit:4.4.1'
-    implementation 'net.kyori:adventure-text-minimessage:4.26.1'
+
+    // Adventure (Component, MiniMessage, LegacyComponentSerializer) is
+    // bundled INSIDE Paper itself (via paper-api's BOM). Pull it in
+    // compileOnly so we get the types at compile time but do not bundle
+    // ~2.7 MB of duplicate Adventure classes into the shadow jar.
+    // adventure-platform-bukkit was used by nothing in our code so it is
+    // dropped entirely.
+    compileOnly 'net.kyori:adventure-text-minimessage:4.26.1'
+
     implementation "com.github.technicallycoded:FoliaLib:0.4.4"
 
     shadow files('libs/MMOItems-6.5.4.jar')
