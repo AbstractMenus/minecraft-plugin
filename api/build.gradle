@@ -3,6 +3,18 @@ plugins {
     id 'maven-publish'
 }
 
+// Local file in api/build/libs/ is AbstractMenus-api-<ver>.jar so
+// it visually groups with AbstractMenus-<ver>.jar from :plugin and an
+// op who copies both off CI artifacts can tell at a glance both are AM.
+//
+// Maven publish artifactId stays 'api' (project.name) so the coord
+// 'ru.abstractmenus:api:<ver>' is unchanged for consumers - Gradle's
+// maven-publish renames files to <artifactId>-<version>.jar inside the
+// repository regardless of what archivesName is on the local jar task.
+base {
+    archivesName = 'AbstractMenus-api'
+}
+
 repositories {
     // root already supplies papermc + jitpack + mavenCentral + mavenLocal
 }

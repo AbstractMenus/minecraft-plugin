@@ -57,9 +57,9 @@ jobs:
       - name: Resolve API JAR paths
         id: api_jars
         run: |
-          echo "binary=$(ls api/build/libs/api-*.jar   | grep -v 'sources\|javadoc' | head -n1)" >> "$GITHUB_OUTPUT"
-          echo "sources=$(ls api/build/libs/api-*-sources.jar | head -n1)" >> "$GITHUB_OUTPUT"
-          echo "javadoc=$(ls api/build/libs/api-*-javadoc.jar | head -n1)" >> "$GITHUB_OUTPUT"
+          echo "binary=$(ls api/build/libs/AbstractMenus-api-*.jar | grep -v 'sources\|javadoc' | head -n1)" >> "$GITHUB_OUTPUT"
+          echo "sources=$(ls api/build/libs/AbstractMenus-api-*-sources.jar | head -n1)" >> "$GITHUB_OUTPUT"
+          echo "javadoc=$(ls api/build/libs/AbstractMenus-api-*-javadoc.jar | head -n1)" >> "$GITHUB_OUTPUT"
 
       - name: Upload plugin shadow JAR
         uses: actions/upload-artifact@v4

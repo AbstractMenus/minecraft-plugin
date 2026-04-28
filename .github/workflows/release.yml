@@ -54,9 +54,9 @@ jobs:
         run: |
           # Skip the dev-only -thin jar; only the shaded fat jar ships.
           PLUGIN=$(ls plugin/build/libs/AbstractMenus-*.jar | grep -v -- '-thin\.jar$' | head -n1)
-          API_BIN=$(ls api/build/libs/api-*.jar | grep -v 'sources\|javadoc' | head -n1)
-          API_SRC=$(ls api/build/libs/api-*-sources.jar | head -n1)
-          API_DOC=$(ls api/build/libs/api-*-javadoc.jar | head -n1)
+          API_BIN=$(ls api/build/libs/AbstractMenus-api-*.jar | grep -v 'sources\|javadoc' | head -n1)
+          API_SRC=$(ls api/build/libs/AbstractMenus-api-*-sources.jar | head -n1)
+          API_DOC=$(ls api/build/libs/AbstractMenus-api-*-javadoc.jar | head -n1)
           echo "plugin=$PLUGIN"  >> "$GITHUB_OUTPUT"
           echo "api_bin=$API_BIN" >> "$GITHUB_OUTPUT"
           echo "api_src=$API_SRC" >> "$GITHUB_OUTPUT"
