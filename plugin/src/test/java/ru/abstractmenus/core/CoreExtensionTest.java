@@ -90,8 +90,8 @@ class CoreExtensionTest {
     @Test
     void coreExtension_registersExpectedItemProperties() {
         new CoreExtension().onEnable(api);
-        assertEquals(32, api.itemProperties().keys().size(),
-                "expected 32 core item-property types (matches Task 10 migration count)");
+        assertEquals(33, api.itemProperties().keys().size(),
+                "expected 33 core item-property types (matches Task 10 migration count)");
     }
 
     @Test
@@ -128,6 +128,7 @@ class CoreExtensionTest {
     void coreExtension_canonicalItemProperty_resolve() {
         new CoreExtension().onEnable(api);
         assertNotNull(api.itemProperties().get("material"), "material item-property must be registered");
+        assertNotNull(api.itemProperties().get("tooltipDisplay"), "tooltipDisplay item-property must be registered");
     }
 
     // -------------------------------------------------------------------------
