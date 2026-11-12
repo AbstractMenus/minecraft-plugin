@@ -56,6 +56,20 @@ class TestPluginLifecycle {
     }
 
     @Test
+    void bundledCakeUsesVanillaTooltipStyle() throws Exception {
+        var manager = MenuManager.instance();
+        manager.loadMenus();
+        var player = server.addPlayer();
+        var template = manager.getMenu("menu");
+        assertNotNull(template);
+        manager.openMenu(player, template);
+        var cake = manager.getOpenedMenu(player).getInventory().getItem(4);
+        assertNotNull(cake);
+        assertEquals(org.bukkit.Material.CAKE, cake.getType());
+        assertFalse(cake.getItemMeta().hasTooltipStyle());
+    }
+
+    @Test
     void pluginDisableIsClean() {
         server.getPluginManager().disablePlugin(plugin);
         assertFalse(plugin.isEnabled(), "Plugin should be disabled after disablePlugin()");

@@ -77,7 +77,7 @@ lore: ["Contents stay hidden"]
 
 Set `hideTooltip: true` to hide the whole tooltip. Component names accept uppercase, lowercase and namespaced keys. Unknown components fail at menu load. Hidden components are merged with existing flags, so `tooltipDisplay` and `flags` can appear in either order.
 
-`itemModel` selects a resource-pack item model; `tooltipStyle` selects its tooltip sprites:
+`itemModel` selects a resource-pack item model; `tooltipStyle` selects tooltip sprites and requires a resource pack that defines the style:
 
 ```hocon
 itemModel: "example:menu/cake"
