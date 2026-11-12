@@ -35,6 +35,10 @@ import ru.abstractmenus.data.properties.PropBindings;
 import ru.abstractmenus.data.properties.PropNameLight;
 import ru.abstractmenus.data.properties.PropLoreLight;
 import ru.abstractmenus.data.properties.PropTooltipDisplay;
+import ru.abstractmenus.data.properties.PropItemModel;
+import ru.abstractmenus.data.properties.PropTooltipStyle;
+import ru.abstractmenus.data.properties.PropMaxStackSize;
+import ru.abstractmenus.data.properties.PropRarity;
 
 /**
  * Core item property registrations. Mirrors {@code ItemProps.init()} before
@@ -69,6 +73,10 @@ final class CoreItemPropsBundle {
         api.itemProperties().register("bookData", PropBookData.class, new PropBookData.Serializer(), owner);
         api.itemProperties().register("bannerData", PropBannerData.class, new PropBannerData.Serializer(), owner);
         api.itemProperties().register("shieldData", PropShieldData.class, new PropShieldData.Serializer(), owner);
+        api.itemProperties().register("itemModel", PropItemModel.class, new PropItemModel.Serializer(), owner);
+        api.itemProperties().register("tooltipStyle", PropTooltipStyle.class, new PropTooltipStyle.Serializer(), owner);
+        api.itemProperties().register("maxStackSize", PropMaxStackSize.class, new PropMaxStackSize.Serializer(), owner);
+        api.itemProperties().register("rarity", PropRarity.class, new PropRarity.Serializer(), owner);
         api.itemProperties().register("model", PropModel.class, new PropModel.Serializer(), owner);
         api.itemProperties().register("enchantStore", PropEnchantStore.class, new PropEnchantStore.Serializer(), owner);
         api.itemProperties().register("recipes", PropKnowledgeBook.class, new PropKnowledgeBook.Serializer(), owner);

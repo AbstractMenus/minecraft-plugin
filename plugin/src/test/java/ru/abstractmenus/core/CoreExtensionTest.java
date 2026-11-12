@@ -50,6 +50,7 @@ class CoreExtensionTest {
 
     @BeforeEach
     void setUp() {
+        ru.abstractmenus.api.Logger.set(java.util.logging.Logger.getLogger(CoreExtensionTest.class.getName()));
         // CoreActivatorsBundle calls AbstractMenus.checkDependency() which calls
         // Bukkit.getServer().getPluginManager().isPluginEnabled(...).
         // Mock the static Bukkit.getServer() so the call doesn't NPE.
@@ -88,8 +89,8 @@ class CoreExtensionTest {
     @Test
     void coreExtension_registersExpectedItemProperties() {
         new CoreExtension().onEnable(api);
-        assertEquals(33, api.itemProperties().keys().size(),
-                "expected 33 core item-property types (matches Task 10 migration count)");
+        assertEquals(37, api.itemProperties().keys().size(),
+                "expected 37 core item-property types");
     }
 
     @Test
