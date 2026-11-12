@@ -6,6 +6,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import ru.abstractmenus.api.inventory.ItemProperty;
@@ -14,7 +15,9 @@ import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.List;
@@ -41,6 +44,8 @@ public class PropAttributeModifier implements ItemProperty {
     @Override
     public void apply(ItemStack itemStack, ItemMeta meta, Player player, Menu menu) {
         for (Map.Entry<Attribute, AttributeModifier> entry : modifiers) {
+            Collection<AttributeModifier> existing = meta.getAttributeModifiers(entry.getKey());
+            if (existing != null && existing.stream().anyMatch(modifier -> modifier.getKey().equals(entry.getValue().getKey()))) continue;
             meta.addAttributeModifier(entry.getKey(), entry.getValue());
         }
     }
@@ -53,7 +58,6 @@ public class PropAttributeModifier implements ItemProperty {
         public PropAttributeModifier deserialize(Class type, ConfigNode node) throws NodeSerializeException {
             List<ConfigNode> nodes = node.childrenList();
             List<Map.Entry<Attribute, AttributeModifier>> modifiers = new ArrayList<>();
-            String propertyKey = UUID.randomUUID().toString();
 
             for (ConfigNode entry : nodes) {
                 try {
@@ -79,7 +83,10 @@ public class PropAttributeModifier implements ItemProperty {
                         }
                     }
 
-                    NamespacedKey key = NamespacedKey.minecraft("custom_modifier_" + propertyKey + "_" + modifiers.size());
+                    String content = attributeKey + "|" + Double.toHexString(amount) + "|" + operation.name()
+                            + "|" + (slot == null ? EquipmentSlotGroup.ANY : slot.getGroup());
+                    UUID entryKey = UUID.nameUUIDFromBytes(content.getBytes(StandardCharsets.UTF_8));
+                    NamespacedKey key = NamespacedKey.minecraft("custom_modifier_" + modifiers.size() + "_" + entryKey);
                     AttributeModifier modifier;
 
                     if (slot != null) {

@@ -52,4 +52,30 @@ class TestAttributeModifier {
   assertTrue(ex.getMessage().contains("does_not_exist"));
   assertTrue(ex.getMessage().contains("attributeModifier"));
  }
+ @Test void separateDeserializationsBuildSimilarItems() throws Exception {
+  String config="attributeModifier: [{type: attack_damage, amount: 3, slot: HAND}, {type: attack_damage, amount: 7, slot: OFF_HAND}]";
+  ItemStack first=buildProperty(config);
+  ItemStack second=buildProperty(config);
+  assertTrue(first.isSimilar(second));
+ }
+ @Test void identicalPropertiesAreAppliedOnce() throws Exception {
+  String config="attributeModifier: [{type: attack_damage, amount: 3, slot: HAND}]";
+  var first=new PropAttributeModifier.Serializer().deserialize(PropAttributeModifier.class,node(config));
+  var second=new PropAttributeModifier.Serializer().deserialize(PropAttributeModifier.class,node(config));
+  var item=new ItemStack(Material.DIAMOND_SWORD);var meta=item.getItemMeta();
+  first.apply(item,meta,null,null);
+  assertDoesNotThrow(()->second.apply(item,meta,null,null));
+  assertEquals(1,meta.getAttributeModifiers(Attribute.ATTACK_DAMAGE).size());
+ }
+ @Test void identicalListEntriesRemainDistinct() throws Exception {
+  var item=buildProperty("attributeModifier: [{type: attack_damage, amount: 3, slot: HAND}, {type: attack_damage, amount: 3, slot: HAND}]");
+  assertEquals(2,item.getItemMeta().getAttributeModifiers(Attribute.ATTACK_DAMAGE).size());
+ }
+ private ItemStack buildProperty(String config) throws Exception {
+  var property=new PropAttributeModifier.Serializer().deserialize(PropAttributeModifier.class,node(config));
+  var item=new ItemStack(Material.DIAMOND_SWORD);var meta=item.getItemMeta();
+  property.apply(item,meta,null,null);
+  item.setItemMeta(meta);
+  return item;
+ }
 }
