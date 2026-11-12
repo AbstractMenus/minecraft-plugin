@@ -2,9 +2,9 @@
 
 <a href="https://github.com/AbstractMenus/minecraft-plugin/blob/master/LICENSE"><img src="https://img.shields.io/badge/License-MIT-red.svg" alt="license"/></a>
 <a href="https://github.com/AbstractMenus/minecraft-plugin/releases"><img src="https://img.shields.io/badge/version-2.0.0--alpha.2-blue" alt="version"/></a>
-<img src="https://img.shields.io/badge/minecraft-1.20.6+-brightgreen" alt="minecraft"/>
-<img src="https://img.shields.io/badge/paper-1.21.11-brightgreen" alt="paper"/>
-<img src="https://img.shields.io/badge/java-21-orange" alt="java"/>
+<img src="https://img.shields.io/badge/minecraft-26.1+-brightgreen" alt="minecraft"/>
+<img src="https://img.shields.io/badge/paper-26.3-brightgreen" alt="paper"/>
+<img src="https://img.shields.io/badge/java-25-orange" alt="java"/>
 <img src="https://img.shields.io/badge/folia-supported-8a2be2" alt="folia"/>
 
 AbstractMenus is a GUI plugin for Paper / Folia Minecraft servers that lets
@@ -13,9 +13,7 @@ HOCON configuration. Menus, rules, actions, activators, and item properties
 are all first-class, extensible via an open type registry, and render through
 a cached, MiniMessage-aware pipeline.
 
-The plugin supports **Minecraft 1.20.6 onwards**. Older versions were dropped
-to keep the codebase free of backwards-compatibility wrappers and to track the
-current Paper API surface.
+The plugin supports **Minecraft 26.1 onwards** and requires **Java 25**. The build targets the Paper 26.3 API.
 
 ## 🔭 Table of contents
 - [Features](#-features)
@@ -66,9 +64,9 @@ current Paper API surface.
 - [Documentation](https://abstractmenus.github.io/docs/index.html)
 
 ## 🧰 Requirements
-- **JDK 21+** (target and source)
-- **Gradle 9.x** (wrapper included)
-- **Paper** or Folia, **1.20.6 – 1.21.11+** (built against 1.21.11 dev bundle)
+- **JDK 25+** (target and source)
+- **Gradle 9.9.1** (wrapper included)
+- **Paper** or Folia, **26.1+** (built against the Paper 26.3 API)
 
 ## 🔨 Build
 Clone and build a distributable shaded JAR:
@@ -87,7 +85,7 @@ Other useful tasks:
 
 ```bash
 ./gradlew build                         # compile + tests
-./gradlew test                          # JUnit 5 + Mockito tests
+./gradlew test                          # JUnit 6 + Mockito tests
 ./gradlew test --tests "ru.abstractmenus.util.TestStringUtil"
 ./gradlew jmh -Pbench=PlaceholderReplace # JMH micro-benchmarks
 ```
@@ -155,23 +153,16 @@ build, and concurrent map access.
 ```
 
 ## 🧪 Tests
-~190 unit and integration tests under `src/test/java/`, covering pure-logic
-utilities, the HOCON type deserializers, the copy-on-write item contract, the
-MiniMessage legacy color path, and Mockito-based regression pinning for
-Bukkit API fixes.
+250 unit and integration tests under `plugin/src/test/java/`, covering pure-logic utilities, the HOCON type deserializers, the copy-on-write item contract, the MiniMessage legacy color path, and Mockito-based regression pinning for Bukkit API fixes.
 
 ```bash
 ./gradlew test
 ```
 
-MockBukkit-backed integration tests are scaffolded but currently `@Disabled`
-due to an upstream MockBukkit ↔ Paper 1.21.11 registry-bootstrap collision.
+MockBukkit 26.3 integration tests verify that the plugin enables, initializes its menu manager, and disables cleanly.
 
 ## 👪 Contributions and feedback
-If you have suggestions for improvement or want to report a bug, feel free
-to create an issue or a pull request in the project repository. The
-codebase follows standard Java style, uses Lombok for boilerplate, and
-targets Java 21 (pattern matching, records, switch expressions welcome).
+If you have suggestions for improvement or want to report a bug, feel free to create an issue or a pull request in the project repository. The codebase follows standard Java style, uses Lombok for boilerplate, and targets Java 25 (pattern matching, records, switch expressions welcome).
 
 ## 🙌 Contributors
 

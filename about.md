@@ -2,12 +2,12 @@
 
 ## Project Summary
 
-AbstractMenus is a GUI plugin for SpigotMC/PaperMC/Folia Minecraft servers that allows creating custom inventory-based menus configured via HOCON files. Players interact with these menus through various activators (commands, items, events), and server admins define menu layouts, rules, and actions declaratively.
+AbstractMenus is a GUI plugin for PaperMC/Folia Minecraft servers that allows creating custom inventory-based menus configured via HOCON files. Players interact with these menus through various activators (commands, items, events), and server admins define menu layouts, rules, and actions declaratively.
 
-- **Target MC version:** 1.21.11
-- **Minimum MC version:** 1.20.6
-- **Java version:** 21
-- **Build system:** Gradle 8.8 with Paperweight userdev + Shadow plugin
+- **Target MC version:** 26.3
+- **Minimum MC version:** 26.1
+- **Java version:** 25
+- **Build system:** Gradle 9.9.1 with Paper API + Shadow plugin
 - **Configuration format:** HOCON (bundled library at `ru.abstractmenus.hocon`)
 
 ## Architecture Layers
@@ -22,7 +22,7 @@ Services Layer (MenuManager, BungeeManager, HeadAnimManager, ProfileStorage, Var
 Data Layer (Actions, Rules, Activators, ItemProps, Catalogs - ~164 files)
     |
     v
-API Module (com.github.AbstractMenus:api - external, JitPack)
+API Module (:api - local Gradle subproject)
 ```
 
 ## Plugin Lifecycle
@@ -97,17 +97,18 @@ Abstracted through interfaces in `handlers/` package, accessed via static `Handl
 
 ## NMS Layer
 
-Version-specific code for features not available in Bukkit API:
-- **Book:** `Book_1_15` uses `player.openBook()` (modern API). Legacy versions (1.8-1.14) use NMS reflection - **to be removed** (min version 1.20.6+).
-- **Title:** `SenderModern` uses `player.sendTitle()`. `SenderLegacy` uses NMS packets - **to be removed**.
-- **ActionBar:** `ActionBar_1_9` uses Spigot `sendMessage(ChatMessageType.ACTION_BAR)`. `ActionBar_1_8` uses NMS - **to be removed**.
+Wrappers use the current server APIs without Minecraft version checks.
+
+- **Book:** `Book_1_15` uses `player.openBook()`.
+- **Title:** `SenderModern` uses `player.sendTitle()`.
+- **ActionBar:** `ActionBar_1_9` uses Spigot `sendMessage(ChatMessageType.ACTION_BAR)`.
 
 ## Key Dependencies
 
 | Dependency | Role |
 |---|---|
-| `paper-api` / `paperDevBundle` | Server API + NMS access via Mojang mappings |
-| `AbstractMenus:api` | Core API interfaces (Menu, Item, Rule, Action, etc.) |
+| `paper-api` | Compile-only Paper 26.3 server API |
+| `:api` | Core API interfaces (Menu, Item, Rule, Action, etc.) |
 | `Lombok` | Boilerplate reduction (@Getter, @Setter, @AllArgsConstructor) |
 | `Kyori Adventure + MiniMessage` | Rich text component API, MiniMessage format support |
 | `FoliaLib` | Thread-safe task scheduling (Folia compatibility) |
@@ -121,16 +122,13 @@ Version-specific code for features not available in Bukkit API:
 - `VariablesDao.connection`: Single SQLite `Connection` used from multiple threads without synchronization
 - `AbstractMenu.placedItems`: Lazy init `if (null) new HashMap<>()` is not thread-safe
 - `BungeeManager.servers`: `HashSet` accessed from message handler and scheduler threads
-- Static singletons (`NMS.minorVersion`, `Title.sender`, `ActionBar.bar`) lack `volatile` keyword
 
 ### Memory Leaks
 - `HeadAnimManager.currentFrames`: ConcurrentHashMap entries accumulate indefinitely
 - `AbstractMenu.placedItems`: Not cleared after `dropPlaced()`
 
 ### Deprecated/Legacy Code
-- NMS reflection code for MC versions < 1.20.6 (6 files to remove)
 - `Skulls.createSkullItem()`: Uses deprecated `ItemStack(Material, int, short)` constructor
-- `NMS.sendPacket()`: Legacy reflection-based packet sending
 
 ### Removed: RuleJS (Nashorn)
 The `js` rule type (JavaScript evaluation via Nashorn engine) has been **removed**. It was a security risk (arbitrary code execution) and Nashorn was removed from JDK in Java 15+. Use the `if` rule with `BooleanEvaluator` as an alternative for conditional logic.
