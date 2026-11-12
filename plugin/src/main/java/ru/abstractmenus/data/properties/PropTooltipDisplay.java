@@ -15,7 +15,6 @@ import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
 
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -56,9 +55,13 @@ public class PropTooltipDisplay implements ItemProperty {
                 ? hideTooltip.getBool(player, menu)
                 : (existing != null && existing.hideTooltip());
 
-        Set<DataComponentType> hidden = (hiddenComponents != null)
-                ? hiddenComponents
-                : (existing != null ? existing.hiddenComponents() : Collections.emptySet());
+        Set<DataComponentType> hidden = new LinkedHashSet<>();
+        if (existing != null) {
+            hidden.addAll(existing.hiddenComponents());
+        }
+        if (hiddenComponents != null) {
+            hidden.addAll(hiddenComponents);
+        }
 
         itemStack.setData(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplay.tooltipDisplay()
                 .hideTooltip(hide)

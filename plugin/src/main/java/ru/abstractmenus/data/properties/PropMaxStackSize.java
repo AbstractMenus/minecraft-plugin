@@ -3,6 +3,7 @@ package ru.abstractmenus.data.properties;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import ru.abstractmenus.api.Logger;
 import ru.abstractmenus.api.inventory.ItemProperty;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.datatype.DataType;
@@ -31,7 +32,12 @@ public class PropMaxStackSize implements ItemProperty {
 
     @Override
     public void apply(ItemStack itemStack, ItemMeta meta, Player player, Menu menu) {
-        meta.setMaxStackSize(maxStackSize.getInt(player, menu));
+        int size = maxStackSize.getInt(player, menu);
+        if (size < 1 || size > 99) {
+            Logger.warning("Skipping maxStackSize value outside 1..99: " + size);
+            return;
+        }
+        meta.setMaxStackSize(size);
     }
 
     public static class Serializer implements NodeSerializer<PropMaxStackSize> {

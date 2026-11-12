@@ -7,6 +7,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockbukkit.mockbukkit.MockBukkit;
 import ru.abstractmenus.datatype.TypeInt;
+import ru.abstractmenus.datatype.TypeMaterial;
+import ru.abstractmenus.menu.item.SimpleItem;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializers;
 import ru.abstractmenus.hocon.api.ConfigurationLoader;
 import ru.abstractmenus.hocon.api.source.ConfigSources;
@@ -29,21 +31,22 @@ class TestPropCount {
     }
 
     @Test
-    void countAboveNaturalLimitIsClampedForUnstackableItem() throws Exception {
+    void buildKeepsConfiguredCountOnUnstackableItem() throws Exception {
         NodeSerializers serializers = NodeSerializers.defaults();
         serializers.register(TypeInt.class, new TypeInt.Serializer());
+        serializers.register(TypeMaterial.class, new TypeMaterial.Serializer());
         var root = ConfigurationLoader.builder()
                 .serializers(serializers)
-                .source(ConfigSources.inputStream("test", new ByteArrayInputStream("count: 64".getBytes(StandardCharsets.UTF_8))))
+                .source(ConfigSources.inputStream("test", new ByteArrayInputStream("material: DIAMOND_SWORD\ncount: 3".getBytes(StandardCharsets.UTF_8))))
                 .build().load();
-        PropCount property = new PropCount.Serializer().deserialize(PropCount.class, root.node("count"));
-        ItemStack sword = new ItemStack(Material.DIAMOND_SWORD);
-        ItemStack stone = new ItemStack(Material.STONE);
+        SimpleItem template = new SimpleItem();
+        template.addProperty("material", new PropMaterial.Serializer().deserialize(PropMaterial.class, root.node("material")));
+        template.addProperty("count", new PropCount.Serializer().deserialize(PropCount.class, root.node("count")));
 
-        property.apply(sword, sword.getItemMeta(), null, null);
-        property.apply(stone, stone.getItemMeta(), null, null);
+        ItemStack sword = template.build(null, null);
 
-        assertEquals(1, sword.getAmount());
-        assertEquals(64, stone.getAmount());
+        assertNotNull(sword);
+        assertEquals(Material.DIAMOND_SWORD, sword.getType());
+        assertEquals(3, sword.getAmount());
     }
 }

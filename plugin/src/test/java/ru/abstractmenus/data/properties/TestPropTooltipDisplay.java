@@ -72,6 +72,32 @@ class TestPropTooltipDisplay {
     }
 
     @Test
+    void hiddenComponentsPreserveFlagsAppliedBeforeTooltipDisplay() throws Exception {
+        ConfigNode root = loadNode("""
+                flags: HIDE_ENCHANTS
+                tooltipDisplay { hiddenComponents: [BUNDLE_CONTENTS] }
+                """);
+        SimpleItem template = new SimpleItem();
+        template.addProperty("flags", new PropFlags.Serializer().deserialize(PropFlags.class, root.node("flags")));
+        PropTooltipDisplay tooltipProperty = spy(new PropTooltipDisplay.Serializer().deserialize(PropTooltipDisplay.class, root.node("tooltipDisplay")));
+        // MockBukkit stores flags separately, so mirror Paper's tooltip component conversion at this boundary.
+        doAnswer(invocation -> {
+            ItemStack stack = invocation.getArgument(0);
+            assertTrue(stack.getItemMeta().hasItemFlag(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS));
+            stack.setData(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplay.tooltipDisplay().hiddenComponents(Set.of(DataComponentTypes.ENCHANTMENTS)).build());
+            return invocation.callRealMethod();
+        }).when(tooltipProperty).apply(any(), any(), any(), any());
+        template.addProperty("tooltipDisplay", tooltipProperty);
+
+        ItemStack item = template.build(null, null);
+
+        assertNotNull(item);
+        TooltipDisplay tooltip = item.getData(DataComponentTypes.TOOLTIP_DISPLAY);
+        assertNotNull(tooltip);
+        assertEquals(Set.of(DataComponentTypes.ENCHANTMENTS, DataComponentTypes.BUNDLE_CONTENTS), tooltip.hiddenComponents());
+    }
+
+    @Test
     void rejectsUnknownComponentAndNonList() throws Exception {
         ConfigNode root = loadNode("""
                 unknown { hiddenComponents: [UNKNOWN_COMPONENT] }

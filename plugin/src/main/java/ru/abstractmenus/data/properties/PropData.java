@@ -5,6 +5,7 @@ import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.ItemProperty;
@@ -25,14 +26,14 @@ public class PropData implements ItemProperty {
 
     @Override
     public boolean isApplyMeta() {
-        return false;
+        return true;
     }
 
     @Override
     public void apply(ItemStack itemStack, ItemMeta meta, Player player, Menu menu) {
-        byte resolved = data.getByte(player, menu);
-        itemStack.getData().setData(resolved);
-        itemStack.setDurability(resolved);
+        if (meta instanceof Damageable damageable) {
+            damageable.setDamage(data.getByte(player, menu));
+        }
     }
 
     public static class Serializer implements NodeSerializer<PropData> {
