@@ -73,7 +73,7 @@ tooltipDisplay {
 lore: ["Contents stay hidden"]
 ```
 
-Set `hideTooltip: true` to hide the whole tooltip. Component names accept uppercase, lowercase and namespaced keys. Unknown components fail at menu load.
+Set `hideTooltip: true` to hide the whole tooltip. Component names accept uppercase, lowercase and namespaced keys. Unknown components fail at menu load. Hidden components are merged with existing flags, so `tooltipDisplay` and `flags` can appear in either order.
 
 `itemModel` selects a resource-pack item model; `tooltipStyle` selects its tooltip sprites:
 
@@ -82,7 +82,7 @@ itemModel: "example:menu/cake"
 tooltipStyle: "example:menu/gold"
 ```
 
-`maxStackSize` accepts integers from 1 through 99, with invalid constants rejected at menu load. It also accepts integer placeholders, whose results must stay within that range. Stack sizes above one cannot be combined with the `max_damage` component, so use them on items without durability. Put `maxStackSize` before `count` when increasing the display count:
+`maxStackSize` accepts integers from 1 through 99, with invalid constants rejected at menu load. It also accepts integer placeholders; results outside that range log a warning and leave the existing stack limit unchanged. Stack sizes above one cannot be combined with the `max_damage` component, so use them on items without durability:
 
 ```hocon
 material: CAKE
@@ -126,12 +126,29 @@ material: DIAMOND_SWORD
 flags: HIDE_ATTRIBUTES
 ```
 
-`count` is capped at the item's current maximum stack size to keep oversized stacks visible on Minecraft 26.x. This sword displays as one item, while stackable items can still display their normal count:
+`count` is passed through unchanged, including amounts above the item's maximum stack size:
 
 ```hocon
 material: DIAMOND_SWORD
 count: 64
 ```
+
+`data` remains accepted as a byte-valued alias for item damage through `Damageable`. It no longer reads or writes legacy material data; use `damage` for new menus.
+
+## Upgrading
+
+This version supports Minecraft 26.1+ and Java 25 only.
+
+`glow` no longer adds an Unbreaking enchantment, and `flags` no longer writes default attribute modifiers. Items handed to players by older versions, such as menu opener items and quest tokens, that carry those old enchantments or modifiers no longer match updated item definitions in `clickItem` activators, `heldItem` and `inventoryItem` rules, or `itemRemove`. Reissue those affected items after updating.
+
+The built-in placeholder values have changed:
+
+- `block_data` returns the full block state string, such as `minecraft:oak_log[axis=y]`, instead of a legacy numeric data byte.
+- `item_data` returns the item's damage value, or `0` for items without damage.
+- `item_localized_name` returns an empty string.
+- `block_biome` returns the registry key path in uppercase, such as `PLAINS`.
+
+`count` is passed through unchanged.
 
 ## 🔗 Links
 - [SpigotMC](https://www.spigotmc.org/resources/abstract-menus-an-advanced-gui-plugin.75107/)
@@ -228,7 +245,7 @@ build, and concurrent map access.
 ```
 
 ## 🧪 Tests
-250 unit and integration tests under `plugin/src/test/java/`, covering pure-logic utilities, the HOCON type deserializers, the copy-on-write item contract, the MiniMessage legacy color path, and Mockito-based regression pinning for Bukkit API fixes.
+Unit and integration tests under `plugin/src/test/java/`, covering pure-logic utilities, the HOCON type deserializers, the copy-on-write item contract, the MiniMessage legacy color path, and Mockito-based regression pinning for Bukkit API fixes.
 
 ```bash
 ./gradlew test
