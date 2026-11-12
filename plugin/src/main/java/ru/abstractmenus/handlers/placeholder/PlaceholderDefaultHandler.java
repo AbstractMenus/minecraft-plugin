@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 public class PlaceholderDefaultHandler implements PlaceholderHandler {
 
-    private static final Pattern PATTERN = Pattern.compile("%(\\S+)%");
+    private static final Pattern PATTERN = Pattern.compile("%([^%\\s]+)%");
 
     private final Map<String, PlaceholderHook> hooks = new HashMap<>();
 

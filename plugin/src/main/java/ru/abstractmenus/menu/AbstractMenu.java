@@ -2,6 +2,7 @@ package ru.abstractmenus.menu;
 
 import lombok.Getter;
 import lombok.Setter;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -15,6 +16,9 @@ import ru.abstractmenus.AbstractMenus;
 import ru.abstractmenus.MainConfig;
 import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.Rule;
+import ru.abstractmenus.api.text.Colors;
+import ru.abstractmenus.util.bukkit.BukkitTasks;
+import java.util.function.BooleanSupplier;
 import ru.abstractmenus.datatype.TypeSlot;
 import ru.abstractmenus.menu.item.MenuItem;
 import ru.abstractmenus.data.Actions;
@@ -98,6 +102,8 @@ public abstract class AbstractMenu implements Menu {
     @Setter
     protected TypeSlot draggableSlots;
     protected Map<Integer, ItemStack> placedItems = new ConcurrentHashMap<>();
+    private Map<Integer, BooleanSupplier> pendingDeposits = new HashMap<>();
+    private boolean closed;
     @Getter
     protected ItemStack lastPlaced = ItemUtil.empty();
     @Getter
@@ -137,9 +143,9 @@ public abstract class AbstractMenu implements Menu {
     @Override
     public void setItem(Slot slot, Item item, Player player) {
         slot.getSlots(index -> {
+            if (placedItems.containsKey(index)) return;
             showedItems.put(index, item);
             inventory.setItem(index, item.build(player, this));
-            placedItems.remove(index);
         });
     }
 
@@ -152,6 +158,7 @@ public abstract class AbstractMenu implements Menu {
     public void refreshItem(Slot slot, Player player) {
         if (inventory != null) {
             slot.getSlots((s) -> {
+                if (placedItems.containsKey(s)) return;
                 Item item = getItem(s);
 
                 if (item != null) {
@@ -200,6 +207,7 @@ public abstract class AbstractMenu implements Menu {
     }
 
     public void dropPlaced(Player player) {
+        reconcilePlacedItems(player);
         if (draggableSlots != null && !placedItems.isEmpty()) {
             Location loc = player.getEyeLocation();
             for (ItemStack item : placedItems.values()) {
@@ -209,6 +217,37 @@ public abstract class AbstractMenu implements Menu {
             }
             placedItems.clear();
         }
+    }
+
+    public void queuePlacedReconcile(Player player, int slot, BooleanSupplier accepted) {
+        pendingDeposits.merge(slot, accepted, (previous, next) -> () -> previous.getAsBoolean() || next.getAsBoolean());
+        BukkitTasks.runForEntity(player, () -> reconcilePlacedItems(player));
+    }
+
+    public void reconcilePlacedItems(Player player) {
+        Map<Integer, BooleanSupplier> pending = new HashMap<>(pendingDeposits);
+        pendingDeposits.clear();
+        for (var entry : pending.entrySet()) {
+            if (closed || !entry.getValue().getAsBoolean()) continue;
+            int slot = entry.getKey();
+            ItemStack current = inventory.getItem(slot);
+            ItemStack previous = placedItems.get(slot);
+            if (current == null || current.getType().isAir()) {
+                takeItem(player, slot, 0);
+            } else if (current.isSimilar(previous) && current.getAmount() < previous.getAmount()) {
+                takeItem(player, slot, previous.getAmount() - current.getAmount());
+            } else if (previous == null || !current.equals(previous)) {
+                if (previous != null && !current.isSimilar(previous)) takeItem(player, slot, 0);
+                placeItem(player, slot, current.clone());
+            }
+        }
+    }
+
+    protected void clearForRefresh(Player player) {
+        reconcilePlacedItems(player);
+        showedItems.clear();
+        inventory.clear();
+        placedItems.forEach((slot, stack) -> inventory.setItem(slot, stack));
     }
 
     public void removePlacedItem(int slot, int amount) {
@@ -296,7 +335,10 @@ public abstract class AbstractMenu implements Menu {
 
     @Override
     public void close(Player player, boolean closeInventory) {
-        if (closeInventory)
+        if (closed) return;
+        dropPlaced(player);
+        closed = true;
+        if (closeInventory && player.getOpenInventory().getTopInventory() == inventory)
             player.closeInventory();
 
         if (closeActions != null)
@@ -358,8 +400,8 @@ public abstract class AbstractMenu implements Menu {
     }
 
     protected void createInventory(Player player, InventoryHolder holder) {
-        String title = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, this.title);
-        title = MiniMessageUtil.parseToLegacy(title);
+        String replacedTitle = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, Colors.of(this.title));
+        Component title = MiniMessageUtil.parseToComponent(replacedTitle);
 
         if (this.type != null) {
             this.inventory = Bukkit.createInventory(holder, type, title);
@@ -374,6 +416,8 @@ public abstract class AbstractMenu implements Menu {
             AbstractMenu menu = (AbstractMenu) super.clone();
             menu.showedItems = new HashMap<>();
             menu.placedItems = new ConcurrentHashMap<>();
+            menu.pendingDeposits = new HashMap<>();
+            menu.closed = false;
             menu.slotClickExpiry = new HashMap<>();
             return menu;
         } catch (CloneNotSupportedException e) {

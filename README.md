@@ -2,9 +2,9 @@
 
 <a href="https://github.com/AbstractMenus/minecraft-plugin/blob/master/LICENSE"><img src="https://img.shields.io/badge/License-MIT-red.svg" alt="license"/></a>
 <a href="https://github.com/AbstractMenus/minecraft-plugin/releases"><img src="https://img.shields.io/badge/version-2.0.0--alpha.2-blue" alt="version"/></a>
-<img src="https://img.shields.io/badge/minecraft-1.20.6+-brightgreen" alt="minecraft"/>
-<img src="https://img.shields.io/badge/paper-1.21.11-brightgreen" alt="paper"/>
-<img src="https://img.shields.io/badge/java-21-orange" alt="java"/>
+<img src="https://img.shields.io/badge/minecraft-26.1+-brightgreen" alt="minecraft"/>
+<img src="https://img.shields.io/badge/paper-26.3-brightgreen" alt="paper"/>
+<img src="https://img.shields.io/badge/java-25-orange" alt="java"/>
 <img src="https://img.shields.io/badge/folia-supported-8a2be2" alt="folia"/>
 
 AbstractMenus is a GUI plugin for Paper / Folia Minecraft servers that lets
@@ -13,9 +13,7 @@ HOCON configuration. Menus, rules, actions, activators, and item properties
 are all first-class, extensible via an open type registry, and render through
 a cached, MiniMessage-aware pipeline.
 
-The plugin supports **Minecraft 1.20.6 onwards**. Older versions were dropped
-to keep the codebase free of backwards-compatibility wrappers and to track the
-current Paper API surface.
+The plugin supports **Minecraft 26.1 onwards** and requires **Java 25**. The build targets the Paper 26.3 API.
 
 ## 🔭 Table of contents
 - [Features](#-features)
@@ -51,6 +49,8 @@ current Paper API surface.
   BungeeCord channel.
 - **Folia-compatible scheduling** — all Bukkit scheduler calls go through a
   `BukkitTasks` wrapper backed by FoliaLib.
+
+  **Known limitations:** The `playerScope` rule cannot safely read another player's state across Folia regions.
 - **External integrations (soft-deps)** — Vault, LuckPerms, WorldGuard,
   SkinsRestorer, MMOItems, HeadDatabase, ItemsAdder, Oraxen, Citizens,
   NBT-API.
@@ -62,47 +62,94 @@ current Paper API surface.
 
 ## 🧰 Item properties
 
-Item properties are configured per menu item. The `tooltipDisplay` property
-wraps the Paper `tooltip_display` data component (Minecraft 1.21.5+).
+Item properties are configured per menu item on Minecraft 26.x. Namespaced keys containing `:` must be quoted in HOCON; keys without a namespace use `minecraft`.
 
-Hide an item's tooltip entirely:
+`tooltipDisplay` can hide an entire tooltip or selected data components, alongside normal name and lore properties:
+
+```hocon
+name: "Bundle"
+tooltipDisplay {
+    hideTooltip: false
+    hiddenComponents: [BUNDLE_CONTENTS, "minecraft:enchantments"]
+}
+lore: ["Contents stay hidden"]
+```
+
+Set `hideTooltip: true` to hide the whole tooltip. Component names accept uppercase, lowercase and namespaced keys. Unknown components fail at menu load. Hidden components are merged with existing flags, so `tooltipDisplay` and `flags` can appear in either order.
+
+`itemModel` selects a resource-pack item model; `tooltipStyle` selects tooltip sprites and requires a resource pack that defines the style:
+
+```hocon
+itemModel: "example:menu/cake"
+tooltipStyle: "example:menu/gold"
+```
+
+`maxStackSize` accepts integers from 1 through 99, with invalid constants rejected at menu load. It also accepts integer placeholders; results outside that range log a warning and leave the existing stack limit unchanged. Stack sizes above one cannot be combined with the `max_damage` component, so use them on items without durability:
+
+```hocon
+material: CAKE
+maxStackSize: 99
+count: 64
+```
+
+`rarity` accepts `COMMON`, `UNCOMMON`, `RARE` or `EPIC`, including enum placeholders:
+
+```hocon
+rarity: RARE
+```
+
+`model` keeps the integer format used by existing menus, mapping it to one float in the custom model data component:
+
+```hocon
+model: 123
+```
+
+It also accepts an object containing any of the four custom model data lists. Floats, flags, strings and colors support placeholders; colors accept hex, RGB strings or dye names:
+
+```hocon
+model {
+    floats: [1.0, 2.5]
+    flags: [true, false]
+    strings: ["cake"]
+    colors: ["#ff8000"]
+}
+```
+
+`glow: true` forces the enchantment glint without adding an enchantment; `false` leaves the item's glint unchanged:
+
+```hocon
+glow: true
+```
+
+`flags` hides the matching tooltip components and preserves attribute modifiers, including those configured with `attributeModifier`:
 
 ```hocon
 material: DIAMOND_SWORD
-tooltipDisplay {
-    hideTooltip: true
-}
+flags: HIDE_ATTRIBUTES
 ```
 
-Hide the tooltip of specific components, e.g. only the Bundle contents:
+`count` is passed through unchanged, including amounts above the item's maximum stack size:
 
 ```hocon
-material: BUNDLE
-tooltipDisplay {
-    hiddenComponents: [
-        BUNDLE_CONTENTS
-    ]
-}
+material: DIAMOND_SWORD
+count: 64
 ```
 
-Several components at once:
+`data` remains accepted as a byte-valued alias for item damage through `Damageable`. It no longer reads or writes legacy material data; use `damage` for new menus.
 
-```hocon
-tooltipDisplay {
-    hiddenComponents: [
-        BUNDLE_CONTENTS,
-        ATTRIBUTE_MODIFIERS,
-        ENCHANTMENTS
-    ]
-}
-```
+## Upgrading
 
-`hiddenComponents` accepts component keys case-insensitively and in
-namespaced form (`BUNDLE_CONTENTS`, `bundle_contents`,
-`"minecraft:bundle_contents"`). Unknown component names fail loudly at menu load.
-Namespaced keys contain `:`, which HOCON only allows inside quotes, so write
-them as `"minecraft:bundle_contents"`. Namespaced keys without an explicit
-namespace are assumed to be `minecraft:`.
+This version supports Minecraft 26.1+ and Java 25 only.
+
+`glow` no longer adds an Unbreaking enchantment, and `flags` no longer writes default attribute modifiers. Items handed to players by older versions, such as menu opener items and quest tokens, that carry those old enchantments or modifiers no longer match updated item definitions in `clickItem` activators, `heldItem` and `inventoryItem` rules, or `itemRemove`. Reissue those affected items after updating.
+
+The built-in placeholder values have changed:
+
+- `block_data` returns the full block state string, such as `minecraft:oak_log[axis=y]`, instead of a legacy numeric data byte.
+- `item_data` returns the item's damage value, or `0` for items without damage.
+- `block_biome` returns the registry key path in uppercase, such as `PLAINS`.
+
+`count` is passed through unchanged.
 
 ## 🔗 Links
 - [SpigotMC](https://www.spigotmc.org/resources/abstract-menus-an-advanced-gui-plugin.75107/)
@@ -110,9 +157,9 @@ namespace are assumed to be `minecraft:`.
 - [Documentation](https://abstractmenus.github.io/docs/index.html)
 
 ## 🧰 Requirements
-- **JDK 21+** (target and source)
-- **Gradle 9.x** (wrapper included)
-- **Paper** or Folia, **1.20.6 – 1.21.11+** (built against 1.21.11 dev bundle)
+- **JDK 25+** (target and source)
+- **Gradle 9.9.1** (wrapper included)
+- **Paper** or Folia, **26.1+** (built against the Paper 26.3 API)
 
 ## 🔨 Build
 Clone and build a distributable shaded JAR:
@@ -131,7 +178,7 @@ Other useful tasks:
 
 ```bash
 ./gradlew build                         # compile + tests
-./gradlew test                          # JUnit 5 + Mockito tests
+./gradlew test                          # JUnit 6 + Mockito tests
 ./gradlew test --tests "ru.abstractmenus.util.TestStringUtil"
 ./gradlew jmh -Pbench=PlaceholderReplace # JMH micro-benchmarks
 ```
@@ -199,23 +246,16 @@ build, and concurrent map access.
 ```
 
 ## 🧪 Tests
-~190 unit and integration tests under `src/test/java/`, covering pure-logic
-utilities, the HOCON type deserializers, the copy-on-write item contract, the
-MiniMessage legacy color path, and Mockito-based regression pinning for
-Bukkit API fixes.
+Unit and integration tests under `plugin/src/test/java/`, covering pure-logic utilities, the HOCON type deserializers, the copy-on-write item contract, the MiniMessage legacy color path, and Mockito-based regression pinning for Bukkit API fixes.
 
 ```bash
 ./gradlew test
 ```
 
-MockBukkit-backed integration tests are scaffolded but currently `@Disabled`
-due to an upstream MockBukkit ↔ Paper 1.21.11 registry-bootstrap collision.
+MockBukkit 26.3 integration tests verify that the plugin enables, initializes its menu manager, and disables cleanly.
 
 ## 👪 Contributions and feedback
-If you have suggestions for improvement or want to report a bug, feel free
-to create an issue or a pull request in the project repository. The
-codebase follows standard Java style, uses Lombok for boilerplate, and
-targets Java 21 (pattern matching, records, switch expressions welcome).
+If you have suggestions for improvement or want to report a bug, feel free to create an issue or a pull request in the project repository. The codebase follows standard Java style, uses Lombok for boilerplate, and targets Java 25 (pattern matching, records, switch expressions welcome).
 
 ## 🙌 Contributors
 

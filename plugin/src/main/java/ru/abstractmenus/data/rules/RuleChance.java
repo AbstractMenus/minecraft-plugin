@@ -21,7 +21,7 @@ public class RuleChance implements Rule {
 
     @Override
     public boolean check(Player player, Menu menu, Item clickedItem) {
-        return ThreadLocalRandom.current().nextInt(100) <= chance.getInt(player, menu);
+        return ThreadLocalRandom.current().nextInt(100) < chance.getInt(player, menu);
     }
 
     public static class Serializer implements NodeSerializer<RuleChance> {

@@ -84,6 +84,18 @@ class ProviderRegistryImplTest {
     }
 
     @Test
+    void replacingProviderTransfersOwnerCleanup() {
+        EconomyHandler first = mock(EconomyHandler.class);
+        EconomyHandler second = mock(EconomyHandler.class);
+        registry.economy().register("points", first, 50, ownerA);
+        registry.economy().register("points", second, 50, ownerB);
+        registry.unregisterAll(ownerA);
+        assertSame(second, registry.economy().resolve("points"));
+        registry.unregisterAll(ownerB);
+        assertNull(registry.economy().resolve("points"));
+    }
+
+    @Test
     void overwrite_replacesPrevious() {
         EconomyHandler old = mock(EconomyHandler.class);
         EconomyHandler fresh = mock(EconomyHandler.class);

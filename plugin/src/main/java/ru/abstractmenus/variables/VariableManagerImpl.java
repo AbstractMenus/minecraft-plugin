@@ -26,6 +26,7 @@ public final class VariableManagerImpl implements VariableManager {
     private final Map<String, Var> cache = new ConcurrentHashMap<>();
 
     private TaskHandle timerTask;
+    private boolean shuttingDown;
 
     public VariableManagerImpl(MainConfig conf) {
         instance = this;
@@ -79,7 +80,8 @@ public final class VariableManagerImpl implements VariableManager {
         return new VarBuilderImpl();
     }
 
-    public void shutdown() {
+    public synchronized void shutdown() {
+        shuttingDown = true;
         stopTimer();
         dao.close();
     }
@@ -92,7 +94,7 @@ public final class VariableManagerImpl implements VariableManager {
         modifyNumeric(key(username, name), func);
     }
 
-    private void modifyNumeric(String key, Function<Double, Double> func) {
+    private synchronized void modifyNumeric(String key, Function<Double, Double> func) {
         Var variable = cache.get(key);
         String name;
         double value;
@@ -111,6 +113,7 @@ public final class VariableManagerImpl implements VariableManager {
 
         variable = createBuilder()
                 .name(name)
+                .expiry(variable == null ? 0 : variable.expiry())
                 .value(String.valueOf(NumberUtil.round(value, 100)))
                 .build();
 
@@ -121,8 +124,8 @@ public final class VariableManagerImpl implements VariableManager {
         cache.put(key, var);
     }
 
-    private void save(String key, Var var, boolean replace) {
-        if (var.isExpired()) return;
+    private synchronized void save(String key, Var var, boolean replace) {
+        if (shuttingDown || var.isExpired()) return;
 
         Var cached = cache.get(key);
 
@@ -137,7 +140,8 @@ public final class VariableManagerImpl implements VariableManager {
         sync("save", key, var);
     }
 
-    public void delete(String key) {
+    public synchronized void delete(String key) {
+        if (shuttingDown) return;
         cache.remove(key);
         dao.delete(key);
         sync("delete", key, null);
@@ -178,7 +182,8 @@ public final class VariableManagerImpl implements VariableManager {
         }
     }
 
-    private void timerTask() {
+    private synchronized void timerTask() {
+        if (shuttingDown) return;
         boolean removed = cache.entrySet()
                 .removeIf(entry -> entry.getValue().isExpired());
 

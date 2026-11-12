@@ -6,7 +6,6 @@ import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import ru.abstractmenus.api.Activator;
 import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.util.bukkit.BukkitTasks;
@@ -23,14 +22,17 @@ public class OpenChatContains extends Activator {
 
     @EventHandler
     public void onChat(AsyncChatEvent event) {
-        for (String str : messages) {
-            String msg = AbstractMenusApi.get().providers().placeholders().resolve().replace(event.getPlayer(), str);
-
-            if (event.signedMessage().message().contains(msg)) {
-                BukkitTasks.runTask(() -> openMenu(null, event.getPlayer()));
-                return;
+        String message = event.signedMessage().message();
+        var player = event.getPlayer();
+        BukkitTasks.runForEntity(player, () -> {
+            for (String str : messages) {
+                String replaced = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, str);
+                if (message.contains(replaced)) {
+                    openMenu(null, player);
+                    return;
+                }
             }
-        }
+        });
     }
 
     public static class Serializer implements NodeSerializer<OpenChatContains> {

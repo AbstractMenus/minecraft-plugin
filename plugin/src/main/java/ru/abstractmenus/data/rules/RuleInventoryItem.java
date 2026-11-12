@@ -30,6 +30,7 @@ public class RuleInventoryItem implements Rule {
             if (item instanceof InventoryItem) {
                 try {
                     ItemStack built = item.build(player, menu);
+                    if (built == null) return false;
                     Slot slot = ((InventoryItem)item).getSlot(player, menu);
 
                     for (int index : SlotUtil.collect(slot)) {
@@ -39,13 +40,16 @@ public class RuleInventoryItem implements Rule {
                     }
                 } catch (Exception e){
                     Logger.severe("Cannot check item in player inventory: " + e.getMessage());
+                    return false;
                 }
             } else {
                 try {
                     ItemStack built = item.build(player, menu);
+                    if (built == null) return false;
                     if(!player.getInventory().containsAtLeast(built, built.getAmount())) return false;
                 } catch (Exception e){
                     Logger.severe("Cannot check item in player inventory: " + e.getMessage());
+                    return false;
                 }
             }
         }

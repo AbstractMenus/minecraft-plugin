@@ -22,7 +22,6 @@ import ru.abstractmenus.data.properties.PropTexture;
 import ru.abstractmenus.menu.AbstractMenu;
 import ru.abstractmenus.util.FileUtils;
 import ru.abstractmenus.api.Logger;
-import ru.abstractmenus.util.NMS;
 import ru.abstractmenus.util.bukkit.Skulls;
 import ru.abstractmenus.util.bukkit.BukkitTasks;
 import ru.abstractmenus.util.bukkit.TaskHandle;
@@ -51,6 +50,7 @@ public final class MenuManager {
     private final Path menuFolder;
 
     private final Map<String, Menu> menus = new ConcurrentHashMap<>();
+    private final Map<Path, Map<String, Menu>> fileMenus = new HashMap<>();
     private final Map<UUID, OpenedMenu> openedMenus = new ConcurrentHashMap<>();
     private final Map<UUID, ActionInputChat.InputAction> inputActions = new ConcurrentHashMap<>();
 
@@ -81,7 +81,8 @@ public final class MenuManager {
 
     public void addMenu(String name, Menu menu) {
         if (menu != null) {
-            menus.put(name.toLowerCase(), menu);
+            Menu previous = menus.put(name.toLowerCase(), menu);
+            if (previous != null && previous != menu) unregisterActivators(previous);
         }
     }
 
@@ -131,6 +132,11 @@ public final class MenuManager {
         if (menu != null) {
             menu.close(player, closeInventory);
         }
+    }
+
+    public void closeMenu(Player player, Menu menu, boolean closeInventory) {
+        openedMenus.computeIfPresent(player.getUniqueId(), (id, entry) -> entry.menu() == menu ? null : entry);
+        menu.close(player, closeInventory);
     }
 
     public void refreshMenu(Player player) {
@@ -220,6 +226,9 @@ public final class MenuManager {
             return 0;
         }
 
+        removeFileMenus(file);
+        Map<String, Menu> loaded = new HashMap<>();
+        fileMenus.put(file.toAbsolutePath().normalize(), loaded);
         ConfigNode menuList = conf.node("menus");
 
         if (!menuList.isNull()) {
@@ -229,6 +238,7 @@ public final class MenuManager {
                 try {
                     Menu menu = entry.getValue().getValue(Menu.class);
                     addMenu(entry.getKey(), menu);
+                    loaded.put(entry.getKey().toLowerCase(), menu);
                     count++;
                 } catch (NodeSerializeException ne) {
                     if (ne.getCauseNode() != null) {
@@ -246,6 +256,7 @@ public final class MenuManager {
             try {
                 Menu menu = conf.getValue(Menu.class);
                 addMenu(filename, menu);
+                loaded.put(filename.toLowerCase(), menu);
                 count++;
             } catch (NodeSerializeException ne) {
                 if (ne.getCauseNode() != null) {
@@ -269,7 +280,7 @@ public final class MenuManager {
         } else {
             watcher = FileSystems.getDefault().newWatchService();
             menuFolder.register(watcher, StandardWatchEventKinds.ENTRY_CREATE,
-                    StandardWatchEventKinds.ENTRY_MODIFY);
+                    StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE);
             watcherThread = new Thread(() -> {
                 while (true) {
                     WatchKey key;
@@ -289,7 +300,9 @@ public final class MenuManager {
                         Path filename = ev.context();
                         Path file = menuFolder.resolve(filename);
 
-                        if (Files.isRegularFile(file) && System.currentTimeMillis() > lastUpdated + 100) {
+                        if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
+                            BukkitTasks.runTask(() -> removeFileMenus(file));
+                        } else if (Files.isRegularFile(file) && System.currentTimeMillis() > lastUpdated + 100) {
                             Logger.info("Detected changes in " + filename + ". Loading ...");
                             // We are on the WatchService thread - hop back into the
                             // server scheduler before parsing. On Folia BukkitTasks.runTask
@@ -331,38 +344,51 @@ public final class MenuManager {
     public void unloadAll() {
         stopWatcher();
         unregisterActivators();
-        Bukkit.getOnlinePlayers().forEach(this::closeMenu);
+        for (var entry : openedMenus.entrySet()) {
+            OpenedMenu opened = entry.getValue();
+            if (openedMenus.remove(entry.getKey(), opened)) {
+                if (!plugin.isEnabled() || Bukkit.isOwnedByCurrentRegion(opened.player())) {
+                    opened.menu().close(opened.player(), true);
+                } else {
+                    BukkitTasks.runForEntity(opened.player(), () -> opened.menu().close(opened.player(), true));
+                }
+            }
+        }
         stopUpdateTask();
         menus.clear();
-        openedMenus.clear();
+        fileMenus.clear();
         inputActions.clear();
         Skulls.clearCache();
     }
 
+    private void removeFileMenus(Path file) {
+        Map<String, Menu> owned = fileMenus.remove(file.toAbsolutePath().normalize());
+        if (owned == null) return;
+        owned.forEach((name, menu) -> {
+            if (menus.remove(name, menu)) unregisterActivators(menu);
+        });
+    }
+
     private void unregisterActivators() {
-        for (Menu menu : menus.values()) {
-            List<Activator> activators = menu.getActivators();
+        for (Menu menu : menus.values()) unregisterActivators(menu);
+    }
 
-            if (activators != null) {
-                for (Activator activator : activators) {
-                    if (activator instanceof OpenCommand) {
-                        Command cmd = ((OpenCommand) activator).getCommand();
-
-                        AbstractMenus.instance()
-                                .getCommandManager()
-                                .unregister(cmd);
-                    }
-
-                    HandlerList.unregisterAll(activator);
+    private void unregisterActivators(Menu menu) {
+        List<Activator> activators = menu.getActivators();
+        if (activators == null) return;
+        for (Activator activator : activators) {
+            if (activator instanceof OpenCommand command) {
+                var manager = AbstractMenus.instance().getCommandManager();
+                if (manager.get(command.getCommand().getName()) == command.getCommand()) {
+                    manager.unregister(command.getCommand());
                 }
             }
+            HandlerList.unregisterAll(activator);
         }
     }
 
     private void loadExampleMenus() throws Exception {
         if (!Files.exists(menuFolder)) {
-            int version = NMS.getMinorVersion();
-
             Files.createDirectory(menuFolder);
 
             ConfigurationLoader.builder()
@@ -372,18 +398,8 @@ public final class MenuManager {
                     .build()
                     .load();
 
-            String animMenuPath;
-
-            if (version >= 21) {
-                animMenuPath = "/1_21/menu_anim.conf";
-            } else if (version >= 13) {
-                animMenuPath = "/1_13/menu_anim.conf";
-            } else {
-                animMenuPath = "/menu_anim.conf";
-            }
-
             ConfigurationLoader.builder()
-                    .source(ConfigSources.resource(animMenuPath, plugin)
+                    .source(ConfigSources.resource("/menu_anim.conf", plugin)
                             .copyTo(menuFolder))
                     .serializers(AbstractMenusApi.get().serializers())
                     .build()

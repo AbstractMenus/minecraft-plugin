@@ -20,7 +20,7 @@ public class OpenJoin extends Activator {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         if (open) {
-            BukkitTasks.runTaskLater(() -> openMenu(null, event.getPlayer()), 20L);
+            BukkitTasks.runForEntityLater(event.getPlayer(), () -> openMenu(null, event.getPlayer()), 20L);
         }
     }
 

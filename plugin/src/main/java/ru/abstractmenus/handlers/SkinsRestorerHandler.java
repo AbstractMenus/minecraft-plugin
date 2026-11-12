@@ -31,6 +31,9 @@ public class SkinsRestorerHandler implements SkinHandler {
     public SkinsRestorerHandler(boolean isProxyMode, Plugin plugin) {
         this.isProxyMode = isProxyMode;
         this.plugin = plugin;
+        if (isProxyMode) {
+            plugin.getServer().getMessenger().registerOutgoingPluginChannel(plugin, "abstractmenus:main");
+        }
         try {
             this.api = SkinsRestorerProvider.get();
             this.applier = api.getSkinApplier(Player.class);

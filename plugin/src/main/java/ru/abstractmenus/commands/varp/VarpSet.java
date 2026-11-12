@@ -18,7 +18,7 @@ public class VarpSet extends Command {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        if (args.length >= 2) {
+        if (args.length >= 3) {
             String player = args[0];
             String name = args[1];
             String value = args[2];
@@ -58,8 +58,8 @@ public class VarpSet extends Command {
             if (args.length == 5) {
                 // set time replace var
                 try {
-                    long time = TimeUtil.parseTime(args[2]);
-                    boolean replace = Boolean.parseBoolean(args[3]);
+                    long time = TimeUtil.parseTime(args[3]);
+                    boolean replace = Boolean.parseBoolean(args[4]);
                     var = var.toBuilder()
                             .expiry(System.currentTimeMillis() + time)
                             .build();

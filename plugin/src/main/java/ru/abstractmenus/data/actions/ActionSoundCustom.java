@@ -85,7 +85,7 @@ public class ActionSoundCustom implements Action {
                 TypeLocation location = null;
 
                 if (node.node("category").rawValue() != null) {
-                    String name = node.node("name").getString(node.getString());
+                    String name = node.node("category").getString();
 
                     try {
                         category = new TypeEnum<>(SoundCategory.valueOf(name));

@@ -1,12 +1,17 @@
 package ru.abstractmenus.serializers;
 
 
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
+import org.bukkit.DyeColor;
+import org.bukkit.NamespacedKey;
+import org.bukkit.block.banner.Pattern;
+import org.bukkit.block.banner.PatternType;
 import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
-import org.bukkit.DyeColor;
-import org.bukkit.block.banner.Pattern;
-import org.bukkit.block.banner.PatternType;
+
+import java.util.Locale;
 
 public class BannerPatternSerializer implements NodeSerializer<Pattern> {
 
@@ -18,9 +23,9 @@ public class BannerPatternSerializer implements NodeSerializer<Pattern> {
         PatternType type;
         DyeColor color;
 
-        try {
-            type = PatternType.valueOf(typeStr);
-        } catch (IllegalArgumentException e) {
+        NamespacedKey key = NamespacedKey.fromString(typeStr.toLowerCase(Locale.ROOT));
+        type = key == null ? null : RegistryAccess.registryAccess().getRegistry(RegistryKey.BANNER_PATTERN).get(key);
+        if (type == null) {
             throw new NodeSerializeException(node.node("type"), "Cannot find banner pattern type: " + typeStr);
         }
 

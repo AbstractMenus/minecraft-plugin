@@ -4,17 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AbstractMenus is a GUI plugin for SpigotMC/PaperMC Minecraft servers (1.20.6+) that allows creating custom inventory-based menus. Written in Java 21, it uses Gradle with PaperMC Paperweight userdev and Shadow plugin.
+AbstractMenus is a GUI plugin for PaperMC/Folia Minecraft servers (26.1+) that allows creating custom inventory-based menus. Written in Java 25, it uses Gradle 9.9.1 with the Paper 26.3 API and Shadow plugin.
 
 ## Build Commands
 
 ```bash
 ./gradlew build          # Compile and run tests
-./gradlew shadowJar      # Create fat JAR with bundled dependencies (output: build/libs/AbstractMenus-<version>.jar)
-./gradlew test           # Run JUnit 5 tests only
+./gradlew shadowJar      # Create fat JAR with bundled dependencies (output: build/dist/AbstractMenus-<version>.jar)
+./gradlew test           # Run JUnit 6 tests only
 ```
 
-Tests are in `src/test/java/` using JUnit 5 (Jupiter). There are currently 4 test classes. Run a single test with:
+Tests are in `plugin/src/test/java/` using JUnit 6 (Jupiter), Mockito, and MockBukkit 26.3. Run a single test with:
 ```bash
 ./gradlew test --tests "ru.abstractmenus.TestValueComparator"
 ```
@@ -65,11 +65,11 @@ Menu (API interface)
 Menus and config use HOCON format (not YAML). The internal HOCON library is at `ru.abstractmenus.hocon`.
 
 ### Key Dependencies
-- **API module**: `com.github.AbstractMenus:api` (separate repo, pulled via JitPack)
+- **API module**: Local `:api` subproject (`ru.abstractmenus:api`)
 - **Lombok**: Used throughout for `@Getter`/`@Setter`/`@AllArgsConstructor`
 - **Kyori Adventure + MiniMessage**: Rich text component API
 - **FoliaLib**: Thread-safe task scheduling (Folia compatibility)
-- **Paperweight userdev**: NMS access with Mojang mappings
+- **Paper API**: Compile-only Paper 26.3 API dependency
 
 ### Adding a New Action/Rule/Property/Activator
 1. Create class in the appropriate `data/` subpackage
