@@ -323,4 +323,37 @@ class TestMenuLifecycleRegressions {
         assertEquals(3,player.getWorld().getEntitiesByClass(org.bukkit.entity.Item.class).stream()
                 .mapToInt(item -> item.getItemStack().getAmount()).sum());
     }
+    @Test void unloadOnOwningThreadReturnsDepositsSynchronously() {
+        var closed = new AtomicInteger();
+        var template = new SimpleMenu("Deposit",9);
+        template.setDraggableSlots(new TypeSlot(new SlotIndex(0)));
+        template.setCloseActions(count(closed));
+        manager.openMenu(player,template);
+        var menu = (AbstractMenu)manager.getOpenedMenu(player);
+        menu.placeItem(player,0,new ItemStack(Material.DIAMOND,4));
+        menu.getInventory().setItem(0,new ItemStack(Material.DIAMOND,4));
+        assertTrue(org.bukkit.Bukkit.isOwnedByCurrentRegion(player));
+        manager.unloadAll();
+        assertEquals(1,closed.get());
+        assertNull(manager.getOpenedMenu(player));
+        assertNotSame(menu.getInventory(),player.getOpenInventory().getTopInventory());
+        assertEquals(4,player.getWorld().getEntitiesByClass(org.bukkit.entity.Item.class).stream()
+                .mapToInt(item -> item.getItemStack().getAmount()).sum());
+        server.getScheduler().performTicks(2);
+        assertEquals(1,closed.get());
+    }
+
+    @Test void disablingPluginClosesWithoutScheduling() {
+        var disabledPlugin = mock(org.bukkit.plugin.Plugin.class);
+        var config = mock(MainConfig.class);
+        when(config.getMenusFolder()).thenReturn(Path.of("/private/tmp/menu-audit-unused"));
+        var disablingManager = new MenuManager(disabledPlugin,config);
+        var menu = mock(Menu.class);
+        disablingManager.setOpenedMenu(player,menu);
+        try (var bukkit = mockStatic(org.bukkit.Bukkit.class,CALLS_REAL_METHODS)) {
+            bukkit.when(() -> org.bukkit.Bukkit.isOwnedByCurrentRegion(player)).thenReturn(false);
+            disablingManager.unloadAll();
+            verify(menu).close(player,true);
+        }
+    }
 }

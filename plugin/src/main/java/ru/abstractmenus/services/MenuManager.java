@@ -347,7 +347,11 @@ public final class MenuManager {
         for (var entry : openedMenus.entrySet()) {
             OpenedMenu opened = entry.getValue();
             if (openedMenus.remove(entry.getKey(), opened)) {
-                BukkitTasks.runForEntity(opened.player(), () -> opened.menu().close(opened.player(), true));
+                if (!plugin.isEnabled() || Bukkit.isOwnedByCurrentRegion(opened.player())) {
+                    opened.menu().close(opened.player(), true);
+                } else {
+                    BukkitTasks.runForEntity(opened.player(), () -> opened.menu().close(opened.player(), true));
+                }
             }
         }
         stopUpdateTask();
