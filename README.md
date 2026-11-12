@@ -60,6 +60,50 @@ current Paper API surface.
   [`PR_DESCRIPTION.md`](PR_DESCRIPTION.md) for the 1.18.0 profile-backed
   numbers).
 
+## 🧰 Item properties
+
+Item properties are configured per menu item. The `tooltipDisplay` property
+wraps the Paper `tooltip_display` data component (Minecraft 1.21.5+).
+
+Hide an item's tooltip entirely:
+
+```hocon
+material: DIAMOND_SWORD
+tooltipDisplay {
+    hideTooltip: true
+}
+```
+
+Hide the tooltip of specific components, e.g. only the Bundle contents:
+
+```hocon
+material: BUNDLE
+tooltipDisplay {
+    hiddenComponents: [
+        BUNDLE_CONTENTS
+    ]
+}
+```
+
+Several components at once:
+
+```hocon
+tooltipDisplay {
+    hiddenComponents: [
+        BUNDLE_CONTENTS,
+        ATTRIBUTE_MODIFIERS,
+        ENCHANTMENTS
+    ]
+}
+```
+
+`hiddenComponents` accepts component keys case-insensitively and in
+namespaced form (`BUNDLE_CONTENTS`, `bundle_contents`,
+`"minecraft:bundle_contents"`). Unknown component names fail loudly at menu load.
+Namespaced keys contain `:`, which HOCON only allows inside quotes, so write
+them as `"minecraft:bundle_contents"`. Namespaced keys without an explicit
+namespace are assumed to be `minecraft:`.
+
 ## 🔗 Links
 - [SpigotMC](https://www.spigotmc.org/resources/abstract-menus-an-advanced-gui-plugin.75107/)
 - [Discord](https://discord.gg/kt4P9Cgw)
