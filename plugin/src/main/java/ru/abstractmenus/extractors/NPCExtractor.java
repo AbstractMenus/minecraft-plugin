@@ -13,7 +13,7 @@ public class NPCExtractor implements ValueExtractor {
             NPC npc = (NPC) obj;
 
             if (placeholder.startsWith("npc_entity_")) {
-                return EntityExtractor.INSTANCE.extract(npc.getBukkitEntity(), placeholder.substring(4));
+                return EntityExtractor.INSTANCE.extract(npc.getEntity(), placeholder.substring(4));
             }
 
             return switch (placeholder) {

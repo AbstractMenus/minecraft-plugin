@@ -12,16 +12,17 @@ public class EntityExtractor implements ValueExtractor {
     @Override
     public String extract(Object obj, String placeholder) {
 
+        if (obj instanceof Player && placeholder.startsWith("player_")) {
+            return PlayerExtractor.INSTANCE.extract(obj, placeholder);
+        }
         if (obj instanceof Entity entity) {
             if (entity instanceof LivingEntity livingEntity) {
-                return switch (placeholder) {
-                    case "entity_last_damage" -> String.valueOf(livingEntity.getLastDamage());
-                    case "entity_no_damage_ticks" -> String.valueOf(livingEntity.getNoDamageTicks());
-                    case "entity_killer" ->
-                            livingEntity.getKiller() != null ? livingEntity.getKiller().getName() : null;
-                    case "entity_eye_height" -> String.valueOf(livingEntity.getEyeHeight());
-                    default -> "";
-                };
+                switch (placeholder) {
+                    case "entity_last_damage": return String.valueOf(livingEntity.getLastDamage());
+                    case "entity_no_damage_ticks": return String.valueOf(livingEntity.getNoDamageTicks());
+                    case "entity_killer": return livingEntity.getKiller() != null ? livingEntity.getKiller().getName() : null;
+                    case "entity_eye_height": return String.valueOf(livingEntity.getEyeHeight());
+                }
             }
 
             return switch (placeholder) {
@@ -40,8 +41,6 @@ public class EntityExtractor implements ValueExtractor {
                 default -> "";
             };
         }
-        if (obj instanceof Player)
-            return PlayerExtractor.INSTANCE.extract(obj, placeholder);
 
         return "";
     }

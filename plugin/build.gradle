@@ -4,6 +4,10 @@ plugins {
 
 // Plugin-specific repos not already in root
 repositories {
+    exclusiveContent {
+        forRepository { maven { url = 'https://maven.citizensnpcs.co/repo' } }
+        filter { includeGroup 'net.citizensnpcs' }
+    }
     maven { url = 'https://repo.tcoded.com/releases' }
     maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
     maven { url = 'https://oss.sonatype.org/content/repositories/snapshots' }
@@ -45,7 +49,7 @@ dependencies {
     implementation "com.tcoded:FoliaLib:0.5.2"
 
     shadow files('libs/MMOItems-6.5.4.jar')
-    shadow files('libs/citizens-2.0.jar')
+    shadow('net.citizensnpcs:citizensapi:2.0.44-SNAPSHOT') { transitive = false }
 
     shadow ('de.tr7zw:item-nbt-api-plugin:2.16.1') {
         exclude group: 'org.bstats', module: 'bstats-bukkit'
@@ -78,6 +82,7 @@ dependencies {
         exclude group: 'org.bstats', module: 'bstats-bukkit'
     }
 
+    testImplementation('net.citizensnpcs:citizensapi:2.0.44-SNAPSHOT') { transitive = false }
     testImplementation 'io.papermc.paper:paper-api:26.3.build.+'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:6.1.3'
