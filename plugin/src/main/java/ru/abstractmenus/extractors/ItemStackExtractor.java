@@ -33,7 +33,7 @@ public class ItemStackExtractor implements ValueExtractor {
             if (meta != null) {
                 return switch (placeholder) {
                     case "item_display_name" -> meta.getDisplayName();
-                    case "item_localized_name" -> "";
+                    case "item_localized_name" -> meta.getDisplayName();
                     case "item_model" -> String.valueOf(meta.getCustomModelData()); // 1.14+
                     default -> "";
                 };

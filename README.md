@@ -145,7 +145,6 @@ The built-in placeholder values have changed:
 
 - `block_data` returns the full block state string, such as `minecraft:oak_log[axis=y]`, instead of a legacy numeric data byte.
 - `item_data` returns the item's damage value, or `0` for items without damage.
-- `item_localized_name` returns an empty string.
 - `block_biome` returns the registry key path in uppercase, such as `PLAINS`.
 
 `count` is passed through unchanged.
