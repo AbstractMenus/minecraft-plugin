@@ -60,47 +60,78 @@ The plugin supports **Minecraft 26.1 onwards** and requires **Java 25**. The bui
 
 ## 🧰 Item properties
 
-Item properties are configured per menu item. The `tooltipDisplay` property
-wraps the Paper `tooltip_display` data component (Minecraft 1.21.5+).
+Item properties are configured per menu item on Minecraft 26.x. Namespaced keys containing `:` must be quoted in HOCON; keys without a namespace use `minecraft`.
 
-Hide an item's tooltip entirely:
+`tooltipDisplay` can hide an entire tooltip or selected data components, alongside normal name and lore properties:
+
+```hocon
+name: "Bundle"
+tooltipDisplay {
+    hideTooltip: false
+    hiddenComponents: [BUNDLE_CONTENTS, "minecraft:enchantments"]
+}
+lore: ["Contents stay hidden"]
+```
+
+Set `hideTooltip: true` to hide the whole tooltip. Component names accept uppercase, lowercase and namespaced keys. Unknown components fail at menu load.
+
+`itemModel` selects a resource-pack item model; `tooltipStyle` selects its tooltip sprites:
+
+```hocon
+itemModel: "example:menu/cake"
+tooltipStyle: "example:menu/gold"
+```
+
+`maxStackSize` accepts integers from 1 through 99, with invalid constants rejected at menu load. It also accepts integer placeholders, whose results must stay within that range. Stack sizes above one cannot be combined with the `max_damage` component, so use them on items without durability. Put `maxStackSize` before `count` when increasing the display count:
+
+```hocon
+material: CAKE
+maxStackSize: 99
+count: 64
+```
+
+`rarity` accepts `COMMON`, `UNCOMMON`, `RARE` or `EPIC`, including enum placeholders:
+
+```hocon
+rarity: RARE
+```
+
+`model` keeps the integer format used by existing menus, mapping it to one float in the custom model data component:
+
+```hocon
+model: 123
+```
+
+It also accepts an object containing any of the four custom model data lists. Floats, flags, strings and colors support placeholders; colors accept hex, RGB strings or dye names:
+
+```hocon
+model {
+    floats: [1.0, 2.5]
+    flags: [true, false]
+    strings: ["cake"]
+    colors: ["#ff8000"]
+}
+```
+
+`glow: true` forces the enchantment glint without adding an enchantment; `false` leaves the item's glint unchanged:
+
+```hocon
+glow: true
+```
+
+`flags` hides the matching tooltip components and preserves attribute modifiers, including those configured with `attributeModifier`:
 
 ```hocon
 material: DIAMOND_SWORD
-tooltipDisplay {
-    hideTooltip: true
-}
+flags: HIDE_ATTRIBUTES
 ```
 
-Hide the tooltip of specific components, e.g. only the Bundle contents:
+`count` is capped at the item's current maximum stack size to keep oversized stacks visible on Minecraft 26.x. This sword displays as one item, while stackable items can still display their normal count:
 
 ```hocon
-material: BUNDLE
-tooltipDisplay {
-    hiddenComponents: [
-        BUNDLE_CONTENTS
-    ]
-}
+material: DIAMOND_SWORD
+count: 64
 ```
-
-Several components at once:
-
-```hocon
-tooltipDisplay {
-    hiddenComponents: [
-        BUNDLE_CONTENTS,
-        ATTRIBUTE_MODIFIERS,
-        ENCHANTMENTS
-    ]
-}
-```
-
-`hiddenComponents` accepts component keys case-insensitively and in
-namespaced form (`BUNDLE_CONTENTS`, `bundle_contents`,
-`"minecraft:bundle_contents"`). Unknown component names fail loudly at menu load.
-Namespaced keys contain `:`, which HOCON only allows inside quotes, so write
-them as `"minecraft:bundle_contents"`. Namespaced keys without an explicit
-namespace are assumed to be `minecraft:`.
 
 ## 🔗 Links
 - [SpigotMC](https://www.spigotmc.org/resources/abstract-menus-an-advanced-gui-plugin.75107/)
