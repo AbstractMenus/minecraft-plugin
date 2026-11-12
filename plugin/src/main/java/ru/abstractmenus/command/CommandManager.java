@@ -22,7 +22,10 @@ public final class CommandManager {
     }
 
     public Command get(String name) {
-        return commands.get(name.toLowerCase());
+        String key = name.toLowerCase(Locale.ROOT);
+        String prefix = plugin.getName().toLowerCase(Locale.ROOT) + ":";
+        if (key.startsWith(prefix)) key = key.substring(prefix.length());
+        return commands.get(key);
     }
 
     @SuppressWarnings("UnstableApiUsage")

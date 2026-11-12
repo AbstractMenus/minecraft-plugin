@@ -176,6 +176,16 @@ public final class AddonManager {
                 addons.put(k, la);
                 continue;
             }
+            boolean dependenciesEnabled = la.getConf().addonDependencies().stream().allMatch(dep -> {
+                LoadedAddon required = addons.get(dep.toLowerCase());
+                return required != null && required.getStatus() == AddonStatus.ENABLED;
+            });
+            if (!dependenciesEnabled) {
+                la.markFailed(new IllegalStateException("Required addon dependency failed to enable"));
+                rollbackRegistrations(la);
+                addons.put(k, la);
+                continue;
+            }
             try {
                 la.getExtension().onEnable(api);
                 la.markEnabled();
@@ -434,17 +444,31 @@ public final class AddonManager {
      * have ended up in FAILED state).
      */
     public List<LoadedAddon> rescan() {
-        List<LoadedAddon> newlyLoaded = new ArrayList<>();
         Map<String, LoadedAddon> discovered = discover();
-        for (var entry : discovered.entrySet()) {
-            LoadedAddon la = entry.getValue();
+        var iterator = discovered.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var entry = iterator.next();
             if (addons.containsKey(entry.getKey())) {
-                // Already loaded - drop the redundant classloader we just built.
-                try { la.getClassLoader().close(); } catch (Exception ignored) {}
-                continue;
+                try { entry.getValue().getClassLoader().close(); } catch (Exception ignored) {}
+                iterator.remove();
             }
-            enableSingle(la);
-            newlyLoaded.add(la);
+        }
+        Map<String, List<String>> graph = new LinkedHashMap<>();
+        discovered.forEach((key, addon) -> graph.put(key, addon.getConf().addonDependencies().stream()
+                .map(String::toLowerCase).filter(discovered::containsKey).toList()));
+        List<LoadedAddon> newlyLoaded = new ArrayList<>();
+        try {
+            for (String key : AddonDependencyGraph.topoSort(graph)) {
+                LoadedAddon addon = discovered.get(key);
+                enableSingle(addon);
+                newlyLoaded.add(addon);
+            }
+        } catch (AddonDependencyCycleException ex) {
+            for (var entry : discovered.entrySet()) {
+                entry.getValue().markFailed(ex);
+                addons.put(entry.getKey(), entry.getValue());
+                newlyLoaded.add(entry.getValue());
+            }
         }
         if (!newlyLoaded.isEmpty()) cachedAvailableAt = 0L;
         return newlyLoaded;
