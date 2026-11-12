@@ -5,6 +5,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.entity.Player;
 import ru.abstractmenus.MainConfig;
+import ru.abstractmenus.api.text.Colors;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +45,10 @@ public final class MiniMessageUtil {
         return replacer.parseToLegacy(input);
     }
 
+    public static Component parseToComponent(String input) {
+        return input == null ? null : replacer.parseToComponent(Colors.of(input));
+    }
+
     private interface Replacer {
 
         void sendParsed(List<String> input, Player player);
@@ -51,6 +56,8 @@ public final class MiniMessageUtil {
         String parseToLegacy(String input);
 
         List<String> parseToLegacy(List<String> input);
+
+        Component parseToComponent(String input);
 
     }
 
@@ -69,7 +76,7 @@ public final class MiniMessageUtil {
 
             for (String line : input) {
                 if (line != null) {
-                    send(parse(LegacyColorTagReplacer.replaceLegacyTags(line)), player);
+                    send(parseToComponent(line), player);
                 }
             }
         }
@@ -79,7 +86,7 @@ public final class MiniMessageUtil {
             if (input == null) return null;
             if (input.isEmpty()) return input;
 
-            return serializer.serialize(parse(LegacyColorTagReplacer.replaceLegacyTags(input)));
+            return serializer.serialize(parseToComponent(input));
         }
 
         @Override
@@ -98,8 +105,9 @@ public final class MiniMessageUtil {
             player.sendMessage(component);
         }
 
-        private Component parse(String input) {
-            return miniMessage.deserialize(input);
+        @Override
+        public Component parseToComponent(String input) {
+            return miniMessage.deserialize(LegacyColorTagReplacer.replaceLegacyTags(input));
         }
     }
 
@@ -118,6 +126,11 @@ public final class MiniMessageUtil {
         @Override
         public List<String> parseToLegacy(List<String> input) {
             return input;
+        }
+
+        @Override
+        public Component parseToComponent(String input) {
+            return LegacyComponentSerializer.legacySection().deserialize(input);
         }
     }
 

@@ -2,6 +2,7 @@ package ru.abstractmenus.menu;
 
 import lombok.Getter;
 import lombok.Setter;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -358,8 +359,8 @@ public abstract class AbstractMenu implements Menu {
     }
 
     protected void createInventory(Player player, InventoryHolder holder) {
-        String title = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, this.title);
-        title = MiniMessageUtil.parseToLegacy(title);
+        String replacedTitle = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, this.title);
+        Component title = MiniMessageUtil.parseToComponent(replacedTitle);
 
         if (this.type != null) {
             this.inventory = Bukkit.createInventory(holder, type, title);
