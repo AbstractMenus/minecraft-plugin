@@ -1,7 +1,7 @@
 main: 'ru.abstractmenus.AbstractMenus'
 name: 'AbstractMenus'
 version: ${version}
-api-version: '1.21'
+api-version: '26.1'
 authors: ['Nanit', 'BrainRTP', 'WhyZerVellasskx']
 folia-supported: true
 softdepend:
