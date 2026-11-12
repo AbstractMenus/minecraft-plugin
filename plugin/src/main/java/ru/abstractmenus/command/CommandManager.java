@@ -2,11 +2,10 @@ package ru.abstractmenus.command;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.SimpleCommandMap;
+import org.bukkit.command.CommandMap;
 import org.bukkit.plugin.Plugin;
 import ru.abstractmenus.command.bukkit.CommandWrapper;
 
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -14,19 +13,12 @@ public final class CommandManager {
 
     private final Plugin plugin;
     private final Map<String, Command> commands = new HashMap<>();
-    private SimpleCommandMap commandMap;
+    private final CommandMap commandMap;
 
     public CommandManager(Plugin plugin) {
         this.plugin = plugin;
 
-        try {
-            String version = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
-            Class<?> craftServerClass = Class.forName(String.format("org.bukkit.craftbukkit.%s.CraftServer", version));
-            Method getCommandMap = craftServerClass.getDeclaredMethod("getCommandMap");
-            commandMap = (SimpleCommandMap) getCommandMap.invoke(Bukkit.getServer());
-        } catch (Exception e) {
-            commandMap = (SimpleCommandMap) Bukkit.getCommandMap();
-        }
+        commandMap = Bukkit.getCommandMap();
     }
 
     public Command get(String name) {

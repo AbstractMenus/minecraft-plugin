@@ -113,12 +113,6 @@ public final class AbstractMenusApiImpl implements AbstractMenusApi {
 
     @Override
     public String apiVersion() {
-        // Paper 1.21+ exposes getPluginMeta().getVersion(); fall back to
-        // getDescription().getVersion() if the new API isn't present.
-        try {
-            return plugin.getPluginMeta().getVersion();
-        } catch (NoSuchMethodError | AbstractMethodError ignored) {
-            return plugin.getDescription().getVersion();
-        }
+        return plugin.getPluginMeta().getVersion();
     }
 }

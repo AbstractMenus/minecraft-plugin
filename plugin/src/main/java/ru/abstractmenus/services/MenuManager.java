@@ -22,7 +22,6 @@ import ru.abstractmenus.data.properties.PropTexture;
 import ru.abstractmenus.menu.AbstractMenu;
 import ru.abstractmenus.util.FileUtils;
 import ru.abstractmenus.api.Logger;
-import ru.abstractmenus.util.NMS;
 import ru.abstractmenus.util.bukkit.Skulls;
 import ru.abstractmenus.util.bukkit.BukkitTasks;
 import ru.abstractmenus.util.bukkit.TaskHandle;
@@ -361,8 +360,6 @@ public final class MenuManager {
 
     private void loadExampleMenus() throws Exception {
         if (!Files.exists(menuFolder)) {
-            int version = NMS.getMinorVersion();
-
             Files.createDirectory(menuFolder);
 
             ConfigurationLoader.builder()
@@ -372,18 +369,8 @@ public final class MenuManager {
                     .build()
                     .load();
 
-            String animMenuPath;
-
-            if (version >= 21) {
-                animMenuPath = "/1_21/menu_anim.conf";
-            } else if (version >= 13) {
-                animMenuPath = "/1_13/menu_anim.conf";
-            } else {
-                animMenuPath = "/menu_anim.conf";
-            }
-
             ConfigurationLoader.builder()
-                    .source(ConfigSources.resource(animMenuPath, plugin)
+                    .source(ConfigSources.resource("/menu_anim.conf", plugin)
                             .copyTo(menuFolder))
                     .serializers(AbstractMenusApi.get().serializers())
                     .build()

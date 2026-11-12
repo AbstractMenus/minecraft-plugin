@@ -34,9 +34,7 @@ import static org.mockito.Mockito.*;
  *
  * <p>This test does NOT boot the full plugin — it constructs a lightweight
  * {@link StubApi} backed by real {@link TypeRegistryImpl} instances and invokes
- * {@code CoreExtension.onEnable()} directly, bypassing the MockBukkit
- * incompatibility with Paper 1.21.11 that prevents the full plugin from loading
- * in tests (see {@link ru.abstractmenus.integration.TestPluginLifecycle}).
+ * {@code CoreExtension.onEnable()} directly.
  *
  * <p><b>Activator count note:</b> {@link CoreActivatorsBundle} conditionally
  * registers "clickNPC" (Citizens) and "regionJoin"/"regionLeave" (WorldGuard)

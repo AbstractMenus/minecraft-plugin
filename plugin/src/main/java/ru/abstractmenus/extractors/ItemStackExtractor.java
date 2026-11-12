@@ -1,6 +1,7 @@
 package ru.abstractmenus.extractors;
 
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import ru.abstractmenus.api.ValueExtractor;
 import ru.abstractmenus.util.bukkit.ItemUtil;
@@ -16,7 +17,7 @@ public class ItemStackExtractor implements ValueExtractor {
 
             String result = switch (placeholder) {
                 case "item_type" -> item.getType().toString();
-                case "item_data" -> String.valueOf(item.getData().getData()); // 1.12-
+                case "item_data" -> String.valueOf(item.getItemMeta() instanceof Damageable damageable ? damageable.getDamage() : 0);
                 case "item_amount" -> String.valueOf(item.getAmount());
                 case "item_max_stack" -> String.valueOf(item.getMaxStackSize());
                 case "item_serialized" -> ItemUtil.encodeStack(item);
@@ -32,7 +33,7 @@ public class ItemStackExtractor implements ValueExtractor {
             if (meta != null) {
                 return switch (placeholder) {
                     case "item_display_name" -> meta.getDisplayName();
-                    case "item_localized_name" -> meta.getLocalizedName();
+                    case "item_localized_name" -> "";
                     case "item_model" -> String.valueOf(meta.getCustomModelData()); // 1.14+
                     default -> "";
                 };

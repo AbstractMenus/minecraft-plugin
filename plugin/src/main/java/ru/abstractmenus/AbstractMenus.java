@@ -4,7 +4,6 @@ import com.tcoded.folialib.FoliaLib;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.ServicePriority;
@@ -48,17 +47,13 @@ import ru.abstractmenus.util.MiniMessageUtil;
 import ru.abstractmenus.util.TimeUtil;
 import ru.abstractmenus.util.bukkit.BukkitTasks;
 import ru.abstractmenus.util.bukkit.Events;
-import ru.abstractmenus.util.proxy.ClassInfo;
 import ru.abstractmenus.variables.VariableManagerImpl;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 
 @Getter
-public final class AbstractMenus extends JavaPlugin {
+public class AbstractMenus extends JavaPlugin {
 
     private static AbstractMenus instance;
 
@@ -103,8 +98,8 @@ public final class AbstractMenus extends JavaPlugin {
     public void onEnable() {
         try {
             instance = this;
-            isProxyMode = determineProxy();
             Logger.set(getLogger());
+            isProxyMode = determineProxy();
             metrics = new Metrics(this);
             foliaLib = new FoliaLib(this);
 
@@ -281,31 +276,8 @@ public final class AbstractMenus extends JavaPlugin {
         return instance;
     }
 
-    // from SkinRestorer.
-    //
-    // YamlConfiguration.loadConfiguration below reads spigot.yml / paper.yml
-    // synchronously on the main thread. These files are <10 KB on a real
-    // server and the call only fires once, during onEnable, before any
-    // gameplay can be affected. Acceptable startup-only IO.
     public boolean determineProxy() {
-        Path spigotFile = Paths.get("spigot.yml");
-        Path paperFile = Paths.get("paper.yml");
-
-        if (Optional.of(getConfig()).map(config ->
-                config.getBoolean("settings.bungeecord")).orElse(false)) {
-            return true;
-        } else if (ClassInfo.get().isSpigot() // Only consider files if classes for that platform are present
-                && Files.exists(spigotFile)
-                && YamlConfiguration.loadConfiguration(spigotFile.toFile())
-                .getBoolean("settings.bungeecord")) {
-            return true;
-        } else if (Optional.of(Bukkit.spigot().getPaperConfig()).map(config ->
-                config.getBoolean("settings.velocity-support.enabled")
-                        || config.getBoolean("proxies.velocity.enabled")).orElse(false)) {
-            return true;
-        } else return ClassInfo.get().isPaper() // Only consider files if classes for that platform are present
-                && Files.exists(paperFile)
-                && YamlConfiguration.loadConfiguration(paperFile.toFile())
-                .getBoolean("settings.velocity-support.enabled");
+        return getConfig().getBoolean("settings.bungeecord")
+                || getServer().getServerConfig().isProxyEnabled();
     }
 }
