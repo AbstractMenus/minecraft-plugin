@@ -35,32 +35,28 @@ public class ActionItemRemove implements Action {
                 ItemStack built = item.build(player, menu);
 
                 if (!player.getInventory().removeItem(built).isEmpty()) {
-                    if (built.isSimilar(player.getInventory().getHelmet())) {
+                    if (built.getAmount() > 0 && built.isSimilar(player.getInventory().getHelmet())) {
                         decrement(built, player.getInventory().getHelmet(),
                                 () -> player.getInventory().setHelmet(null));
-                        continue;
                     }
 
-                    if (built.isSimilar(player.getInventory().getChestplate())) {
+                    if (built.getAmount() > 0 && built.isSimilar(player.getInventory().getChestplate())) {
                         decrement(built, player.getInventory().getChestplate(),
                                 () -> player.getInventory().setChestplate(null));
-                        continue;
                     }
 
-                    if (built.isSimilar(player.getInventory().getLeggings())) {
+                    if (built.getAmount() > 0 && built.isSimilar(player.getInventory().getLeggings())) {
                         decrement(built, player.getInventory().getLeggings(),
                                 () -> player.getInventory().setLeggings(null));
-                        continue;
                     }
 
-                    if (built.isSimilar(player.getInventory().getBoots())) {
+                    if (built.getAmount() > 0 && built.isSimilar(player.getInventory().getBoots())) {
                         decrement(built, player.getInventory().getBoots(),
                                 () -> player.getInventory().setBoots(null));
-                        continue;
                     }
 
                     try {
-                        if (built.isSimilar(player.getInventory().getItemInOffHand())) {
+                        if (built.getAmount() > 0 && built.isSimilar(player.getInventory().getItemInOffHand())) {
                             decrement(built, player.getInventory().getItemInOffHand(),
                                     () -> player.getInventory().setItemInOffHand(null));
                         }
@@ -73,11 +69,13 @@ public class ActionItemRemove implements Action {
     }
 
     private void decrement(ItemStack item, ItemStack inSlot, Runnable clearCommand) {
-        if (inSlot != null && inSlot.getAmount() > item.getAmount()) {
-            inSlot.setAmount(inSlot.getAmount() - item.getAmount());
+        int removed = Math.min(item.getAmount(), inSlot.getAmount());
+        if (inSlot.getAmount() > removed) {
+            inSlot.setAmount(inSlot.getAmount() - removed);
         } else {
             clearCommand.run();
         }
+        item.setAmount(item.getAmount() - removed);
     }
 
     public static class Serializer implements NodeSerializer<ActionItemRemove> {

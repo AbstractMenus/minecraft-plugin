@@ -28,10 +28,13 @@ public class ActionItemRefresh implements Action {
 
     @Override
     public void activate(Player player, Menu menu, Item clickedItem) {
-        Slot slot = ((InventoryItem) clickedItem).getSlot(player, menu);
-
+        Slot slot;
         if (this.slot != null) {
             slot = this.slot.getSlot(player, menu);
+        } else if (clickedItem instanceof InventoryItem inventoryItem) {
+            slot = inventoryItem.getSlot(player, menu);
+        } else {
+            return;
         }
 
         if (ticks != null) {

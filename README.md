@@ -49,6 +49,8 @@ The plugin supports **Minecraft 26.1 onwards** and requires **Java 25**. The bui
   BungeeCord channel.
 - **Folia-compatible scheduling** — all Bukkit scheduler calls go through a
   `BukkitTasks` wrapper backed by FoliaLib.
+
+  **Known limitations:** The `playerScope` rule cannot safely read another player's state across Folia regions.
 - **External integrations (soft-deps)** — Vault, LuckPerms, WorldGuard,
   SkinsRestorer, MMOItems, HeadDatabase, ItemsAdder, Oraxen, Citizens,
   NBT-API.
