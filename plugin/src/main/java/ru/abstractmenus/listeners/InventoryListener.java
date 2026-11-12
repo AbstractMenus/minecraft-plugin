@@ -1,11 +1,10 @@
 package ru.abstractmenus.listeners;
 
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.*;
-import org.bukkit.inventory.ItemStack;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.api.inventory.Slot;
 import ru.abstractmenus.menu.AbstractMenu;
@@ -15,7 +14,6 @@ import ru.abstractmenus.util.bukkit.BukkitTasks;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 
 public class InventoryListener implements Listener {
 
@@ -32,9 +30,9 @@ public class InventoryListener implements Listener {
         allowedActions.add(InventoryAction.SWAP_WITH_CURSOR);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event) {
-        if (event.getSlot() < 0
+        if (event.isCancelled() || event.getSlot() < 0
                 || !(event.getInventory().getHolder() instanceof Menu)
                 || !(event.getWhoClicked() instanceof Player)
                 || event.getClickedInventory() == null) return;
@@ -54,36 +52,9 @@ public class InventoryListener implements Listener {
         }
 
         if (menu.isDraggable(player, event.getSlot())) {
-            ItemStack old = event.getCurrentItem();
-            ItemStack cursor = event.getCursor();
-
             switch (event.getAction()) {
-                case PICKUP_ALL:
-                    if (!menu.takeItem(player, event.getSlot(), 0))
-                        event.setCancelled(true);
-                    break;
-                case PICKUP_HALF:
-                    int amount = (int) Math.ceil((float) old.getAmount() / 2);
-                    if (!menu.takeItem(player, event.getSlot(), amount))
-                        event.setCancelled(true);
-                    break;
-                case PICKUP_ONE:
-                    if (!menu.takeItem(player, event.getSlot(), 1))
-                        event.setCancelled(true);
-                    break;
-                case PLACE_ALL:
-                case PLACE_SOME:
-                    menu.placeItem(player, event.getSlot(), calcPlaced(old, cursor, 0));
-                    break;
-                case PLACE_ONE:
-                    menu.placeItem(player, event.getSlot(), calcPlaced(old, cursor, 1));
-                    break;
-                case SWAP_WITH_CURSOR:
-                    if (menu.takeItem(player, event.getSlot(), 0)) {
-                        menu.placeItem(player, event.getSlot(), cursor);
-                    } else {
-                        event.setCancelled(true);
-                    }
+                case PICKUP_ALL, PICKUP_HALF, PICKUP_ONE, SWAP_WITH_CURSOR:
+                    if (menu.getPlacedItem(event.getSlot()).getType().isAir()) event.setCancelled(true);
                     break;
                 default:
                     break;
@@ -98,9 +69,9 @@ public class InventoryListener implements Listener {
         BukkitTasks.runForEntityLater(player, player::updateInventory, 2L);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onDrag(InventoryDragEvent event) {
-        if (event.getWhoClicked() instanceof Player
+        if (!event.isCancelled() && event.getWhoClicked() instanceof Player
                 && event.getInventory().getHolder() instanceof Menu) {
 
             Player player = (Player) event.getWhoClicked();
@@ -112,7 +83,7 @@ public class InventoryListener implements Listener {
             boolean hasMenuSlots = false;
 
             for (int slot : event.getRawSlots()) {
-                if (slot >= menu.getSize()) {
+                if (slot >= event.getView().getTopInventory().getSize()) {
                     hasPlayerSlots = true;
                 } else {
                     hasMenuSlots = true;
@@ -129,50 +100,33 @@ public class InventoryListener implements Listener {
                 event.setCancelled(true);
                 return;
             }
+        }
+    }
 
-            for (Map.Entry<Integer, ItemStack> entry : event.getNewItems().entrySet()) {
-                menu.placeItem(player, entry.getKey(), entry.getValue());
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void reconcileClick(InventoryClickEvent event) {
+        if (event.isCancelled() || !(event.getWhoClicked() instanceof Player player)
+                || !(event.getInventory().getHolder() instanceof AbstractMenu menu)
+                || event.getClickedInventory() != event.getInventory()
+                || !allowedActions.contains(event.getAction()) || !menu.isDraggable(player, event.getSlot())) return;
+        menu.queuePlacedReconcile(player, event.getSlot(), () -> !event.isCancelled());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void reconcileDrag(InventoryDragEvent event) {
+        if (event.isCancelled() || !(event.getWhoClicked() instanceof Player player)
+                || !(event.getInventory().getHolder() instanceof AbstractMenu menu)) return;
+        for (int slot : event.getRawSlots()) {
+            if (slot < event.getInventory().getSize() && menu.isDraggable(player, slot)) {
+                menu.queuePlacedReconcile(player, slot, () -> !event.isCancelled());
             }
         }
     }
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
-        if (event.getPlayer() instanceof Player && event.getInventory().getHolder() instanceof Menu) {
-            Player player = (Player) event.getPlayer();
-            Menu closed = (Menu) event.getInventory().getHolder();
-            Menu current = MenuManager.instance().getOpenedMenu(player);
-
-            if (closed instanceof AbstractMenu abstractMenu) {
-                abstractMenu.dropPlaced(player);
-            }
-
-            if (current != null && current.equals(closed)) {
-                // Pin to player's region: closeMenu calls player.closeInventory
-                // which on Folia must run on the player's region thread.
-                BukkitTasks.runForEntityLater(player,
-                        () -> MenuManager.instance().closeMenu(player, false),
-                        3L
-                );
-            }
+        if (event.getPlayer() instanceof Player player && event.getInventory().getHolder() instanceof Menu closed) {
+            MenuManager.instance().closeMenu(player, closed, false);
         }
-    }
-
-    private static ItemStack calcPlaced(ItemStack current, ItemStack cursor, int modifier) {
-        ItemStack stack;
-        int amount;
-
-        if (current != null && current.getType() != Material.AIR) {
-            stack = current.clone();
-            int mod = modifier > 0 ? modifier : cursor.getAmount();
-            amount = stack.getAmount() + mod;
-        } else {
-            stack = cursor.clone();
-            amount = modifier > 0 ? modifier : cursor.getAmount();
-        }
-
-        amount = Math.min(amount, stack.getMaxStackSize());
-        stack.setAmount(amount);
-        return stack;
     }
 }

@@ -29,7 +29,7 @@ class TestInventoryTitles {
         var server = MockBukkit.mock();
         var api = mock(AbstractMenusApi.class, RETURNS_DEEP_STUBS);
         when(api.providers().placeholders().resolve().replace(any(), anyString()))
-                .thenAnswer(call -> call.<String>getArgument(1).replace("%title%", "Menu"));
+                .thenAnswer(call -> call.<String>getArgument(1).replace("%title%", "Menu").replace("%brand%", "R&D"));
         server.getServicesManager().register(AbstractMenusApi.class, api, MockBukkit.createMockPlugin(), ServicePriority.Normal);
         player = server.addPlayer();
         Colors.init(false);
@@ -66,6 +66,18 @@ class TestInventoryTitles {
         }
         MiniMessageUtil.init(true);
         assertEquals(expected, titleOf("<#12abef>%title%", null));
+    }
+
+    @Test
+    void placeholderAmpersandsRemainLiteral() {
+        for (boolean miniMessage : new boolean[]{false, true}) {
+            MiniMessageUtil.init(miniMessage);
+            for (InventoryType type : new InventoryType[]{null, InventoryType.HOPPER}) {
+                assertEquals(Component.text("R&D"), titleOf("%brand%", type));
+                assertEquals(Component.text("R&D", NamedTextColor.GREEN), titleOf("&a%brand%", type));
+                assertEquals(Component.text("Menu", NamedTextColor.GREEN), titleOf("\u00a7a%title%", type));
+            }
+        }
     }
 
     private Component titleOf(String title, InventoryType type) {

@@ -5,7 +5,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.entity.Player;
 import ru.abstractmenus.MainConfig;
-import ru.abstractmenus.api.text.Colors;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +45,7 @@ public final class MiniMessageUtil {
     }
 
     public static Component parseToComponent(String input) {
-        return input == null ? null : replacer.parseToComponent(Colors.of(input));
+        return input == null ? null : replacer.parseToComponent(input);
     }
 
     private interface Replacer {

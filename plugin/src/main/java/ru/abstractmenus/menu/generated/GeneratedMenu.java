@@ -21,9 +21,9 @@ public class GeneratedMenu extends SimpleMenu {
     @Setter
     private Matrix matrix;
 
-    private final Map<Integer, Object> slotContexts = new HashMap<>();
+    private Map<Integer, Object> slotContexts = new HashMap<>();
 
-    private ArrayList<?> snapshot;
+    private ArrayList<?> snapshot = new ArrayList<>();
     @Getter
     private Object currentObject;
     private int perPage;
@@ -54,7 +54,7 @@ public class GeneratedMenu extends SimpleMenu {
         int current = page;
         page = page + value;
         page = Math.max(0, page);
-        page = Math.min(page, pages - 1);
+        page = Math.min(page, Math.max(0, pages - 1));
         return current != page;
     }
 
@@ -89,8 +89,6 @@ public class GeneratedMenu extends SimpleMenu {
 
     @Override
     public void refresh(Player player) {
-        super.refresh(player);
-
         slotContexts.clear();
 
         snapshot = new ArrayList<>(catalog.snapshot(player, this));
@@ -99,6 +97,8 @@ public class GeneratedMenu extends SimpleMenu {
         pages = snapshot.size() / perPage;
 
         if (snapshot.size() % perPage > 0) pages++;
+        page = Math.max(0, Math.min(page, Math.max(0, pages - 1)));
+        super.refresh(player);
 
 
         int from = page * perPage;
@@ -133,10 +133,13 @@ public class GeneratedMenu extends SimpleMenu {
 
     @Override
     public GeneratedMenu clone() {
-        return (GeneratedMenu) super.clone();
+        GeneratedMenu menu = (GeneratedMenu) super.clone();
+        if (menu != null) menu.slotContexts = new HashMap<>();
+        return menu;
     }
 
     private void setItem(int slot, Player player, Item item, Object ctx) {
+        if (placedItems.containsKey(slot)) return;
         ItemStack stack = item.build(player, this);
 
         slotContexts.put(slot, ctx);
