@@ -30,8 +30,7 @@ public class PropCount implements ItemProperty {
 
     @Override
     public void apply(ItemStack itemStack, ItemMeta meta, Player player, Menu menu) {
-        itemStack.setAmount(amount.getInt(player, menu));
-        
+        itemStack.setAmount(Math.min(amount.getInt(player, menu), itemStack.getMaxStackSize()));
     }
 
     public static class Serializer implements NodeSerializer<PropCount> {
