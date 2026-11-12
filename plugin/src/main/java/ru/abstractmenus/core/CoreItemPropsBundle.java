@@ -34,6 +34,7 @@ import ru.abstractmenus.data.properties.PropNbt;
 import ru.abstractmenus.data.properties.PropBindings;
 import ru.abstractmenus.data.properties.PropNameLight;
 import ru.abstractmenus.data.properties.PropLoreLight;
+import ru.abstractmenus.data.properties.PropTooltipDisplay;
 
 /**
  * Core item property registrations. Mirrors {@code ItemProps.init()} before
@@ -60,6 +61,7 @@ final class CoreItemPropsBundle {
         api.itemProperties().register("enchantments", PropEnchantments.class, new PropEnchantments.Serializer(), owner);
         api.itemProperties().register("color", PropColor.class, new PropColor.Serializer(), owner);
         api.itemProperties().register("flags", PropFlags.class, new PropFlags.Serializer(), owner);
+        api.itemProperties().register("tooltipDisplay", PropTooltipDisplay.class, new PropTooltipDisplay.Serializer(), owner);
         api.itemProperties().register("unbreakable", PropUnbreakable.class, new PropUnbreakable.Serializer(), owner);
         api.itemProperties().register("potionData", PropPotionData.class, new PropPotionData.Serializer(), owner);
         api.itemProperties().register("fireworkData", PropFireworkData.class, new PropFireworkData.Serializer(), owner);
