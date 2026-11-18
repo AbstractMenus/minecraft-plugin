@@ -1,5 +1,5 @@
 // Common configuration applied to every subproject.
-// Subproject-specific plugins (java-library, shadow, paperweight) stay in subprojects.
+// Subproject-specific plugins (java-library, shadow) stay in subprojects.
 
 plugins {
     // Root needs the base lifecycle ('build', 'assemble', 'clean') so we
@@ -14,8 +14,8 @@ allprojects {
     repositories {
         mavenLocal()
         mavenCentral()
-        maven { url 'https://repo.papermc.io/repository/maven-public/' }
-        maven { url 'https://jitpack.io' }
+        maven { url = 'https://repo.papermc.io/repository/maven-public/' }
+        maven { url = 'https://jitpack.io' }
     }
 }
 
@@ -23,10 +23,10 @@ subprojects {
     apply plugin: 'java'
 
     java {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
         toolchain {
-            languageVersion = JavaLanguageVersion.of(21)
+            languageVersion = JavaLanguageVersion.of(25)
         }
     }
 

@@ -51,7 +51,7 @@ public class TypeColor extends DataType {
                 );
             }
 
-            return DyeColor.valueOf(str).getColor();
+            return DyeColor.valueOf(str.toUpperCase(java.util.Locale.ROOT)).getColor();
         }
 
         throw new IllegalArgumentException("Cannot deserialize color. You need to specify color in single string. Check our wiki");

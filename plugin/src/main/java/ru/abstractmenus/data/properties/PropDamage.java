@@ -14,17 +14,8 @@ import ru.abstractmenus.datatype.TypeInt;
 public class PropDamage implements ItemProperty {
 
     private final TypeInt damage;
-    private static boolean legacy;
 
-    static {
-        try {
-            Class.forName("org.bukkit.inventory.meta.Damageable");
-        } catch (Exception e) {
-            legacy = true;
-        }
-    }
-
-    private PropDamage(TypeInt damage){
+    private PropDamage(TypeInt damage) {
         this.damage = damage;
     }
 
@@ -35,20 +26,13 @@ public class PropDamage implements ItemProperty {
 
     @Override
     public boolean isApplyMeta() {
-        return !legacy;
+        return true;
     }
 
     @Override
     public void apply(ItemStack itemStack, ItemMeta meta, Player player, Menu menu) {
-        int dmg = damage.getInt(player, menu);
-
-        if (legacy) {
-            itemStack.setDurability((short) dmg);
-        } else {
-            if (meta instanceof Damageable) {
-                Damageable damageable = (Damageable) meta;
-                damageable.setDamage(dmg);
-            }
+        if (meta instanceof Damageable damageable) {
+            damageable.setDamage(damage.getInt(player, menu));
         }
     }
 

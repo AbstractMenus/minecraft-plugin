@@ -12,7 +12,7 @@ public class LevelDefaultHandler implements LevelHandler {
 
     @Override
     public int getXp(Player player) {
-        return player.getTotalExperience();
+        return player.calculateTotalExperiencePoints();
     }
 
     @Override
@@ -23,10 +23,7 @@ public class LevelDefaultHandler implements LevelHandler {
     @Override
     public void takeXp(Player player, int xp) {
         int value = Math.max(0, getXp(player) - xp);
-        player.setTotalExperience(0);
-        player.setLevel(0);
-        player.setExp(0);
-        player.giveExp(value);
+        player.setExperienceLevelAndProgress(value);
     }
 
     @Override

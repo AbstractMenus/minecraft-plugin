@@ -30,6 +30,7 @@ public class RulePlacedItem implements Rule {
         if (!(menu instanceof AbstractMenu)) return false;
 
         AbstractMenu am = (AbstractMenu) menu;
+        am.reconcilePlacedItems(player);
 
         for (InventoryItem item : items) {
             Slot slot = item.getSlot(player, menu);

@@ -1,6 +1,7 @@
 package ru.abstractmenus.util;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,7 +26,7 @@ final class LegacyColorTagReplacer {
 
     static final char SECTION_CHAR = '\u00a7';
 
-    private static final Pattern COLOR_PATTERN = Pattern.compile(SECTION_CHAR + "([0-9a-fk-rx])");
+    private static final Pattern COLOR_PATTERN = Pattern.compile(SECTION_CHAR + "x(?:" + SECTION_CHAR + "[0-9a-f]){6}|" + SECTION_CHAR + "#([0-9a-f]{6})|" + SECTION_CHAR + "([0-9a-fk-rx])", Pattern.CASE_INSENSITIVE);
     private static final Map<String, String> COLOR_TAGS = new HashMap<>();
 
     static {
@@ -67,7 +68,10 @@ final class LegacyColorTagReplacer {
 
         StringBuilder sb = new StringBuilder(input.length() + 32);
         do {
-            String replacement = COLOR_TAGS.get(matcher.group(1));
+            String code = matcher.group(2);
+            String replacement = code != null
+                    ? COLOR_TAGS.get(code.toLowerCase(Locale.ROOT))
+                    : "<#" + matcher.group().replace(String.valueOf(SECTION_CHAR), "").substring(1) + ">";
             // Replacement values contain '<' and '>' but neither '$' nor '\\',
             // so they are safe as appendReplacement literals without quoting.
             matcher.appendReplacement(sb, replacement != null ? replacement : matcher.group());

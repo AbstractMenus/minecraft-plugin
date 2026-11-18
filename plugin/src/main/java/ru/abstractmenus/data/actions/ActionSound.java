@@ -74,18 +74,20 @@ public class ActionSound implements Action {
             TypeFloat volume = getNodeValue(node, "volume", new TypeFloat(1.0f));
             TypeFloat pitch = getNodeValue(node, "pitch", new TypeFloat(1.0f));
             TypeBool isPublic = getNodeValue(node, "public", new TypeBool(false));
-            TypeLocation location = getNodeValue(node, "location", null);
+            TypeLocation location = node.node("location").rawValue() == null
+                    ? null : node.node("location").getValue(TypeLocation.class);
 
             return new ActionSound(sound, volume, pitch, isPublic, location);
         }
 
         private boolean isValidSoundName(String name) {
+            if (StringUtil.contains(name, '%')) return true;
             NamespacedKey namespacedKey = NamespacedKey.fromString(name);
             if (namespacedKey == null) {
                 return false;
             }
 
-            return StringUtil.contains(name, '%') || Registry.SOUNDS.get(namespacedKey) != null;
+            return Registry.SOUNDS.get(namespacedKey) != null;
         }
 
         @SuppressWarnings("unchecked")

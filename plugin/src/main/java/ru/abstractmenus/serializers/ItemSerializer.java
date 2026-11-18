@@ -21,6 +21,8 @@ import java.util.*;
 
 public class ItemSerializer implements NodeSerializer<Item> {
 
+    private static final Set<String> ITEM_CONTROLS = Set.of("slot", "rules", "mrules", "click", "clickCooldown");
+
     @Override
     public Item deserialize(Class<Item> type, ConfigNode node) throws NodeSerializeException {
         Item item = new SimpleItem();
@@ -71,6 +73,8 @@ public class ItemSerializer implements NodeSerializer<Item> {
 
             if (token != null) {
                 item.addProperty(key, entry.getValue().getValue(token));
+            } else if (!ITEM_CONTROLS.contains(key)) {
+                throw new NodeSerializeException(entry.getValue(), "Item property '" + key + "' does not exist");
             }
         }
 

@@ -40,8 +40,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * {@code unloadAll()} strips the registration.
  *
  * <p>Uses a pure-unit {@link StubApi} + the package-private test-only
- * {@code AddonManager(Path, AbstractMenusApi)} constructor, since MockBukkit
- * does not work with Paper 1.21.11 (see {@code CoreExtensionTest}).
+ * {@code AddonManager(Path, AbstractMenusApi)} constructor.
  */
 class AddonManagerIntegrationTest {
 

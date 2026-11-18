@@ -14,8 +14,8 @@ public class Title {
     private String title;
     private String subtitle;
     private int fadeIn;
-    private int fadeOut;
     private int stay;
+    private int fadeOut;
 
     public void send(Player player) {
         sender.send(player, this);

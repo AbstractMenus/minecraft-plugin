@@ -34,9 +34,7 @@ import static org.mockito.Mockito.*;
  *
  * <p>This test does NOT boot the full plugin — it constructs a lightweight
  * {@link StubApi} backed by real {@link TypeRegistryImpl} instances and invokes
- * {@code CoreExtension.onEnable()} directly, bypassing the MockBukkit
- * incompatibility with Paper 1.21.11 that prevents the full plugin from loading
- * in tests (see {@link ru.abstractmenus.integration.TestPluginLifecycle}).
+ * {@code CoreExtension.onEnable()} directly.
  *
  * <p><b>Activator count note:</b> {@link CoreActivatorsBundle} conditionally
  * registers "clickNPC" (Citizens) and "regionJoin"/"regionLeave" (WorldGuard)
@@ -52,6 +50,7 @@ class CoreExtensionTest {
 
     @BeforeEach
     void setUp() {
+        ru.abstractmenus.api.Logger.set(java.util.logging.Logger.getLogger(CoreExtensionTest.class.getName()));
         // CoreActivatorsBundle calls AbstractMenus.checkDependency() which calls
         // Bukkit.getServer().getPluginManager().isPluginEnabled(...).
         // Mock the static Bukkit.getServer() so the call doesn't NPE.
@@ -90,8 +89,8 @@ class CoreExtensionTest {
     @Test
     void coreExtension_registersExpectedItemProperties() {
         new CoreExtension().onEnable(api);
-        assertEquals(33, api.itemProperties().keys().size(),
-                "expected 33 core item-property types (matches Task 10 migration count)");
+        assertEquals(37, api.itemProperties().keys().size(),
+                "expected 37 core item-property types");
     }
 
     @Test

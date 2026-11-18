@@ -7,6 +7,7 @@ import ru.abstractmenus.api.AbstractMenusApi;
 import ru.abstractmenus.api.inventory.Item;
 import ru.abstractmenus.api.inventory.Menu;
 import ru.abstractmenus.data.Actions;
+import ru.abstractmenus.util.bukkit.BukkitTasks;
 import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
@@ -27,7 +28,7 @@ public class ActionPlayerScope implements Action {
         Player target = Bukkit.getPlayerExact(replacedName);
 
         if (target != null && target.isOnline()) {
-            actions.activate(target, menu, clickedItem);
+            BukkitTasks.runForEntity(target, () -> actions.activate(target, menu, clickedItem));
         }
     }
 

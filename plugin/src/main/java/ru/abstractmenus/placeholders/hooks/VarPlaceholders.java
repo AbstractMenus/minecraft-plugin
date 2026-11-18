@@ -12,10 +12,7 @@ public class VarPlaceholders {
 
         @Override
         public String replace(String placeholder, Player player) {
-            int colonIdx = placeholder.indexOf(':');
-            if (colonIdx == -1 || colonIdx >= placeholder.length() - 1) return null;
-
-            String rest = placeholder.substring(colonIdx + 1);
+            String rest = parameter(placeholder);
             String defaultVal = "";
             int secondColon = rest.indexOf(':');
             if (secondColon != -1) {
@@ -43,10 +40,7 @@ public class VarPlaceholders {
         public String replace(String placeholder, Player player) {
             if (player == null) return null;
 
-            int colonIdx = placeholder.indexOf(':');
-            if (colonIdx == -1 || colonIdx >= placeholder.length() - 1) return null;
-
-            String varName = placeholder.substring(colonIdx + 1);
+            String varName = parameter(placeholder);
             String defaultVal = "";
             int secondColon = varName.indexOf(':');
             if (secondColon != -1) {
@@ -64,11 +58,9 @@ public class VarPlaceholders {
 
         @Override
         public String replace(String placeholder, Player player) {
-            int colonIdx = placeholder.indexOf(':');
-            if (colonIdx == -1 || colonIdx >= placeholder.length() - 1) return null;
-
-            return getVarTime(VariableManagerImpl.instance().getGlobal(
-                    placeholder.substring(colonIdx + 1)));
+            String[] parts = parameter(placeholder).split(":", 2);
+            Var var = VariableManagerImpl.instance().getGlobal(parts[0]);
+            return var == null && parts.length > 1 ? parts[1] : getVarTime(var);
         }
     }
 
@@ -78,12 +70,16 @@ public class VarPlaceholders {
         public String replace(String placeholder, Player player) {
             if (player == null) return null;
 
-            int colonIdx = placeholder.indexOf(':');
-            if (colonIdx == -1 || colonIdx >= placeholder.length() - 1) return null;
-
-            return getVarTime(VariableManagerImpl.instance().getPersonal(
-                    player.getName(), placeholder.substring(colonIdx + 1)));
+            String[] parts = parameter(placeholder).split(":", 2);
+            Var var = VariableManagerImpl.instance().getPersonal(player.getName(), parts[0]);
+            return var == null && parts.length > 1 ? parts[1] : getVarTime(var);
         }
+    }
+
+    private static String parameter(String placeholder) {
+        if (placeholder.startsWith(":")) return placeholder.substring(1);
+        if (placeholder.startsWith("get:")) return placeholder.substring(4);
+        return placeholder;
     }
 
     private static String getVarTime(Var var) {

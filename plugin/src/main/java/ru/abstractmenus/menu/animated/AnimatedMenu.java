@@ -35,10 +35,10 @@ public class AnimatedMenu extends SimpleMenu {
             animStartActions.activate(player, this, null);
 
         currentFrame = 0;
+        endActionsActivated = false;
         lastPlayTime = TimeUtil.currentTimeTicks();
 
-        showedItems.clear();
-        inventory.clear();
+        clearForRefresh(player);
 
         placeItems(player);
     }
@@ -72,14 +72,14 @@ public class AnimatedMenu extends SimpleMenu {
                     updateActions.activate(player, this, null);
 
                 if (frame.isClear()) {
-                    showedItems.clear();
-                    inventory.clear();
+                    clearForRefresh(player);
                     placeItems(player);
                 }
 
                 int size = inventory.getSize();
                 for (Map.Entry<Integer, Frame.PlayedSlot> entry : played.entrySet()) {
                     int slot = entry.getKey();
+                    if (placedItems.containsKey(slot)) continue;
                     Frame.PlayedSlot ps = entry.getValue();
                     showedItems.put(slot, ps.item());
                     if (slot >= 0 && slot < size) {

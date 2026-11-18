@@ -123,6 +123,8 @@ public final class ProviderRegistryImpl implements ProviderRegistry {
         @Override
         public synchronized void register(String id, T handler, int priority, MenuExtension extOwner) {
             String k = id.toLowerCase();
+            keysByExtension.values().forEach(keys -> keys.remove(k));
+            keysByExtension.entrySet().removeIf(entry -> entry.getValue().isEmpty());
             byId.put(k, new Entry<>(handler, priority));
             keysByExtension.computeIfAbsent(extOwner, o -> new HashSet<>()).add(k);
         }

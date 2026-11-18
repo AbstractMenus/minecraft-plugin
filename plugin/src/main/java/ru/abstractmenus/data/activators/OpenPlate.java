@@ -27,7 +27,7 @@ public class OpenPlate extends Activator {
     @EventHandler
     public void onPlateEnter(PlayerInteractEvent event) {
         Block clickedBlock = event.getClickedBlock();
-        if (!ActivatorUtil.checkHand(event) || clickedBlock == null) {
+        if (clickedBlock == null) {
             return;
         }
 

@@ -20,6 +20,7 @@ public final class AddonClassLoader extends URLClassLoader {
 
     static final String[] PARENT_FIRST_PREFIXES = {
             "ru.abstractmenus.api.",
+            "ru.abstractmenus.hocon.",
             "org.bukkit.",
             "org.spigotmc.",
             "io.papermc.",

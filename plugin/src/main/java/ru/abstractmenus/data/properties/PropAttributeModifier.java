@@ -6,6 +6,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import ru.abstractmenus.api.inventory.ItemProperty;
@@ -14,15 +15,19 @@ import ru.abstractmenus.hocon.api.ConfigNode;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializeException;
 import ru.abstractmenus.hocon.api.serialize.NodeSerializer;
 
-import java.util.HashMap;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Locale;
+import java.util.UUID;
 import java.util.List;
 import java.util.Map;
 
 public class PropAttributeModifier implements ItemProperty {
 
-    private final Map<Attribute, AttributeModifier> modifiers;
+    private final List<Map.Entry<Attribute, AttributeModifier>> modifiers;
 
-    private PropAttributeModifier(Map<Attribute, AttributeModifier> modifiers) {
+    private PropAttributeModifier(List<Map.Entry<Attribute, AttributeModifier>> modifiers) {
         this.modifiers = modifiers;
     }
 
@@ -38,7 +43,9 @@ public class PropAttributeModifier implements ItemProperty {
 
     @Override
     public void apply(ItemStack itemStack, ItemMeta meta, Player player, Menu menu) {
-        for (Map.Entry<Attribute, AttributeModifier> entry : modifiers.entrySet()) {
+        for (Map.Entry<Attribute, AttributeModifier> entry : modifiers) {
+            Collection<AttributeModifier> existing = meta.getAttributeModifiers(entry.getKey());
+            if (existing != null && existing.stream().anyMatch(modifier -> modifier.getKey().equals(entry.getValue().getKey()))) continue;
             meta.addAttributeModifier(entry.getKey(), entry.getValue());
         }
     }
@@ -50,12 +57,20 @@ public class PropAttributeModifier implements ItemProperty {
         @SuppressWarnings("UnstableApiUsage")
         public PropAttributeModifier deserialize(Class type, ConfigNode node) throws NodeSerializeException {
             List<ConfigNode> nodes = node.childrenList();
-            Map<Attribute, AttributeModifier> map = new HashMap<>();
+            List<Map.Entry<Attribute, AttributeModifier>> modifiers = new ArrayList<>();
 
             for (ConfigNode entry : nodes) {
                 try {
                     String modifierType = entry.node("type").getString();
-                    Attribute attribute = Registry.ATTRIBUTE.getOrThrow(NamespacedKey.minecraft(modifierType.toLowerCase()));
+                    NamespacedKey attributeKey = NamespacedKey.fromString(modifierType.toLowerCase(Locale.ROOT));
+                    if (attributeKey != null) {
+                        String name = attributeKey.getKey().replaceFirst("^(generic|player|zombie)\\.", "");
+                        attributeKey = new NamespacedKey(attributeKey.getNamespace(), name);
+                    }
+                    Attribute attribute = attributeKey == null ? null : Registry.ATTRIBUTE.get(attributeKey);
+                    if (attribute == null) {
+                        throw new NodeSerializeException(entry, "Unknown attribute in attributeModifier: " + modifierType);
+                    }
                     double amount = entry.node("amount").getDouble(0);
                     AttributeModifier.Operation operation = AttributeModifier.Operation.valueOf(entry.node("operation").getString("add_number").toUpperCase());
 
@@ -68,7 +83,10 @@ public class PropAttributeModifier implements ItemProperty {
                         }
                     }
 
-                    NamespacedKey key = NamespacedKey.minecraft("custom_modifier_" + attribute.getKey().getKey());
+                    String content = attributeKey + "|" + Double.toHexString(amount) + "|" + operation.name()
+                            + "|" + (slot == null ? EquipmentSlotGroup.ANY : slot.getGroup());
+                    UUID entryKey = UUID.nameUUIDFromBytes(content.getBytes(StandardCharsets.UTF_8));
+                    NamespacedKey key = NamespacedKey.minecraft("custom_modifier_" + modifiers.size() + "_" + entryKey);
                     AttributeModifier modifier;
 
                     if (slot != null) {
@@ -77,13 +95,13 @@ public class PropAttributeModifier implements ItemProperty {
                         modifier = new AttributeModifier(key, amount, operation);
                     }
 
-                    map.put(attribute, modifier);
+                    modifiers.add(Map.entry(attribute, modifier));
                 } catch (IllegalArgumentException e) {
-                    throw new NodeSerializeException("Invalid attribute or operation: " + e.getMessage(), e);
+                    throw new NodeSerializeException(entry, "Invalid attribute or operation in attributeModifier: " + e.getMessage());
                 }
             }
 
-            return new PropAttributeModifier(map);
+            return new PropAttributeModifier(modifiers);
         }
     }
 }

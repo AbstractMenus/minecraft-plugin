@@ -38,13 +38,12 @@ public class OpenShiftClickEntity extends Activator {
                 continue;
             }
 
-            if (data.getName() == null) {
+            if (data.getName() != null) {
                 String name = AbstractMenusApi.get().providers().placeholders().resolve().replace(player, data.getName());
-                if (clickedEntity.getName().equalsIgnoreCase(name)) {
-                    openMenu(clickedEntity, player);
-                    return;
-                }
+                if (!clickedEntity.getName().equalsIgnoreCase(name)) continue;
             }
+            openMenu(clickedEntity, player);
+            return;
         }
     }
 

@@ -6,22 +6,19 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import ru.abstractmenus.api.Logger;
 
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 public final class Skulls {
 
+    private static final Pattern PLAYER_NAME = Pattern.compile("[!-~]{1,16}");
+
     private static final Map<String, ItemStack> skullCache = new ConcurrentHashMap<>();
-    /**
-     * Cache of resolved player-skin skulls keyed by lowercased player name.
-     * Populated lazily by {@link #getPlayerSkull(String)} and invalidated by
-     * {@link #invalidatePlayerSkull(String)} (called from PlayerJoinEvent so a
-     * rejoining player gets fresh skin data on the next query).
-     */
+    // PlayerJoinEvent invalidates cached heads so online skin changes are picked up.
     private static final Map<String, ItemStack> playerSkullCache = new ConcurrentHashMap<>();
 
     private Skulls() {
@@ -71,24 +68,16 @@ public final class Skulls {
     }
 
     public static ItemStack getPlayerSkull(String playerName) {
-        if (playerName == null) return null;
+        if (playerName == null || !PLAYER_NAME.matcher(playerName).matches()) return null;
 
         String key = playerName.toLowerCase(Locale.ROOT);
         ItemStack cached = playerSkullCache.get(key);
         if (cached != null) return cached.clone();
 
-        Player player = Bukkit.getPlayer(playerName);
-
-        if (player == null) {
-            Logger.info("Player '" + playerName + "' is not online or not found.");
-            return null;
-        }
-
-        PlayerProfile profile = player.getPlayerProfile();
-
-        if (profile == null) {
-            Logger.info("PlayerProfile for '" + playerName + "' not found.");
-            return null;
+        Player player = Bukkit.getPlayerExact(playerName);
+        PlayerProfile profile = player != null ? player.getPlayerProfile() : null;
+        if (profile == null || !profile.hasTextures()) {
+            profile = Bukkit.createProfileExact(null, playerName);
         }
 
         ItemStack result = getCustomSkull(profile);

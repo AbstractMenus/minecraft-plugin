@@ -4,18 +4,25 @@ import ru.abstractmenus.api.Logger;
 import ru.abstractmenus.api.variables.Var;
 import ru.abstractmenus.api.variables.VariableManager;
 import ru.abstractmenus.util.FileUtils;
-import ru.abstractmenus.util.bukkit.BukkitTasks;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.*;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class VariablesDao {
 
     private final VariableManager varManager;
     private final Object connectionLock = new Object();
     private Connection connection;
+    private final ExecutorService writer = Executors.newSingleThreadExecutor(task -> {
+        Thread thread = new Thread(task, "AbstractMenus-VariablesWriter");
+        thread.setDaemon(true);
+        return thread;
+    });
 
     public VariablesDao(VariableManager varManager) {
         this.varManager = varManager;
@@ -67,8 +74,9 @@ public class VariablesDao {
         }
     }
 
-    private void executeUpdate(String sql, Object... values) {
-        BukkitTasks.runTaskAsync(() -> {
+    private synchronized void executeUpdate(String sql, Object... values) {
+        if (writer.isShutdown()) return;
+        writer.execute(() -> {
             synchronized (connectionLock) {
                 try (PreparedStatement statement = connection.prepareStatement(sql)) {
                     for (int i = 0; i < values.length; i++) {
@@ -117,11 +125,26 @@ public class VariablesDao {
     }
 
     void close() {
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
+        synchronized (this) {
+            if (!writer.isShutdown()) {
+                writer.execute(() -> {
+                    synchronized (connectionLock) {
+                        try {
+                            if (connection != null) connection.close();
+                        } catch (SQLException e) {
+                            Logger.warning("Cannot close variables database: " + e.getMessage());
+                        }
+                    }
+                });
+                writer.shutdown();
             }
-        } catch (Throwable ignore) {
+        }
+        try {
+            if (!writer.awaitTermination(5, TimeUnit.SECONDS)) {
+                Logger.warning("Variables writer is still draining; the database will close after pending writes");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 }

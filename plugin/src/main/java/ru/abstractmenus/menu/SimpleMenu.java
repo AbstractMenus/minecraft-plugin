@@ -58,8 +58,7 @@ public class SimpleMenu extends AbstractMenu {
 
     @Override
     public void refresh(Player player) {
-        showedItems.clear();
-        inventory.clear();
+        clearForRefresh(player);
         placeItems(player);
     }
 
@@ -85,7 +84,7 @@ public class SimpleMenu extends AbstractMenu {
                         }
 
                         slot.getSlots(s -> {
-                            if (s >= 0 && s < inventory.getSize()) {
+                            if (s >= 0 && s < inventory.getSize() && !placedItems.containsKey(s)) {
                                 showedItems.put(s, item);
                                 inventory.setItem(s, built);
                             }
