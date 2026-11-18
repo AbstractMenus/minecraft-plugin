@@ -145,6 +145,42 @@ class TestPluginLifecycle {
     }
 
     @Test
+    void unknownItemKeysRejectMenusButItemControlsRemainValid() throws Exception {
+        var file = plugin.getMainConfig().getMenusFolder().resolve("item-keys.conf");
+        Files.createDirectories(file.getParent());
+        String valid = """
+                title: Shop
+                size: 1
+                items: [{
+                  slot: 0
+                  material: DIAMOND
+                  rules {permission: example}
+                  mrules {permission: example}
+                  clickCooldown: 0
+                  click {
+                    LEFT {message: hello}
+                    message: hello
+                    rules {permission: example}
+                    actions {message: hello}
+                    denyActions {message: denied}
+                  }
+                }]
+                """;
+        Files.writeString(file, valid);
+        MenuManager.instance().loadMenus();
+        assertNotNull(MenuManager.instance().getMenu("item-keys"));
+        Files.writeString(file, valid.replace("material: DIAMOND", "materail: DIAMOND"));
+        var node = ConfigurationLoader.builder().source(ConfigSources.path(file))
+                .serializers(AbstractMenusApi.get().serializers()).build().load();
+        var error = assertThrows(NodeSerializeException.class, () -> node.getValue(Menu.class));
+        assertNotNull(error.getCauseNode());
+        assertEquals(5, error.getCauseNode().wrapped().origin().lineNumber());
+        assertTrue(error.getMessage().contains("materail"));
+        MenuManager.instance().loadMenus();
+        assertNull(MenuManager.instance().getMenu("item-keys"));
+    }
+
+    @Test
     void pluginDisableIsClean() {
         server.getPluginManager().disablePlugin(plugin);
         assertFalse(plugin.isEnabled(), "Plugin should be disabled after disablePlugin()");
