@@ -129,7 +129,7 @@ public final class Actions implements Iterable<Action> {
                 return;
             }
 
-            Logger.severe(String.format("Action '%s' is not exists", key));
+            throw new NodeSerializeException(node, String.format("Action '%s' does not exist", key));
         }
     }
 }

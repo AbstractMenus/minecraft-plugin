@@ -17,6 +17,9 @@ import ru.abstractmenus.util.bukkit.BukkitTasks;
 import ru.abstractmenus.util.bukkit.Events;
 
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -90,6 +93,55 @@ class TestPluginLifecycle {
         assertTrue(error.getMessage().contains("'if'"));
         MenuManager.instance().loadMenus();
         assertNull(MenuManager.instance().getMenu("unsafe-js"));
+    }
+
+    @Test
+    void invalidMenusFailClosedAndLogWithOrWithoutCauseNodes() throws Exception {
+        var folder = plugin.getMainConfig().getMenusFolder();
+        Files.createDirectories(folder);
+        var messages = new ArrayList<String>();
+        var handler = new Handler() {
+            @Override public void publish(LogRecord record) { messages.add(record.getMessage()); }
+            @Override public void flush() {}
+            @Override public void close() {}
+        };
+        var field = ru.abstractmenus.api.Logger.class.getDeclaredField("logger");
+        field.setAccessible(true);
+        var logger = (java.util.logging.Logger) field.get(null);
+        logger.addHandler(handler);
+        try {
+            for (boolean named : new boolean[]{false, true}) {
+                for (boolean unknownAction : new boolean[]{false, true}) {
+                    String name = "invalid-" + named + "-" + unknownAction;
+                    var file = folder.resolve(name + ".conf");
+                    String body = unknownAction
+                            ? "title: Shop\nsize: 1\nitems: [{slot: 0, material: DIAMOND, click {takeMony: 100}}]\n"
+                            : "title: Shop\nsize: 7\n";
+                    Files.writeString(file, named ? "menus {\n" + name + " {\n" + body + "}\n}\n" : body);
+                    if (unknownAction) {
+                        var node = ConfigurationLoader.builder().source(ConfigSources.path(file))
+                                .serializers(AbstractMenusApi.get().serializers()).build().load();
+                        var menuNode = named ? node.node("menus", name) : node;
+                        var error = assertThrows(NodeSerializeException.class, () -> menuNode.getValue(Menu.class));
+                        assertNotNull(error.getCauseNode());
+                        assertEquals(named ? 5 : 3, error.getCauseNode().wrapped().origin().lineNumber());
+                        assertTrue(error.getMessage().contains("takeMony"));
+                    }
+                }
+            }
+            MenuManager.instance().loadMenus();
+            for (boolean named : new boolean[]{false, true}) {
+                for (boolean unknownAction : new boolean[]{false, true}) {
+                    String name = "invalid-" + named + "-" + unknownAction;
+                    assertNull(MenuManager.instance().getMenu(name));
+                    String reason = unknownAction ? "takeMony" : "Menu size";
+                    assertTrue(messages.stream().anyMatch(message -> message.contains(name + ".conf")
+                            && message.contains(reason) && (!unknownAction || message.contains("[Near line "))), messages.toString());
+                }
+            }
+        } finally {
+            logger.removeHandler(handler);
+        }
     }
 
     @Test

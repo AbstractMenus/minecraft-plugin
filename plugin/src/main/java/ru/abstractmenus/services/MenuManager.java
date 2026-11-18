@@ -222,7 +222,7 @@ public final class MenuManager {
                     .build()
                     .load();
         } catch (Throwable t) {
-            Logger.severe("Cannot parse menu file '" + filename + "': " + t.getMessage());
+            Logger.severe("Cannot parse menu file '" + file.getFileName() + "': " + t.getMessage());
             return 0;
         }
 
@@ -241,14 +241,13 @@ public final class MenuManager {
                     loaded.put(entry.getKey().toLowerCase(), menu);
                     count++;
                 } catch (NodeSerializeException ne) {
-                    if (ne.getCauseNode() != null) {
-                        int line = ne.getCauseNode().wrapped().origin().lineNumber();
-                        Logger.severe(String.format("[Near line %d] Cannot load menu '%s' in file '%s': %s",
-                                line, entry.getKey(), filename, ne.getMessage()));
-                    }
+                    String position = ne.getCauseNode() == null ? "" : String.format("[Near line %d] ",
+                            ne.getCauseNode().wrapped().origin().lineNumber());
+                    Logger.severe(position + String.format("Cannot load menu '%s' in file '%s': %s",
+                            entry.getKey(), file.getFileName(), ne.getMessage()));
                 } catch (Throwable e) {
                     Logger.severe(String.format("Cannot load menu '%s' in file '%s': %s",
-                            entry.getKey(), filename, e.getMessage()));
+                            entry.getKey(), file.getFileName(), e.getMessage()));
                     e.printStackTrace();
                 }
             }
@@ -259,13 +258,12 @@ public final class MenuManager {
                 loaded.put(filename.toLowerCase(), menu);
                 count++;
             } catch (NodeSerializeException ne) {
-                if (ne.getCauseNode() != null) {
-                    int line = ne.getCauseNode().wrapped().origin().lineNumber();
-                    Logger.severe(String.format("[Near line %d] Cannot load menu '%s': %s",
-                            line, filename, ne.getMessage()));
-                }
+                String position = ne.getCauseNode() == null ? "" : String.format("[Near line %d] ",
+                        ne.getCauseNode().wrapped().origin().lineNumber());
+                Logger.severe(position + String.format("Cannot load menu '%s' in file '%s': %s",
+                        filename, file.getFileName(), ne.getMessage()));
             } catch (Throwable e) {
-                Logger.severe("Cannot load menu '" + filename + "': " + e.getMessage());
+                Logger.severe("Cannot load menu '" + filename + "' in file '" + file.getFileName() + "': " + e.getMessage());
                 e.printStackTrace();
             }
         }
