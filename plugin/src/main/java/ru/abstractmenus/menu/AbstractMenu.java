@@ -21,6 +21,7 @@ import ru.abstractmenus.util.bukkit.BukkitTasks;
 import java.util.function.BooleanSupplier;
 import ru.abstractmenus.datatype.TypeSlot;
 import ru.abstractmenus.menu.item.MenuItem;
+import ru.abstractmenus.services.MenuManager;
 import ru.abstractmenus.data.Actions;
 import ru.abstractmenus.api.Activator;
 import ru.abstractmenus.api.inventory.Menu;
@@ -336,12 +337,14 @@ public abstract class AbstractMenu implements Menu {
     @Override
     public void close(Player player, boolean closeInventory) {
         if (closed) return;
+        Menu opened = MenuManager.instance().getOpenedMenu(player);
+        boolean runCloseActions = !(opened instanceof AbstractMenu) || opened == this;
         dropPlaced(player);
         closed = true;
         if (closeInventory && player.getOpenInventory().getTopInventory() == inventory)
             player.closeInventory();
 
-        if (closeActions != null)
+        if (runCloseActions && closeActions != null)
             closeActions.activate(player, this, null);
     }
 

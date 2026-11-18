@@ -102,10 +102,31 @@ class TestMenuLifecycleRegressions {
     @Test void switchingMenusClosesOldInstanceOnce() {
         var closed = new AtomicInteger();
         var a = new SimpleMenu("A",9); a.setCloseActions(count(closed));
+        a.setDraggableSlots(new TypeSlot(new SlotIndex(0)));
         manager.openMenu(player,a);
+        var old = (AbstractMenu)manager.getOpenedMenu(player);
+        old.placeItem(player,0,new ItemStack(Material.DIAMOND,4));
+        old.getInventory().setItem(0,new ItemStack(Material.DIAMOND,4));
         manager.openMenu(player,new SimpleMenu("B",9));
+        var replacement = manager.getOpenedMenu(player);
         server.getScheduler().performTicks(5);
+        assertEquals(0,closed.get());
+        assertSame(replacement,manager.getOpenedMenu(player));
+        assertSame(replacement.getInventory(),player.getOpenInventory().getTopInventory());
+        old.close(player,false);
+        assertEquals(0,closed.get());
+        assertEquals(4,player.getWorld().getEntitiesByClass(org.bukkit.entity.Item.class).stream()
+                .mapToInt(item -> item.getItemStack().getAmount()).sum());
+    }
+    @Test void replacingMenuWithExternalInventoryRunsCloseActionsOnce() {
+        var closed = new AtomicInteger();
+        var template = new SimpleMenu("A",9); template.setCloseActions(count(closed));
+        manager.openMenu(player,template);
+        var old = manager.getOpenedMenu(player);
+        player.openInventory(org.bukkit.Bukkit.createInventory(null,9));
+        old.close(player,false);
         assertEquals(1,closed.get());
+        assertNull(manager.getOpenedMenu(player));
     }
     @Test void oldCloseDoesNotUnregisterNewMenu() {
         var closedB = new AtomicInteger();
