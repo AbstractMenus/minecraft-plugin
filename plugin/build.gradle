@@ -32,7 +32,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.48'
     annotationProcessor 'org.projectlombok:lombok:1.18.48'
 
-    compileOnly 'io.papermc.paper:paper-api:26.3.build.+'
+    compileOnly 'io.papermc.paper:paper-api:26.3.build.249-stable'
 
     implementation project(':api')
 
@@ -83,7 +83,7 @@ dependencies {
     }
 
     testImplementation('net.citizensnpcs:citizensapi:2.0.44-SNAPSHOT') { transitive = false }
-    testImplementation 'io.papermc.paper:paper-api:26.3.build.+'
+    testImplementation 'io.papermc.paper:paper-api:26.3.build.249-stable'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:6.1.3'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:6.1.3'
