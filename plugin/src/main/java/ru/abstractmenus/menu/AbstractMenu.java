@@ -251,7 +251,8 @@ public abstract class AbstractMenu implements Menu {
         placedItems.forEach((slot, stack) -> inventory.setItem(slot, stack));
     }
 
-    public void removePlacedItem(int slot, int amount) {
+    public void removePlacedItem(Player player, int slot, int amount) {
+        reconcilePlacedItems(player);
         ItemStack placed = placedItems.get(slot);
 
         if (placed != null) {

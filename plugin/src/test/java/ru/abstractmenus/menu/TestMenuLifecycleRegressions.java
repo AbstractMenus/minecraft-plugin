@@ -22,6 +22,9 @@ import ru.abstractmenus.api.inventory.*;
 import ru.abstractmenus.api.inventory.slot.SlotIndex;
 import ru.abstractmenus.api.text.Colors;
 import ru.abstractmenus.data.Actions;
+import ru.abstractmenus.data.actions.ActionPlacedItemRemove;
+import ru.abstractmenus.data.rules.RulePlacedItem;
+import ru.abstractmenus.datatype.TypeInt;
 import ru.abstractmenus.datatype.TypeSlot;
 import ru.abstractmenus.listeners.InventoryListener;
 import ru.abstractmenus.menu.animated.*;
@@ -343,6 +346,59 @@ class TestMenuLifecycleRegressions {
         menu.close(player,false);
         assertEquals(3,player.getWorld().getEntitiesByClass(org.bukkit.entity.Item.class).stream()
                 .mapToInt(item -> item.getItemStack().getAmount()).sum());
+    }
+    @Test void sameTickPickupCannotFundClicksRulesOrRemoval() throws Exception {
+        var required = mock(ru.abstractmenus.menu.item.InventoryItem.class);
+        when(required.getSlot(any(),any())).thenReturn(new SlotIndex(0));
+        when(required.build(any(),any())).thenReturn(new ItemStack(Material.DIAMOND,4));
+        var constructor = RulePlacedItem.class.getDeclaredConstructor(List.class);
+        constructor.setAccessible(true);
+        var rule = constructor.newInstance(List.of(required));
+        for (String path : List.of("click","rule","remove")) {
+            var rewards = new AtomicInteger();
+            var taken = new AtomicInteger();
+            var template = new SimpleMenu("Deposit",9);
+            template.setDraggableSlots(new TypeSlot(new SlotIndex(0)));
+            template.setOnTakeItem(count(taken));
+            var button = new MenuItem();
+            button.setSlot(new TypeSlot(new SlotIndex(1)));
+            button.setClickCooldown(0);
+            var trade = new Actions();
+            trade.add((p,m,i) -> {
+                if (((AbstractMenu)m).getPlacedItem(0).getAmount() >= 4) rewards.incrementAndGet();
+            });
+            button.setAnyClickActions(trade);
+            template.setItems(List.of(button));
+            manager.openMenu(player,template);
+            var menu = (AbstractMenu)manager.getOpenedMenu(player);
+            menu.placeItem(player,0,new ItemStack(Material.DIAMOND,4));
+            menu.getInventory().setItem(0,new ItemStack(Material.DIAMOND,4));
+            var listener = new InventoryListener();
+            var pickup = new org.bukkit.event.inventory.InventoryClickEvent(player.getOpenInventory(),
+                    InventoryType.SlotType.CONTAINER,0,ClickType.LEFT,
+                    org.bukkit.event.inventory.InventoryAction.PICKUP_ALL);
+            listener.onInventoryClick(pickup);
+            listener.reconcileClick(pickup);
+            assertFalse(pickup.isCancelled());
+            menu.getInventory().clear(0);
+            player.setItemOnCursor(new ItemStack(Material.DIAMOND,4));
+            switch (path) {
+                case "click" -> listener.onInventoryClick(new org.bukkit.event.inventory.InventoryClickEvent(
+                        player.getOpenInventory(),InventoryType.SlotType.CONTAINER,1,ClickType.LEFT,
+                        org.bukkit.event.inventory.InventoryAction.PICKUP_ALL));
+                case "rule" -> assertFalse(rule.check(player,menu,null));
+                case "remove" -> new ActionPlacedItemRemove(new TypeSlot(new SlotIndex(0)),new TypeInt(1))
+                        .activate(player,menu,null);
+            }
+            assertEquals(0,rewards.get(),path);
+            assertTrue(menu.getPlacedItem(0).getType().isAir(),path);
+            assertNull(menu.getInventory().getItem(0),path);
+            assertEquals(1,taken.get(),path);
+            assertEquals(4,player.getItemOnCursor().getAmount(),path);
+            server.getScheduler().performTicks(2);
+            assertEquals(1,taken.get(),path);
+            assertTrue(menu.getPlacedItem(0).getType().isAir(),path);
+        }
     }
     @Test void unloadOnOwningThreadReturnsDepositsSynchronously() {
         var closed = new AtomicInteger();

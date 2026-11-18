@@ -39,6 +39,7 @@ public class InventoryListener implements Listener {
 
         AbstractMenu menu = (AbstractMenu) event.getInventory().getHolder();
         Player player = (Player) event.getWhoClicked();
+        menu.reconcilePlacedItems(player);
 
         if (!allowedActions.contains(event.getAction())) {
             event.setCancelled(true);

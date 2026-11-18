@@ -34,7 +34,7 @@ public class ActionPlacedItemRemove implements Action {
         int amount = this.amount.getInt(player, menu);
 
         slot.getSlot(player, menu).getSlots(i ->
-                am.removePlacedItem(i, amount));
+                am.removePlacedItem(player, i, amount));
     }
 
     public static class Serializer implements NodeSerializer<ActionPlacedItemRemove> {
