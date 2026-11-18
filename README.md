@@ -141,6 +141,8 @@ count: 64
 
 This version supports Minecraft 26.1+ and Java 25 only.
 
+The `js` rule was removed because it allowed code injection through placeholder values. Menus using it now fail to load with the source location. Replace it with `if` comparisons or expressions, combined with `and`, `or` or `oneof` rules as needed.
+
 `glow` no longer adds an Unbreaking enchantment, and `flags` no longer writes default attribute modifiers. Items handed to players by older versions, such as menu opener items and quest tokens, that carry those old enchantments or modifiers no longer match updated item definitions in `clickItem` activators, `heldItem` and `inventoryItem` rules, or `itemRemove`. Reissue those affected items after updating.
 
 The built-in placeholder values have changed:
